@@ -15,7 +15,7 @@ export default function NotFound() {
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Button href="/catalog">В каталог</Button>
         <Button href="/configurator" variant="ghost">
-          Собрать футболку
+          Собрать футболку 
         </Button>
       </div>
     </Container>
