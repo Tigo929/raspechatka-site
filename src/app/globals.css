@@ -1,0 +1,206 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────
+   PRINTLAB — дизайн-система (Tailwind v4, CSS-first @theme)
+   Премиальная палитра: тёплая бумага, чернильный графит, акцент-коралл.
+   ───────────────────────────────────────────────────────────── */
+@theme {
+  /* Цвета бренда */
+  --color-paper: #f6f4ef;
+  --color-paper-dim: #efece4;
+  --color-ink: #15151b;
+  --color-ink-soft: #3a3a44;
+  --color-muted: #6c6c78;
+  --color-line: #e4e0d6;
+  --color-midnight: #0e0e13;
+
+  --color-accent: #ff4a1c;
+  --color-accent-hover: #e83d12;
+  --color-accent-soft: #ffe9e1;
+
+  /* Шрифты (переменные задаёт next/font в layout) */
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-display:
+    var(--font-display), var(--font-inter), system-ui, sans-serif;
+
+  /* Радиусы */
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.75rem;
+  --radius-3xl: 2.25rem;
+
+  /* Тени */
+  --shadow-soft: 0 1px 2px rgba(21, 21, 27, 0.04),
+    0 8px 24px -12px rgba(21, 21, 27, 0.12);
+  --shadow-lift: 0 2px 4px rgba(21, 21, 27, 0.05),
+    0 24px 48px -20px rgba(21, 21, 27, 0.25);
+
+  /* Плавность */
+  --ease-out-quart: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Анимации */
+  --animate-marquee: marquee 32s linear infinite;
+  --animate-rise: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-float: floatY 6s ease-in-out infinite;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: white;
+  }
+
+  /* Уважаем системную настройку «уменьшить движение» */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+
+  /* Видимый фокус для доступности */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  /* Тонкая «бумажная» зернистость для премиальности фона секций */
+  .bg-grain {
+    background-image: radial-gradient(
+      rgba(21, 21, 27, 0.035) 1px,
+      transparent 1px
+    );
+    background-size: 4px 4px;
+  }
+  .mask-fade-x {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 8%,
+      black 92%,
+      transparent
+    );
+  }
+}
+
+/* ── Кастомный курсор (только desktop, монтируется из JS) ── */
+html.has-custom-cursor,
+html.has-custom-cursor * {
+  cursor: none !important;
+}
+
+.cursor-ring {
+  will-change: transform;
+  background-color: transparent;
+}
+
+/* Точка курсора: при наведении на кликабельное меняет цвет и светится. */
+.cursor-dot {
+  will-change: transform;
+}
+.cursor-dot[data-state="cta"] {
+  width: 0.6rem;
+  height: 0.6rem;
+  background-color: #ffffff;
+  box-shadow:
+    0 0 0 2px var(--color-accent),
+    0 0 16px 3px color-mix(in srgb, var(--color-accent) 70%, transparent);
+}
+.cursor-dot[data-state="view"],
+.cursor-dot[data-state="drag"] {
+  width: 0.6rem;
+  height: 0.6rem;
+  background-color: #ffffff;
+  box-shadow:
+    0 0 0 2px var(--color-ink),
+    0 0 16px 3px color-mix(in srgb, var(--color-ink) 55%, transparent);
+}
+.cursor-dot[data-state="link"] {
+  background-color: var(--color-accent);
+  box-shadow: 0 0 14px 3px color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+.cursor-ring[data-state="cta"] {
+  box-shadow: 0 0 24px 4px color-mix(in srgb, var(--color-accent) 45%, transparent);
+}
+.cursor-ring[data-state="cta"],
+.cursor-ring[data-state="view"],
+.cursor-ring[data-state="drag"] {
+  width: 4.25rem;
+  height: 4.25rem;
+}
+.cursor-ring[data-state="cta"] {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+.cursor-ring[data-state="view"],
+.cursor-ring[data-state="drag"] {
+  background-color: var(--color-ink);
+  border-color: var(--color-ink);
+}
+.cursor-ring[data-state="cta"] span,
+.cursor-ring[data-state="view"] span,
+.cursor-ring[data-state="drag"] span {
+  opacity: 1;
+}
+.cursor-ring[data-state="link"] {
+  width: 3.25rem;
+  height: 3.25rem;
+  background-color: color-mix(in srgb, var(--color-ink) 8%, transparent);
+}

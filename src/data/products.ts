@@ -1,0 +1,135 @@
+import type { Product, ProductColor } from "@/types";
+import { images } from "./images";
+
+const baseColors: ProductColor[] = [
+  { name: "Белый", hex: "#F4F4F1" },
+  { name: "Чёрный", hex: "#16161A" },
+  { name: "Серый меланж", hex: "#9CA0A6" },
+  { name: "Бежевый", hex: "#D9CBB3" },
+  { name: "Синий", hex: "#2C3E78" },
+  { name: "Бордовый", hex: "#6E2331" },
+];
+
+export const products: Product[] = [
+  {
+    slug: "oversize-premium",
+    title: "Oversize Premium",
+    excerpt: "Плотный хлопок 240 г/м², свободный крой, насыщенная DTG-печать.",
+    description:
+      "Флагманская модель для принта на всю грудь и спину. Плотный кулирный хлопок 240 г/м² держит форму после десятков стирок, спущенное плечо и удлинённый силуэт дают актуальный oversize-крой. Печатаем методом DTG — без ограничений по цветам и градиентам.",
+    priceFrom: 1690,
+    rating: 4.9,
+    reviewsCount: 312,
+    category: "s-printom",
+    image: images.prodOversize,
+    imageAlt: "Футболка Oversize Premium с принтом",
+    colors: baseColors,
+    material: "100% хлопок, 240 г/м²",
+    printMethod: "DTG / прямая цифровая печать",
+    badge: "Хит",
+  },
+  {
+    slug: "classic-cotton",
+    title: "Classic Cotton",
+    excerpt: "Универсальная классика 180 г/м² — идеально под фото и логотип.",
+    description:
+      "Базовая футболка прямого кроя из чесаного хлопка 180 г/м². Ровная плотная ткань — лучший холст для фотопечати и брендирования. Подходит для личных заказов и корпоративных тиражей.",
+    priceFrom: 1190,
+    rating: 4.8,
+    reviewsCount: 488,
+    category: "s-foto",
+    image: images.prodClassic,
+    imageAlt: "Классическая футболка Classic Cotton",
+    colors: baseColors,
+    material: "100% хлопок, 180 г/м²",
+    printMethod: "DTG / сублимация",
+    badge: "Бестселлер",
+  },
+  {
+    slug: "noir-heavy",
+    title: "Noir Heavy",
+    excerpt: "Глубокий чёрный, плотный 220 г/м², печать белилами не выгорает.",
+    description:
+      "Тяжёлая чёрная футболка для ярких принтов на тёмном. Печать с белой подложкой даёт сочные цвета, которые не сереют после стирки. Премиальный матовый чёрный без отлива.",
+    priceFrom: 1490,
+    rating: 4.9,
+    reviewsCount: 201,
+    category: "s-printom",
+    image: images.prodBlack,
+    imageAlt: "Чёрная футболка Noir Heavy с принтом",
+    colors: [
+      { name: "Чёрный", hex: "#16161A" },
+      { name: "Графит", hex: "#3A3A40" },
+      { name: "Тёмно-синий", hex: "#1E2540" },
+    ],
+    material: "100% хлопок, 220 г/м²",
+    printMethod: "DTG с белой подложкой",
+  },
+  {
+    slug: "pair-edition",
+    title: "Pair Edition",
+    excerpt: "Набор парных футболок — для пар, друзей и команд.",
+    description:
+      "Комплект из двух футболок с согласованными принтами. Идеальный подарок на годовщину или дружеский мерч. Любые размеры в паре, единый стиль печати.",
+    priceFrom: 2790,
+    rating: 5.0,
+    reviewsCount: 96,
+    category: "s-nadpisyu",
+    image: images.prodHanger,
+    imageAlt: "Парные футболки Pair Edition",
+    colors: baseColors,
+    material: "100% хлопок, 180 г/м² (×2)",
+    printMethod: "DTG / шелкография",
+    badge: "Для пары",
+  },
+  {
+    slug: "corporate-line",
+    title: "Corporate Line",
+    excerpt: "Корпоративный мерч с логотипом, тираж от 1 до 1000+.",
+    description:
+      "Решение для брендирования: фирменные цвета, логотип на груди/рукаве/спине, аккуратная вышивка или печать. Согласуем макет, выдержим тираж в едином качестве и сроке.",
+    priceFrom: 1090,
+    rating: 4.8,
+    reviewsCount: 154,
+    category: "s-logotipom",
+    image: images.prodRack,
+    imageAlt: "Корпоративные футболки Corporate Line с логотипом",
+    colors: baseColors,
+    material: "Хлопок/пике, 160–200 г/м²",
+    printMethod: "Шелкография / вышивка / DTF",
+  },
+  {
+    slug: "photo-art",
+    title: "Photo Art",
+    excerpt: "Фотопечать музейного качества — перенесём любое изображение.",
+    description:
+      "Модель под детализированную фотопечать: ровная белая ткань премиум-хлопка раскрывает полутона и цвета. Подойдёт для портрета, пейзажа или арта.",
+    priceFrom: 1390,
+    rating: 4.9,
+    reviewsCount: 178,
+    category: "s-foto",
+    image: images.prodFolded,
+    imageAlt: "Футболка Photo Art с фотопечатью",
+    colors: [
+      { name: "Белый", hex: "#F4F4F1" },
+      { name: "Молочный", hex: "#EFE9DD" },
+      { name: "Серый меланж", hex: "#9CA0A6" },
+    ],
+    material: "100% хлопок премиум, 190 г/м²",
+    printMethod: "Сублимация / DTG",
+  },
+];
+
+export function getProduct(slug: string): Product | undefined {
+  return products.find((p) => p.slug === slug);
+}
+
+export function getProductsByCategory(category: string): Product[] {
+  return products.filter((p) => p.category === category);
+}
+
+export function getPopularProducts(limit = 4): Product[] {
+  return [...products]
+    .sort((a, b) => b.reviewsCount - a.reviewsCount)
+    .slice(0, limit);
+}
