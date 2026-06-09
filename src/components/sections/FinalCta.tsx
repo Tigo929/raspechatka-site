@@ -18,7 +18,7 @@ export function FinalCta() {
             className="bg-accent/20 pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full blur-[100px]"
           />
           <div className="relative mx-auto max-w-2xl">
-            <h2 className="font-display text-3xl font-extrabold tracking-tight text-balance text-white sm:text-4xl lg:text-5xl">
+            <h2 className="font-display text-3xl font-extrabold text-balance text-white sm:text-4xl lg:text-5xl">
               Готовы напечатать свою футболку?
             </h2>
             <p className="text-paper/70 mx-auto mt-4 max-w-xl text-pretty">

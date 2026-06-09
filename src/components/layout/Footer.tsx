@@ -17,7 +17,7 @@ export function Footer() {
           <div className="lg:col-span-4">
             <Link
               href="/"
-              className="font-display text-2xl font-extrabold tracking-tight text-white"
+              className="font-display text-2xl font-extrabold text-white"
             >
               PRINT<span className="text-accent">LAB</span>
             </Link>

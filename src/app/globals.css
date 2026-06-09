@@ -193,11 +193,17 @@ html.has-custom-cursor * {
   box-shadow: 0 0 24px 4px
     color-mix(in srgb, var(--color-accent) 45%, transparent);
 }
-.cursor-ring[data-state="cta"],
-.cursor-ring[data-state="view"],
+.cursor-ring[data-state="cta"] {
+  width: 3.85rem;
+  height: 3.85rem;
+}
+.cursor-ring[data-state="view"] {
+  width: 3.1rem;
+  height: 3.1rem;
+}
 .cursor-ring[data-state="drag"] {
-  width: 4.25rem;
-  height: 4.25rem;
+  width: 3.6rem;
+  height: 3.6rem;
 }
 .cursor-ring[data-state="cta"] {
   background-color: var(--color-accent);
@@ -212,6 +218,10 @@ html.has-custom-cursor * {
 .cursor-ring[data-state="view"] span,
 .cursor-ring[data-state="drag"] span {
   opacity: 1;
+}
+.cursor-ring[data-state="view"] span {
+  font-size: 0.5rem;
+  letter-spacing: 0.02em;
 }
 /* Угол для «живого» вращающегося градиента (анимируется через @property). */
 @property --cursor-angle {

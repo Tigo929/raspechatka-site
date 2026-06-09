@@ -46,7 +46,7 @@ export function PlatformRatings({ className }: { className?: string }) {
             <span className="flex flex-col">
               <span className="text-muted text-xs">{p.name}</span>
               <span className="flex items-center gap-1.5">
-                <span className="font-display text-ink text-xl font-extrabold leading-none">
+                <span className="font-display text-ink text-xl leading-none font-extrabold">
                   {p.rating.toFixed(1)}
                 </span>
                 <Star

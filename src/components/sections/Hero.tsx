@@ -1,11 +1,10 @@
-import Image from "next/image";
 import { Sparkles, Star, Clock, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Magnetic } from "@/components/interaction/Magnetic";
-import { Spotlight } from "@/components/interaction/Spotlight";
 import { CountUp } from "@/components/interaction/CountUp";
-import { images } from "@/data/images";
+import { HeroCarousel } from "@/components/sections/HeroCarousel";
+import { heroSlides } from "@/data/images";
 import { siteConfig } from "@/data/site";
 
 /**
@@ -35,7 +34,7 @@ export function Hero() {
               довольных клиентов
             </span>
 
-            <h1 className="font-display text-ink mt-6 text-4xl leading-[1.05] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+            <h1 className="font-display text-ink mt-6 text-4xl leading-[1.05] font-extrabold text-balance sm:text-5xl lg:text-6xl">
               Футболки с принтом,
               <br className="hidden sm:block" /> фото и логотипом{" "}
               <span className="text-accent">на заказ</span>
@@ -86,18 +85,7 @@ export function Hero() {
 
           {/* Визуал */}
           <div className="relative">
-            <Spotlight className="overflow-hidden rounded-3xl" size={360}>
-              <div className="bg-paper-dim shadow-lift relative aspect-[4/5] sm:aspect-square lg:aspect-[4/5]">
-                <Image
-                  src={images.hero}
-                  alt="Премиальные футболки с принтом от студии PRINTLAB"
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover"
-                />
-              </div>
-            </Spotlight>
+            <HeroCarousel slides={heroSlides} />
 
             <div
               className="animate-float shadow-lift absolute top-8 -left-3 flex items-center gap-2.5 rounded-2xl bg-white/90 px-4 py-3 backdrop-blur sm:-left-5"

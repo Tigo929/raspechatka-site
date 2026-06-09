@@ -29,11 +29,11 @@ export function SectionHeading({
       )}
     >
       {eyebrow && (
-        <span className="text-accent text-xs font-semibold tracking-[0.2em] uppercase">
+        <span className="text-accent text-xs font-semibold uppercase">
           {eyebrow}
         </span>
       )}
-      <Tag className="font-display text-ink text-3xl font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl">
+      <Tag className="font-display text-ink text-3xl font-bold text-balance sm:text-4xl lg:text-5xl">
         {title}
       </Tag>
       {subtitle && (

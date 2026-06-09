@@ -13,8 +13,54 @@ function unsplash(id: string, w = 1200, q = 70): string {
   return `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=${q}`;
 }
 
+export interface HeroSlide {
+  src: string;
+  alt: string;
+  label: string;
+  title: string;
+}
+
+export const heroSlides: HeroSlide[] = [
+  {
+    src: "/home/hero-print-01.webp",
+    alt: "Белая футболка с ярким абстрактным принтом на модели",
+    label: "Фронт",
+    title: "Принт выглядит как часть ткани",
+  },
+  {
+    src: "/home/hero-print-02.webp",
+    alt: "Чёрная оверсайз-футболка с цветным принтом на груди",
+    label: "Чёрная",
+    title: "Контрастные цвета на тёмном хлопке",
+  },
+  {
+    src: "/home/hero-print-03.webp",
+    alt: "Белая футболка со спины с крупным принтом",
+    label: "Спина",
+    title: "Отдельная зона для крупного принта",
+  },
+  {
+    src: "/home/hero-print-04.webp",
+    alt: "Клиент держит белую футболку с готовым принтом",
+    label: "Выдача",
+    title: "Показываем результат до передачи",
+  },
+  {
+    src: "/home/hero-print-05.webp",
+    alt: "Крупный план чёрной футболки с деталью цветного принта",
+    label: "Деталь",
+    title: "Фактура ткани и стойкая печать",
+  },
+  {
+    src: "/home/hero-print-06.webp",
+    alt: "Несколько футболок с разными принтами на вешалках",
+    label: "Тираж",
+    title: "Один стиль для всей команды",
+  },
+];
+
 export const images = {
-  hero: unsplash("photo-1503341504253-dff4815485f1", 1600),
+  hero: heroSlides[0].src,
   heroSecondary: unsplash("photo-1620799140408-edc6dcb6d633", 900),
 
   // Категории

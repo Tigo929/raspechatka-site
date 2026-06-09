@@ -72,7 +72,7 @@ export default async function LandingPage({
         />
         <div className="mt-6 grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-center">
           <Reveal>
-            <h1 className="font-display text-ink text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
+            <h1 className="font-display text-ink text-4xl font-extrabold text-balance sm:text-5xl">
               {landing.heading}
             </h1>
             <p className="text-muted mt-5 max-w-xl text-lg text-pretty">

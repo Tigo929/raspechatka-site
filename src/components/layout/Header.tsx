@@ -59,7 +59,7 @@ export function Header() {
           <Link
             href="/"
             onClick={() => setOpen(false)}
-            className="font-display text-ink text-xl font-extrabold tracking-tight"
+            className="font-display text-ink text-xl font-extrabold"
             aria-label={`${siteConfig.name} — на главную`}
           >
             PRINT<span className="text-accent">LAB</span>

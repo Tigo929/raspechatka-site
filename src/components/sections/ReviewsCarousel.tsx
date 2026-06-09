@@ -88,7 +88,7 @@ export function ReviewsCarousel({ reviews }: { reviews: Review[] }) {
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
-        className={`flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+        className={`flex snap-x snap-mandatory [scrollbar-width:none] gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
           dragging ? "cursor-grabbing select-none" : "cursor-grab"
         }`}
       >
@@ -128,7 +128,7 @@ export function ReviewsCarousel({ reviews }: { reviews: Review[] }) {
                 <div className="min-w-0">
                   <p className="text-ink truncate font-semibold">{r.name}</p>
                   <p className="text-muted truncate text-xs">
-                    {formatMonth(r.date)}
+                    {r.context} · {formatMonth(r.date)}
                   </p>
                 </div>
                 <Stars value={r.rating} size={13} className="ml-auto" />

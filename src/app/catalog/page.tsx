@@ -93,7 +93,7 @@ export default async function CatalogPage({
           ]}
         />
         <Reveal className="mt-6 max-w-3xl">
-          <h1 className="font-display text-ink text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
+          <h1 className="font-display text-ink text-4xl font-extrabold text-balance sm:text-5xl">
             Каталог футболок с печатью
           </h1>
           <p className="text-muted mt-4 text-lg text-pretty">

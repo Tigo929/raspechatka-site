@@ -97,7 +97,7 @@ export default async function ProductPage({
           {/* Информация */}
           <Reveal delay={0.08}>
             <div>
-              <h1 className="font-display text-ink text-3xl font-extrabold tracking-tight sm:text-4xl">
+              <h1 className="font-display text-ink text-3xl font-extrabold sm:text-4xl">
                 {product.title}
               </h1>
               <div className="mt-3 flex items-center gap-2 text-sm">
