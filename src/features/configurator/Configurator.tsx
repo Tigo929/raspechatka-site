@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
   Upload,
@@ -32,21 +32,41 @@ const sides: PrintSide[] = ["front", "back"];
 const BASE_PRICE = 1190;
 const allowedImageTypes = new Set(["image/png", "image/jpeg", "image/webp"]);
 
+interface PrintDesign {
+  imageUrl: string | null;
+  fileName: string | null;
+}
+
+type PrintDesigns = Record<PrintSide, PrintDesign>;
+
+const createEmptyPrints = (): PrintDesigns => ({
+  front: { imageUrl: null, fileName: null },
+  back: { imageUrl: null, fileName: null },
+});
+
+const createDefaultTransforms = (): Record<PrintSide, Transform> => ({
+  front: { ...defaultTransforms.front },
+  back: { ...defaultTransforms.back },
+});
+
 export function Configurator({ compact = false }: { compact?: boolean }) {
   const [colorId, setColorId] = useState<ShirtColorId>("white");
   const [side, setSide] = useState<PrintSide>("front");
   const [size, setSize] = useState("M");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [transforms, setTransforms] =
-    useState<Record<PrintSide, Transform>>(defaultTransforms);
+  const [prints, setPrints] = useState<PrintDesigns>(createEmptyPrints);
+  const [transforms, setTransforms] = useState<Record<PrintSide, Transform>>(
+    createDefaultTransforms,
+  );
   const [orderOpen, setOrderOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const objectUrlsRef = useRef<Set<string>>(new Set());
+  const uploadId = useId();
   const color =
     shirtColors.find((item) => item.id === colorId) ?? shirtColors[0];
   const mockup = color.views[side];
   const transform = transforms[side];
   const sideLabel = sideLabels[side];
+  const activePrint = prints[side];
 
   const setActiveTransform = (next: Transform) => {
     setTransforms((current) => ({ ...current, [side]: next }));
@@ -54,10 +74,17 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
 
   // Освобождаем object URL, чтобы не текла память.
   useEffect(() => {
+    const objectUrls = objectUrlsRef.current;
+
     return () => {
-      if (imageUrl) URL.revokeObjectURL(imageUrl);
+      objectUrls.forEach((url) => URL.revokeObjectURL(url));
+      objectUrls.clear();
     };
-  }, [imageUrl]);
+  }, []);
+
+  useEffect(() => {
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, [side]);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -72,24 +99,44 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
       alert("Файл слишком большой. Максимум 15 МБ.");
       return;
     }
-    if (imageUrl) URL.revokeObjectURL(imageUrl);
-    setImageUrl(URL.createObjectURL(file));
-    setFileName(file.name);
-    setTransforms(defaultTransforms);
+    if (activePrint.imageUrl) {
+      URL.revokeObjectURL(activePrint.imageUrl);
+      objectUrlsRef.current.delete(activePrint.imageUrl);
+    }
+
+    const nextUrl = URL.createObjectURL(file);
+    objectUrlsRef.current.add(nextUrl);
+    setPrints((current) => ({
+      ...current,
+      [side]: { imageUrl: nextUrl, fileName: file.name },
+    }));
+    setTransforms((current) => ({
+      ...current,
+      [side]: { ...defaultTransforms[side] },
+    }));
   };
 
   const removeImage = () => {
-    if (imageUrl) URL.revokeObjectURL(imageUrl);
-    setImageUrl(null);
-    setFileName(null);
-    setTransforms(defaultTransforms);
+    if (activePrint.imageUrl) {
+      URL.revokeObjectURL(activePrint.imageUrl);
+      objectUrlsRef.current.delete(activePrint.imageUrl);
+    }
+    setPrints((current) => ({
+      ...current,
+      [side]: { imageUrl: null, fileName: null },
+    }));
+    setTransforms((current) => ({
+      ...current,
+      [side]: { ...defaultTransforms[side] },
+    }));
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   // Имя файла приходит от пользователя — кодируем, чтобы не сломать/не подменить ссылку.
-  const printPart = fileName ? `загружу файл «${fileName}»` : "обсудим";
+  const formatPrintForMessage = (print: PrintDesign) =>
+    print.fileName ? `файл «${print.fileName}»` : "без принта";
   const orderText = encodeURIComponent(
-    `Здравствуйте! Хочу заказать футболку:\n• Цвет: ${color.name}\n• Сторона печати: ${sideLabel}\n• Размер: ${size}\n• Принт: ${printPart}`,
+    `Здравствуйте! Хочу заказать футболку:\n• Цвет: ${color.name}\n• Размер: ${size}\n• Перед: ${formatPrintForMessage(prints.front)}\n• Спина: ${formatPrintForMessage(prints.back)}`,
   );
   const whatsappHref = `${siteConfig.social.whatsapp}?text=${orderText}`;
 
@@ -103,7 +150,7 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
           colorId={color.id}
           side={side}
           mockup={mockup}
-          imageUrl={imageUrl}
+          imageUrl={activePrint.imageUrl}
           transform={transform}
           onTransformChange={setActiveTransform}
         />
@@ -166,6 +213,11 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
                 type="button"
                 onClick={() => setSide(item)}
                 aria-pressed={side === item}
+                title={
+                  prints[item].fileName
+                    ? `${sideLabels[item]}: ${prints[item].fileName}`
+                    : sideHints[item]
+                }
                 className={`rounded-2xl border p-4 text-left transition-colors ${
                   side === item
                     ? "border-ink bg-ink text-paper"
@@ -180,7 +232,7 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
                     side === item ? "text-paper/60" : "text-muted"
                   }`}
                 >
-                  {sideHints[item]}
+                  {prints[item].fileName ? "Принт добавлен" : sideHints[item]}
                 </span>
               </button>
             ))}
@@ -211,35 +263,62 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
 
         {/* Загрузка */}
         <div>
-          <Label>Ваше изображение</Label>
+          <Label>Изображение для стороны «{sideLabel}»</Label>
           <input
             ref={fileInputRef}
             type="file"
             accept="image/png,image/jpeg,image/webp"
             onChange={handleFile}
             className="hidden"
-            id="print-upload"
+            id={uploadId}
           />
-          {!imageUrl ? (
+          {!activePrint.imageUrl ? (
             <label
-              htmlFor="print-upload"
-              className="border-line text-ink-soft hover:border-accent hover:text-accent flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed bg-white px-4 py-5 text-sm font-medium transition-colors"
+              htmlFor={uploadId}
+              className="border-line text-ink-soft hover:border-accent hover:text-accent flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed bg-white px-4 py-5 text-center text-sm font-medium transition-colors"
             >
-              <Upload width={18} height={18} />
-              Загрузить принт (PNG, JPG, WebP до 15 МБ)
+              <span className="flex items-center justify-center gap-2">
+                <Upload width={18} height={18} />
+                Загрузить принт для стороны «{sideLabel}»
+              </span>
+              <span className="text-muted text-xs font-normal">
+                PNG, JPG или WebP до 15 МБ
+              </span>
             </label>
           ) : (
             <div className="border-line flex items-center justify-between gap-3 rounded-2xl border bg-white px-4 py-3">
-              <span className="text-ink truncate text-sm">{fileName}</span>
+              <span className="text-ink truncate text-sm">
+                {activePrint.fileName}
+              </span>
               <button
                 type="button"
                 onClick={removeImage}
+                aria-label={`Удалить принт со стороны ${sideLabel}`}
                 className="text-muted hover:text-accent flex shrink-0 items-center gap-1.5 text-sm font-medium transition-colors"
               >
                 <Trash2 width={16} height={16} /> Удалить
               </button>
             </div>
           )}
+          <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+            {sides.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setSide(item)}
+                className={`min-w-0 rounded-xl border px-3 py-2 text-left transition-colors ${
+                  side === item
+                    ? "border-ink bg-ink text-paper"
+                    : "border-line text-muted hover:border-ink/40 bg-white"
+                }`}
+              >
+                <span className="block font-semibold">{sideLabels[item]}</span>
+                <span className="block truncate">
+                  {prints[item].fileName ?? "без принта"}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Масштаб */}
@@ -249,7 +328,7 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
             <button
               type="button"
               onClick={() => setActiveTransform({ ...defaultTransforms[side] })}
-              disabled={!imageUrl}
+              disabled={!activePrint.imageUrl}
               className="text-muted hover:text-accent flex items-center gap-1.5 text-xs font-medium transition-colors disabled:opacity-40"
             >
               <RotateCcw width={14} height={14} /> Сбросить
@@ -261,7 +340,7 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
             max={1.8}
             step={0.01}
             value={transform.scale}
-            disabled={!imageUrl}
+            disabled={!activePrint.imageUrl}
             onChange={(e) =>
               setActiveTransform({
                 ...transform,
@@ -272,7 +351,7 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
             aria-label="Масштаб принта"
           />
           <p className="text-muted mt-2 text-xs">
-            {imageUrl
+            {activePrint.imageUrl
               ? `Перетащите принт в рамке «${sideLabel}», чтобы изменить положение.`
               : "Загрузите изображение, чтобы настроить положение и масштаб."}
           </p>
@@ -310,9 +389,11 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
       {orderOpen && (
         <OrderDialog
           color={color.name}
-          side={sideLabel}
           size={size}
-          fileName={fileName}
+          prints={{
+            front: prints.front.fileName,
+            back: prints.back.fileName,
+          }}
           whatsappHref={whatsappHref}
           onClose={() => setOrderOpen(false)}
         />
@@ -337,16 +418,14 @@ function Label({
 
 function OrderDialog({
   color,
-  side,
   size,
-  fileName,
+  prints,
   whatsappHref,
   onClose,
 }: {
   color: string;
-  side: string;
   size: string;
-  fileName: string | null;
+  prints: Record<PrintSide, string | null>;
   whatsappHref: string;
   onClose: () => void;
 }) {
@@ -408,9 +487,9 @@ function OrderDialog({
 
         <dl className="border-line mt-4 space-y-2 rounded-2xl border bg-white p-4 text-sm">
           <Row label="Цвет" value={color} />
-          <Row label="Сторона" value={side} />
           <Row label="Размер" value={size} />
-          <Row label="Принт" value={fileName ?? "обсудим с дизайнером"} />
+          <Row label="Перед" value={prints.front ?? "без принта"} />
+          <Row label="Спина" value={prints.back ?? "без принта"} />
         </dl>
 
         <p className="text-muted mt-4 text-sm">
