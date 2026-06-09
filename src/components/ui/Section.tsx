@@ -21,7 +21,11 @@ export function Section({
       id={id}
       className={cn("scroll-mt-24 py-16 sm:py-20 lg:py-28", className)}
     >
-      {bare ? children : <Container className={containerClassName}>{children}</Container>}
+      {bare ? (
+        children
+      ) : (
+        <Container className={containerClassName}>{children}</Container>
+      )}
     </section>
   );
 }

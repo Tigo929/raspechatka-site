@@ -15,7 +15,11 @@ export const metadata: Metadata = buildMetadata({
   description:
     "Онлайн-конструктор футболки: выберите цвет, загрузите изображение, настройте размер и положение принта и оформите заказ. Бесплатный макет, печать от 1 дня.",
   path: "/configurator",
-  keywords: ["конструктор футболки", "создать футболку онлайн", "дизайн футболки"],
+  keywords: [
+    "конструктор футболки",
+    "создать футболку онлайн",
+    "дизайн футболки",
+  ],
 });
 
 const perks = [
@@ -43,16 +47,20 @@ export default function ConfiguratorPage() {
           ]}
         />
         <Reveal className="mt-6 max-w-3xl">
-          <h1 className="font-display text-4xl font-extrabold tracking-tight text-ink text-balance sm:text-5xl">
+          <h1 className="font-display text-ink text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
             Соберите свою футболку
           </h1>
-          <p className="mt-4 text-lg text-muted text-pretty">
-            Выберите цвет, загрузите принт, настройте размер и положение — и сразу
-            увидите результат. Когда всё готово, оформите заказ в один клик.
+          <p className="text-muted mt-4 text-lg text-pretty">
+            Выберите цвет, загрузите принт, настройте размер и положение — и
+            сразу увидите результат. Когда всё готово, оформите заказ в один
+            клик.
           </p>
           <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2">
             {perks.map((p) => (
-              <li key={p} className="flex items-center gap-2 text-sm text-ink-soft">
+              <li
+                key={p}
+                className="text-ink-soft flex items-center gap-2 text-sm"
+              >
                 <Check width={16} height={16} className="text-accent" />
                 {p}
               </li>

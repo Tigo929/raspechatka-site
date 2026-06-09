@@ -23,52 +23,52 @@ export function ProductCard({
       <Link
         href={`/product/${product.slug}`}
         data-cursor="view"
-        className="group flex h-full flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-soft transition-shadow duration-300 hover:shadow-lift"
+        className="group border-line shadow-soft hover:shadow-lift flex h-full flex-col overflow-hidden rounded-3xl border bg-white transition-shadow duration-300"
       >
-      <div className="relative aspect-[4/5] overflow-hidden bg-paper-dim">
-        <Image
-          src={product.image}
-          alt={product.imageAlt}
-          fill
-          sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 22vw"
-          priority={priority}
-          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-        />
-        {product.badge && (
-          <span className="absolute left-3 top-3 rounded-full bg-ink/90 px-3 py-1 text-xs font-semibold text-paper backdrop-blur">
-            {product.badge}
+        <div className="bg-paper-dim relative aspect-[4/5] overflow-hidden">
+          <Image
+            src={product.image}
+            alt={product.imageAlt}
+            fill
+            sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 22vw"
+            priority={priority}
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          />
+          {product.badge && (
+            <span className="bg-ink/90 text-paper absolute top-3 left-3 rounded-full px-3 py-1 text-xs font-semibold backdrop-blur">
+              {product.badge}
+            </span>
+          )}
+          <span className="text-ink shadow-soft absolute top-3 right-3 flex h-9 w-9 translate-y-1 items-center justify-center rounded-full bg-white/90 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+            <ArrowUpRight width={18} height={18} />
           </span>
-        )}
-        <span className="absolute right-3 top-3 flex h-9 w-9 translate-y-1 items-center justify-center rounded-full bg-white/90 text-ink opacity-0 shadow-soft transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-          <ArrowUpRight width={18} height={18} />
-        </span>
-      </div>
+        </div>
 
-      <div className="flex flex-1 flex-col p-5">
-        <div className="flex items-center gap-2 text-sm">
-          <Stars value={product.rating} size={14} />
-          <span className="text-muted">{product.rating}</span>
-          <span className="text-line">·</span>
-          <span className="text-muted">{product.reviewsCount} отзывов</span>
-        </div>
-        <h3 className="mt-2 font-display text-lg font-bold text-ink">
-          {product.title}
-        </h3>
-        <p className="mt-1.5 line-clamp-2 text-sm text-muted">
-          {product.excerpt}
-        </p>
-        <div className="mt-4 flex items-end justify-between pt-2">
-          <div>
-            <span className="text-xs text-muted">от</span>
-            <p className="font-display text-xl font-bold text-ink">
-              {formatPrice(product.priceFrom)}
-            </p>
+        <div className="flex flex-1 flex-col p-5">
+          <div className="flex items-center gap-2 text-sm">
+            <Stars value={product.rating} size={14} />
+            <span className="text-muted">{product.rating}</span>
+            <span className="text-line">·</span>
+            <span className="text-muted">{product.reviewsCount} отзывов</span>
           </div>
-          <span className="rounded-full bg-paper px-4 py-2 text-sm font-semibold text-ink transition-colors group-hover:bg-accent group-hover:text-white">
-            Подробнее
-          </span>
+          <h3 className="font-display text-ink mt-2 text-lg font-bold">
+            {product.title}
+          </h3>
+          <p className="text-muted mt-1.5 line-clamp-2 text-sm">
+            {product.excerpt}
+          </p>
+          <div className="mt-4 flex items-end justify-between pt-2">
+            <div>
+              <span className="text-muted text-xs">от</span>
+              <p className="font-display text-ink text-xl font-bold">
+                {formatPrice(product.priceFrom)}
+              </p>
+            </div>
+            <span className="bg-paper text-ink group-hover:bg-accent rounded-full px-4 py-2 text-sm font-semibold transition-colors group-hover:text-white">
+              Подробнее
+            </span>
+          </div>
         </div>
-      </div>
       </Link>
     </Tilt>
   );

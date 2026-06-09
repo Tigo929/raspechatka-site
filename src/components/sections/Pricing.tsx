@@ -60,54 +60,56 @@ export function Pricing() {
         {tiers.map((t, i) => (
           <Reveal key={t.name} delay={i * 0.07}>
             <Tilt max={6}>
-            <div
-              className={`flex h-full flex-col rounded-3xl border p-7 transition-shadow duration-300 ${
-                t.featured
-                  ? "border-accent bg-ink text-paper shadow-lift"
-                  : "border-line bg-white text-ink shadow-soft hover:shadow-lift"
-              }`}
-            >
-              {t.featured && (
-                <span className="mb-4 inline-flex w-fit rounded-full bg-accent px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
-                  Популярный выбор
-                </span>
-              )}
-              <h3 className="font-display text-lg font-bold">{t.name}</h3>
-              <div className="mt-3 flex items-baseline gap-1.5">
-                <span className="text-sm opacity-70">от</span>
-                <span className="font-display text-4xl font-extrabold">
-                  {formatPrice(t.price)}
-                </span>
-              </div>
-              <p className={`mt-1 text-sm ${t.featured ? "text-paper/60" : "text-muted"}`}>
-                {t.note}
-              </p>
-              <ul className="mt-6 space-y-3 text-sm">
-                {t.features.map((f) => (
-                  <li key={f} className="flex items-center gap-2.5">
-                    <Check
-                      width={18}
-                      height={18}
-                      className={t.featured ? "text-accent" : "text-accent"}
-                    />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Button
-                href={t.cta.href}
-                variant={t.featured ? "primary" : "ghost"}
-                className="mt-7 w-full"
+              <div
+                className={`flex h-full flex-col rounded-3xl border p-7 transition-shadow duration-300 ${
+                  t.featured
+                    ? "border-accent bg-ink text-paper shadow-lift"
+                    : "border-line text-ink shadow-soft hover:shadow-lift bg-white"
+                }`}
               >
-                {t.cta.label}
-              </Button>
-            </div>
+                {t.featured && (
+                  <span className="bg-accent mb-4 inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold tracking-wide text-white uppercase">
+                    Популярный выбор
+                  </span>
+                )}
+                <h3 className="font-display text-lg font-bold">{t.name}</h3>
+                <div className="mt-3 flex items-baseline gap-1.5">
+                  <span className="text-sm opacity-70">от</span>
+                  <span className="font-display text-4xl font-extrabold">
+                    {formatPrice(t.price)}
+                  </span>
+                </div>
+                <p
+                  className={`mt-1 text-sm ${t.featured ? "text-paper/60" : "text-muted"}`}
+                >
+                  {t.note}
+                </p>
+                <ul className="mt-6 space-y-3 text-sm">
+                  {t.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2.5">
+                      <Check
+                        width={18}
+                        height={18}
+                        className={t.featured ? "text-accent" : "text-accent"}
+                      />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  href={t.cta.href}
+                  variant={t.featured ? "primary" : "ghost"}
+                  className="mt-7 w-full"
+                >
+                  {t.cta.label}
+                </Button>
+              </div>
             </Tilt>
           </Reveal>
         ))}
       </div>
       <Reveal className="mt-6 text-center">
-        <p className="text-sm text-muted">
+        <p className="text-muted text-sm">
           Итоговая цена зависит от модели, размера печати и срочности. Точный
           расчёт — бесплатно, после согласования макета.
         </p>

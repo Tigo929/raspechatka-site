@@ -10,10 +10,11 @@ import { Faq } from "@/components/sections/Faq";
 import { Reviews } from "@/components/sections/Reviews";
 import { FinalCta } from "@/components/sections/FinalCta";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { breadcrumbJsonLd, faqJsonLd } from "@/lib/jsonld";
+import { breadcrumbJsonLd, faqJsonLd, reviewsJsonLd } from "@/lib/jsonld";
 import { buildMetadata } from "@/lib/seo";
 import { getLanding, seoLandings } from "@/data/seoLandings";
 import { getProduct } from "@/data/products";
+import { reviews } from "@/data/reviews";
 
 export function generateStaticParams() {
   return seoLandings.map((l) => ({ slug: l.slug }));
@@ -58,9 +59,10 @@ export default async function LandingPage({
         ])}
       />
       <JsonLd data={faqJsonLd(landing.faq)} />
+      <JsonLd data={reviewsJsonLd(reviews)} />
 
       {/* Hero посадочной */}
-      <Section className="pb-8 pt-10 sm:pt-14">
+      <Section className="pt-10 pb-8 sm:pt-14">
         <Breadcrumbs
           items={[
             { name: "Главная", href: "/" },
@@ -70,10 +72,10 @@ export default async function LandingPage({
         />
         <div className="mt-6 grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-center">
           <Reveal>
-            <h1 className="font-display text-4xl font-extrabold tracking-tight text-ink text-balance sm:text-5xl">
+            <h1 className="font-display text-ink text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
               {landing.heading}
             </h1>
-            <p className="mt-5 max-w-xl text-lg text-muted text-pretty">
+            <p className="text-muted mt-5 max-w-xl text-lg text-pretty">
               {landing.intro}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -87,15 +89,15 @@ export default async function LandingPage({
           </Reveal>
 
           <Reveal delay={0.1}>
-            <ul className="grid gap-3 rounded-3xl border border-line bg-white p-6 shadow-soft">
+            <ul className="border-line shadow-soft grid gap-3 rounded-3xl border bg-white p-6">
               {landing.sellingPoints.map((sp) => (
                 <li key={sp.title} className="flex gap-3">
-                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                  <span className="bg-accent-soft text-accent mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
                     <Check width={15} height={15} />
                   </span>
                   <div>
-                    <p className="font-semibold text-ink">{sp.title}</p>
-                    <p className="text-sm text-muted">{sp.text}</p>
+                    <p className="text-ink font-semibold">{sp.title}</p>
+                    <p className="text-muted text-sm">{sp.text}</p>
                   </div>
                 </li>
               ))}
@@ -108,7 +110,7 @@ export default async function LandingPage({
       {products.length > 0 && (
         <Section className="py-12 sm:py-16">
           <Reveal>
-            <h2 className="font-display text-2xl font-bold text-ink sm:text-3xl">
+            <h2 className="font-display text-ink text-2xl font-bold sm:text-3xl">
               Подходящие модели
             </h2>
           </Reveal>

@@ -36,8 +36,8 @@ npm run format      # Prettier
 - **Каталог** (`/catalog`) — товары по категориям.
 - **SEO-посадочные** (`/catalog/[slug]`) — 10 страниц под ключевые запросы.
 - **Карточка товара** (`/product/[slug]`) — описание, характеристики, заказ.
-- **Конструктор** (`/configurator`) — цвет, загрузка изображения, позиция,
-  масштаб, превью и оформление заказа.
+- **Конструктор** (`/configurator`) — белая/чёрная футболка, вид спереди/сзади,
+  загрузка изображения, позиция, масштаб, видимая зона печати и оформление заказа.
 - **SEO** — Metadata API, canonical, OG/Twitter, robots, sitemap, JSON-LD
   (Organization, LocalBusiness, WebSite, Product, FAQPage, Breadcrumb, Review).
 

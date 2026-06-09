@@ -35,12 +35,21 @@ export function Header() {
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
   return (
     <header
       className={cn(
         "sticky top-0 z-50 transition-all duration-300",
         scrolled
-          ? "border-b border-line bg-paper/85 backdrop-blur-md"
+          ? "border-line bg-paper/85 border-b backdrop-blur-md"
           : "border-b border-transparent bg-transparent",
       )}
     >
@@ -48,7 +57,8 @@ export function Header() {
         <div className="flex h-16 items-center justify-between lg:h-20">
           <Link
             href="/"
-            className="font-display text-xl font-extrabold tracking-tight text-ink"
+            onClick={() => setOpen(false)}
+            className="font-display text-ink text-xl font-extrabold tracking-tight"
             aria-label={`${siteConfig.name} — на главную`}
           >
             PRINT<span className="text-accent">LAB</span>
@@ -62,7 +72,7 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-ink-soft transition-colors hover:text-accent"
+                className="text-ink-soft hover:text-accent text-sm font-medium transition-colors"
               >
                 {link.label}
               </Link>
@@ -72,7 +82,7 @@ export function Header() {
           <div className="hidden items-center gap-3 lg:flex">
             <a
               href={siteConfig.phoneHref}
-              className="text-sm font-semibold text-ink transition-colors hover:text-accent"
+              className="text-ink hover:text-accent text-sm font-semibold transition-colors"
             >
               {siteConfig.phone}
             </a>
@@ -83,9 +93,10 @@ export function Header() {
 
           <button
             type="button"
-            className="flex h-11 w-11 items-center justify-center rounded-full text-ink lg:hidden"
+            className="text-ink flex h-11 w-11 items-center justify-center rounded-full lg:hidden"
             aria-label={open ? "Закрыть меню" : "Открыть меню"}
             aria-expanded={open}
+            aria-controls="mobile-menu"
             onClick={() => setOpen((v) => !v)}
           >
             {open ? <X /> : <Menu />}
@@ -95,15 +106,21 @@ export function Header() {
 
       {/* Мобильное меню */}
       {open && (
-        <div className="fixed inset-x-0 top-16 bottom-0 z-40 bg-paper lg:hidden">
+        <div
+          id="mobile-menu"
+          className="bg-paper fixed inset-x-0 top-16 bottom-0 z-40 lg:hidden"
+        >
           <Container className="flex h-full flex-col py-6">
-            <nav className="flex flex-col gap-1" aria-label="Мобильная навигация">
+            <nav
+              className="flex flex-col gap-1"
+              aria-label="Мобильная навигация"
+            >
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setOpen(false)}
-                  className="rounded-xl px-4 py-3.5 text-lg font-semibold text-ink transition-colors hover:bg-paper-dim"
+                  className="text-ink hover:bg-paper-dim rounded-xl px-4 py-3.5 text-lg font-semibold transition-colors"
                 >
                   {link.label}
                 </Link>
@@ -112,7 +129,7 @@ export function Header() {
             <div className="mt-auto flex flex-col gap-3 pt-6">
               <a
                 href={siteConfig.phoneHref}
-                className="flex items-center justify-center gap-2 text-base font-semibold text-ink"
+                className="text-ink flex items-center justify-center gap-2 text-base font-semibold"
               >
                 <Phone width={18} height={18} /> {siteConfig.phone}
               </a>

@@ -54,19 +54,41 @@ export function CustomCursor() {
     };
     const interactiveSelector =
       'a, button, [role="button"], label, summary, input, select, textarea';
-    const onOver = (e: MouseEvent) => {
-      const t = e.target as HTMLElement | null;
+
+    const getCursorTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return null;
+
       // Явная зона (cta/view/drag) важнее; иначе любой кликабельный → "link".
-      const dataEl = t?.closest?.("[data-cursor]");
-      const interEl = t?.closest?.(interactiveSelector);
-      let kind = dataEl?.getAttribute("data-cursor") ?? "";
-      if (!kind && interEl) kind = "link";
+      const dataEl = target.closest("[data-cursor]");
+      if (dataEl) return dataEl;
+
+      return target.closest(interactiveSelector);
+    };
+
+    const applyCursorState = (el: Element | null) => {
+      let kind = el?.getAttribute("data-cursor") ?? "";
+      if (!kind && el) kind = "link";
       // Состояние пишем и на кольцо, и на точку — оба меняют вид.
       ring.dataset.state = kind;
       dot.dataset.state = kind;
-      const text = dataEl?.getAttribute("data-cursor-label") ?? labels[kind] ?? "";
+      const text = el?.getAttribute("data-cursor-label") ?? labels[kind] ?? "";
       label.textContent = text;
     };
+
+    const onOver = (e: MouseEvent) => {
+      applyCursorState(getCursorTarget(e.target));
+    };
+
+    const onOut = (e: MouseEvent) => {
+      const from = getCursorTarget(e.target);
+      if (!from) return;
+
+      const to = getCursorTarget(e.relatedTarget);
+
+      if (from === to) return;
+      applyCursorState(to);
+    };
+
     const onLeaveWindow = () => {
       dot.style.opacity = "0";
       ring.style.opacity = "0";
@@ -79,6 +101,7 @@ export function CustomCursor() {
     window.addEventListener("mousemove", onMove, { passive: true });
     // Один mouseover: срабатывает при входе в любой элемент (включая пустоту → сброс).
     document.addEventListener("mouseover", onOver, { passive: true });
+    document.addEventListener("mouseout", onOut, { passive: true });
     document.documentElement.addEventListener("mouseleave", onLeaveWindow);
     document.documentElement.addEventListener("mouseenter", onEnterWindow);
     document.documentElement.classList.add("has-custom-cursor");
@@ -87,6 +110,7 @@ export function CustomCursor() {
       cancelAnimationFrame(raf);
       window.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseover", onOver);
+      document.removeEventListener("mouseout", onOut);
       document.documentElement.removeEventListener("mouseleave", onLeaveWindow);
       document.documentElement.removeEventListener("mouseenter", onEnterWindow);
       document.documentElement.classList.remove("has-custom-cursor");
@@ -100,16 +124,16 @@ export function CustomCursor() {
       <div
         ref={dotRef}
         data-state=""
-        className="cursor-dot fixed left-0 top-0 h-2 w-2 rounded-full bg-accent transition-[background-color,box-shadow,width,height,opacity] duration-200"
+        className="cursor-dot bg-accent fixed top-0 left-0 h-2 w-2 rounded-full transition-[background-color,box-shadow,width,height,opacity] duration-200"
       />
       <div
         ref={ringRef}
         data-state=""
-        className="cursor-ring fixed left-0 top-0 flex h-9 w-9 items-center justify-center rounded-full border border-ink/30 transition-[width,height,background-color,border-color,opacity] duration-200"
+        className="cursor-ring border-ink/30 fixed top-0 left-0 flex h-9 w-9 items-center justify-center rounded-full border transition-[width,height,background-color,border-color,opacity] duration-200"
       >
         <span
           ref={labelRef}
-          className="text-[10px] font-semibold uppercase tracking-wide text-white opacity-0 transition-opacity"
+          className="text-[10px] font-semibold tracking-wide text-white uppercase opacity-0 transition-opacity"
         />
       </div>
     </div>

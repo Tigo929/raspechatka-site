@@ -14,8 +14,9 @@ import { Faq } from "@/components/sections/Faq";
 import { SeoText } from "@/components/sections/SeoText";
 import { FinalCta } from "@/components/sections/FinalCta";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { faqJsonLd } from "@/lib/jsonld";
+import { faqJsonLd, reviewsJsonLd } from "@/lib/jsonld";
 import { faq } from "@/data/faq";
+import { reviews } from "@/data/reviews";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
@@ -37,6 +38,7 @@ export default function HomePage() {
   return (
     <>
       <JsonLd data={faqJsonLd(faq)} />
+      <JsonLd data={reviewsJsonLd(reviews)} />
       <Hero />
       <TrustBar />
       <Benefits />

@@ -17,14 +17,14 @@ export function Benefits() {
         {benefits.map((b, i) => (
           <Reveal key={b.title} delay={i * 0.05}>
             <Tilt>
-              <div className="group h-full rounded-3xl border border-line bg-white p-7 shadow-soft transition-shadow duration-300 hover:shadow-lift">
-                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-accent transition-colors group-hover:bg-accent group-hover:text-white">
+              <div className="group border-line shadow-soft hover:shadow-lift h-full rounded-3xl border bg-white p-7 transition-shadow duration-300">
+                <span className="bg-accent-soft text-accent group-hover:bg-accent flex h-12 w-12 items-center justify-center rounded-2xl transition-colors group-hover:text-white">
                   <Icon name={b.icon} className="h-6 w-6" />
                 </span>
-                <h3 className="mt-5 font-display text-lg font-bold text-ink">
+                <h3 className="font-display text-ink mt-5 text-lg font-bold">
                   {b.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">
+                <p className="text-muted mt-2 text-sm leading-relaxed">
                   {b.text}
                 </p>
               </div>

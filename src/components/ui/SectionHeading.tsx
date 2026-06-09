@@ -22,22 +22,24 @@ export function SectionHeading({
     <Reveal
       className={cn(
         "flex flex-col gap-4",
-        align === "center" ? "items-center text-center" : "items-start text-left",
+        align === "center"
+          ? "items-center text-center"
+          : "items-start text-left",
         className,
       )}
     >
       {eyebrow && (
-        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
+        <span className="text-accent text-xs font-semibold tracking-[0.2em] uppercase">
           {eyebrow}
         </span>
       )}
-      <Tag className="font-display text-3xl font-bold tracking-tight text-ink text-balance sm:text-4xl lg:text-5xl">
+      <Tag className="font-display text-ink text-3xl font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl">
         {title}
       </Tag>
       {subtitle && (
         <p
           className={cn(
-            "max-w-2xl text-base text-muted text-pretty sm:text-lg",
+            "text-muted max-w-2xl text-base text-pretty sm:text-lg",
             align === "center" && "mx-auto",
           )}
         >

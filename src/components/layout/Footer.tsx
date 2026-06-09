@@ -21,7 +21,7 @@ export function Footer() {
             >
               PRINT<span className="text-accent">LAB</span>
             </Link>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-paper/60">
+            <p className="text-paper/60 mt-4 max-w-xs text-sm leading-relaxed">
               {siteConfig.description}
             </p>
             <div className="mt-6 flex gap-3">
@@ -30,7 +30,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Telegram"
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-accent"
+                className="hover:bg-accent flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors"
               >
                 <Send width={18} height={18} />
               </a>
@@ -39,7 +39,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="WhatsApp"
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-accent"
+                className="hover:bg-accent flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors"
               >
                 <Phone width={18} height={18} />
               </a>
@@ -47,7 +47,7 @@ export function Footer() {
           </div>
 
           <div className="lg:col-span-2">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-white">
+            <h3 className="text-sm font-semibold tracking-wide text-white uppercase">
               Каталог
             </h3>
             <ul className="mt-4 space-y-2.5 text-sm">
@@ -55,7 +55,7 @@ export function Footer() {
                 <li key={c.slug}>
                   <Link
                     href={`/catalog#${c.slug}`}
-                    className="transition-colors hover:text-accent"
+                    className="hover:text-accent transition-colors"
                   >
                     {c.title}
                   </Link>
@@ -65,7 +65,7 @@ export function Footer() {
           </div>
 
           <div className="lg:col-span-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-white">
+            <h3 className="text-sm font-semibold tracking-wide text-white uppercase">
               Популярное
             </h3>
             <ul className="mt-4 space-y-2.5 text-sm">
@@ -73,7 +73,7 @@ export function Footer() {
                 <li key={l.slug}>
                   <Link
                     href={`/catalog/${l.slug}`}
-                    className="transition-colors hover:text-accent"
+                    className="hover:text-accent transition-colors"
                   >
                     {l.heading}
                   </Link>
@@ -83,7 +83,7 @@ export function Footer() {
           </div>
 
           <div className="lg:col-span-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-white">
+            <h3 className="text-sm font-semibold tracking-wide text-white uppercase">
               Контакты
             </h3>
             <ul className="mt-4 space-y-3 text-sm">
@@ -114,7 +114,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-14 flex flex-col gap-3 border-t border-white/10 pt-8 text-xs text-paper/50 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-paper/50 mt-14 flex flex-col gap-3 border-t border-white/10 pt-8 text-xs sm:flex-row sm:items-center sm:justify-between">
           <p>
             © {year} {siteConfig.legalName}. Все права защищены.
           </p>

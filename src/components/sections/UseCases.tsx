@@ -17,25 +17,25 @@ export function UseCases() {
         {useCases.map((u, i) => (
           <Reveal key={u.title} delay={i * 0.08}>
             <Tilt max={7}>
-            <article className="group h-full overflow-hidden rounded-3xl border border-line bg-white shadow-soft transition-shadow duration-300 hover:shadow-lift">
-              <div className="relative aspect-[16/10] overflow-hidden">
-                <Image
-                  src={u.image}
-                  alt={u.imageAlt}
-                  fill
-                  sizes="(max-width: 1024px) 90vw, 30vw"
-                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                />
-              </div>
-              <div className="p-6">
-                <h3 className="font-display text-xl font-bold text-ink">
-                  {u.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">
-                  {u.text}
-                </p>
-              </div>
-            </article>
+              <article className="group border-line shadow-soft hover:shadow-lift h-full overflow-hidden rounded-3xl border bg-white transition-shadow duration-300">
+                <div className="relative aspect-[16/10] overflow-hidden">
+                  <Image
+                    src={u.image}
+                    alt={u.imageAlt}
+                    fill
+                    sizes="(max-width: 1024px) 90vw, 30vw"
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-6">
+                  <h3 className="font-display text-ink text-xl font-bold">
+                    {u.title}
+                  </h3>
+                  <p className="text-muted mt-2 text-sm leading-relaxed">
+                    {u.text}
+                  </p>
+                </div>
+              </article>
             </Tilt>
           </Reveal>
         ))}

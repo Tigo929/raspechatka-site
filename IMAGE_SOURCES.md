@@ -40,3 +40,16 @@
 - **OG-картинка** — генерируется динамически в [`src/app/opengraph-image.tsx`](src/app/opengraph-image.tsx) (next/og), сторонних изображений не использует.
 - **Иконки** — [lucide-react](https://lucide.dev) (ISC License).
 - **Аватары отзывов** — инициалы на CSS-градиенте, внешних изображений нет.
+
+## Сгенерированные mockup-ассеты
+
+Файлы ниже созданы через встроенный `image_gen` для конфигуратора и сохранены в
+[`public/mockups`](public/mockups). Это нейтральные студийные изображения без
+логотипов и текста, поверх которых в UI отображается зона печати.
+
+| Файл | Где используется |
+| --- | --- |
+| `public/mockups/tshirt-white-front.webp` | Конструктор: белая футболка, перед |
+| `public/mockups/tshirt-white-back.webp` | Конструктор: белая футболка, спина |
+| `public/mockups/tshirt-black-front.webp` | Конструктор: чёрная футболка, перед |
+| `public/mockups/tshirt-black-back.webp` | Конструктор: чёрная футболка, спина |

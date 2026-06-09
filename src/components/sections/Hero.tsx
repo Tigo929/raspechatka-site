@@ -19,26 +19,30 @@ export function Hero() {
     <section className="relative overflow-hidden pt-10 sm:pt-14 lg:pt-20">
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-40 right-0 h-[520px] w-[520px] rounded-full bg-accent/15 blur-[120px]"
+        className="bg-accent/15 pointer-events-none absolute -top-40 right-0 h-[520px] w-[520px] rounded-full blur-[120px]"
       />
       <Container>
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-8">
           <div className="flex flex-col items-start">
-            <span className="animate-rise inline-flex items-center gap-2 rounded-full border border-line bg-white/60 px-4 py-1.5 text-sm font-medium text-ink-soft backdrop-blur">
-              <Star width={15} height={15} className="fill-accent text-accent" />
+            <span className="animate-rise border-line text-ink-soft inline-flex items-center gap-2 rounded-full border bg-white/60 px-4 py-1.5 text-sm font-medium backdrop-blur">
+              <Star
+                width={15}
+                height={15}
+                className="fill-accent text-accent"
+              />
               {siteConfig.aggregateRating.value} · больше{" "}
               {siteConfig.aggregateRating.count.toLocaleString("ru-RU")}{" "}
               довольных клиентов
             </span>
 
-            <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-ink text-balance sm:text-5xl lg:text-6xl">
+            <h1 className="font-display text-ink mt-6 text-4xl leading-[1.05] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
               Футболки с принтом,
               <br className="hidden sm:block" /> фото и логотипом{" "}
               <span className="text-accent">на заказ</span>
             </h1>
 
             <p
-              className="animate-rise mt-5 max-w-xl text-lg text-muted text-pretty"
+              className="animate-rise text-muted mt-5 max-w-xl text-lg text-pretty"
               style={{ animationDelay: "0.08s" }}
             >
               Премиальная печать на плотном хлопке. Без минимального тиража,
@@ -54,7 +58,7 @@ export function Hero() {
                 <Link
                   href="/configurator"
                   data-cursor="cta"
-                  className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-accent px-8 text-base font-semibold text-white shadow-soft transition-colors hover:bg-accent-hover hover:shadow-lift"
+                  className="bg-accent shadow-soft hover:bg-accent-hover hover:shadow-lift inline-flex h-14 items-center justify-center gap-2 rounded-full px-8 text-base font-semibold text-white transition-colors"
                 >
                   <Sparkles width={18} height={18} /> Собрать футболку
                 </Link>
@@ -63,7 +67,7 @@ export function Hero() {
                 <Link
                   href="/catalog"
                   data-cursor="link"
-                  className="inline-flex h-14 items-center justify-center rounded-full border border-line px-8 text-base font-semibold text-ink transition-colors hover:bg-ink/5"
+                  className="border-line text-ink hover:bg-ink/5 inline-flex h-14 items-center justify-center rounded-full border px-8 text-base font-semibold transition-colors"
                 >
                   Смотреть каталог
                 </Link>
@@ -71,7 +75,7 @@ export function Hero() {
             </div>
 
             <dl
-              className="animate-rise mt-10 grid w-full max-w-md grid-cols-3 gap-4 border-t border-line pt-6"
+              className="animate-rise border-line mt-10 grid w-full max-w-md grid-cols-3 gap-4 border-t pt-6"
               style={{ animationDelay: "0.24s" }}
             >
               <Stat value={1} prefix="от " label="дня на заказ" />
@@ -83,7 +87,7 @@ export function Hero() {
           {/* Визуал */}
           <div className="relative">
             <Spotlight className="overflow-hidden rounded-3xl" size={360}>
-              <div className="relative aspect-[4/5] bg-paper-dim shadow-lift sm:aspect-square lg:aspect-[4/5]">
+              <div className="bg-paper-dim shadow-lift relative aspect-[4/5] sm:aspect-square lg:aspect-[4/5]">
                 <Image
                   src={images.hero}
                   alt="Премиальные футболки с принтом от студии PRINTLAB"
@@ -96,28 +100,32 @@ export function Hero() {
             </Spotlight>
 
             <div
-              className="animate-float absolute -left-3 top-8 flex items-center gap-2.5 rounded-2xl bg-white/90 px-4 py-3 shadow-lift backdrop-blur sm:-left-5"
+              className="animate-float shadow-lift absolute top-8 -left-3 flex items-center gap-2.5 rounded-2xl bg-white/90 px-4 py-3 backdrop-blur sm:-left-5"
               style={{ animationDelay: "0.2s" }}
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent">
+              <span className="bg-accent-soft text-accent flex h-9 w-9 items-center justify-center rounded-full">
                 <Clock width={18} height={18} />
               </span>
               <div>
-                <p className="text-sm font-semibold text-ink">Печать от 1 дня</p>
-                <p className="text-xs text-muted">успеем к вашей дате</p>
+                <p className="text-ink text-sm font-semibold">
+                  Печать от 1 дня
+                </p>
+                <p className="text-muted text-xs">успеем к вашей дате</p>
               </div>
             </div>
 
             <div
-              className="animate-float absolute -right-3 bottom-8 flex items-center gap-2.5 rounded-2xl bg-white/90 px-4 py-3 shadow-lift backdrop-blur sm:-right-5"
+              className="animate-float shadow-lift absolute -right-3 bottom-8 flex items-center gap-2.5 rounded-2xl bg-white/90 px-4 py-3 backdrop-blur sm:-right-5"
               style={{ animationDelay: "1.2s" }}
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent">
+              <span className="bg-accent-soft text-accent flex h-9 w-9 items-center justify-center rounded-full">
                 <ShieldCheck width={18} height={18} />
               </span>
               <div>
-                <p className="text-sm font-semibold text-ink">Гарантия качества</p>
-                <p className="text-xs text-muted">переделаем при браке</p>
+                <p className="text-ink text-sm font-semibold">
+                  Гарантия качества
+                </p>
+                <p className="text-muted text-xs">переделаем при браке</p>
               </div>
             </div>
           </div>
@@ -140,10 +148,10 @@ function Stat({
 }) {
   return (
     <div>
-      <dt className="font-display text-2xl font-bold text-ink">
+      <dt className="font-display text-ink text-2xl font-bold">
         <CountUp value={value} prefix={prefix} suffix={suffix} />
       </dt>
-      <dd className="text-sm text-muted">{label}</dd>
+      <dd className="text-muted text-sm">{label}</dd>
     </div>
   );
 }

@@ -10,10 +10,8 @@ const base =
 const variants: Record<Variant, string> = {
   primary:
     "bg-accent text-white shadow-soft hover:bg-accent-hover hover:shadow-lift",
-  secondary:
-    "bg-ink text-paper hover:bg-ink-soft shadow-soft",
-  ghost:
-    "bg-transparent text-ink hover:bg-ink/5 border border-line",
+  secondary: "bg-ink text-paper hover:bg-ink-soft shadow-soft",
+  ghost: "bg-transparent text-ink hover:bg-ink/5 border border-line",
   dark: "bg-white/10 text-white backdrop-blur hover:bg-white/20 border border-white/15",
 };
 
@@ -69,8 +67,13 @@ export function Button(props: ButtonAsButton | ButtonAsLink) {
     );
   }
 
-  const { variant = "primary", size = "md", className, children, ...rest } =
-    props;
+  const {
+    variant = "primary",
+    size = "md",
+    className,
+    children,
+    ...rest
+  } = props;
   const classes = cn(base, variants[variant], sizes[size], className);
   return (
     <button className={classes} {...rest}>

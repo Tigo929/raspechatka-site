@@ -77,7 +77,7 @@ export default async function ProductPage({
         <div className="mt-6 grid gap-8 lg:grid-cols-2 lg:gap-12">
           {/* Изображение */}
           <Reveal>
-            <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-paper-dim shadow-soft">
+            <div className="bg-paper-dim shadow-soft relative aspect-[4/5] overflow-hidden rounded-3xl">
               <Image
                 src={product.image}
                 alt={product.imageAlt}
@@ -87,7 +87,7 @@ export default async function ProductPage({
                 className="object-cover"
               />
               {product.badge && (
-                <span className="absolute left-4 top-4 rounded-full bg-ink/90 px-3 py-1 text-xs font-semibold text-paper backdrop-blur">
+                <span className="bg-ink/90 text-paper absolute top-4 left-4 rounded-full px-3 py-1 text-xs font-semibold backdrop-blur">
                   {product.badge}
                 </span>
               )}
@@ -97,34 +97,36 @@ export default async function ProductPage({
           {/* Информация */}
           <Reveal delay={0.08}>
             <div>
-              <h1 className="font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
+              <h1 className="font-display text-ink text-3xl font-extrabold tracking-tight sm:text-4xl">
                 {product.title}
               </h1>
               <div className="mt-3 flex items-center gap-2 text-sm">
                 <Stars value={product.rating} />
-                <span className="font-medium text-ink">{product.rating}</span>
+                <span className="text-ink font-medium">{product.rating}</span>
                 <span className="text-line">·</span>
-                <span className="text-muted">{product.reviewsCount} отзывов</span>
+                <span className="text-muted">
+                  {product.reviewsCount} отзывов
+                </span>
               </div>
 
-              <p className="mt-5 text-base leading-relaxed text-ink-soft">
+              <p className="text-ink-soft mt-5 text-base leading-relaxed">
                 {product.description}
               </p>
 
               <ul className="mt-5 space-y-2 text-sm">
-                <li className="flex items-center gap-2 text-ink-soft">
+                <li className="text-ink-soft flex items-center gap-2">
                   <Check width={16} height={16} className="text-accent" />
                   Материал: {product.material}
                 </li>
-                <li className="flex items-center gap-2 text-ink-soft">
+                <li className="text-ink-soft flex items-center gap-2">
                   <Check width={16} height={16} className="text-accent" />
                   Печать: {product.printMethod}
                 </li>
               </ul>
 
               <div className="mt-6 flex items-baseline gap-2">
-                <span className="text-sm text-muted">Цена</span>
-                <span className="font-display text-3xl font-extrabold text-ink">
+                <span className="text-muted text-sm">Цена</span>
+                <span className="font-display text-ink text-3xl font-extrabold">
                   от {formatPrice(product.priceFrom)}
                 </span>
               </div>
@@ -133,12 +135,12 @@ export default async function ProductPage({
                 <ProductActions product={product} />
               </div>
 
-              <div className="mt-8 grid grid-cols-3 gap-3 border-t border-line pt-6">
+              <div className="border-line mt-8 grid grid-cols-3 gap-3 border-t pt-6">
                 {specs.map((s) => (
                   <div key={s.label} className="flex flex-col gap-1.5">
                     <s.icon width={20} height={20} className="text-accent" />
-                    <p className="text-xs text-muted">{s.label}</p>
-                    <p className="text-sm font-semibold text-ink">{s.value}</p>
+                    <p className="text-muted text-xs">{s.label}</p>
+                    <p className="text-ink text-sm font-semibold">{s.value}</p>
                   </div>
                 ))}
               </div>
@@ -150,7 +152,7 @@ export default async function ProductPage({
       {/* Похожие товары */}
       <Section className="py-12 sm:py-16">
         <Reveal>
-          <h2 className="font-display text-2xl font-bold text-ink sm:text-3xl">
+          <h2 className="font-display text-ink text-2xl font-bold sm:text-3xl">
             Похожие модели
           </h2>
         </Reveal>

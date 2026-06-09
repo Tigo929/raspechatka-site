@@ -115,8 +115,3 @@ export function reviewsJsonLd(reviews: Review[]) {
     itemReviewed: { "@type": "Organization", name: siteConfig.name },
   }));
 }
-
-/** Компонент-инъектор JSON-LD. Использование: <JsonLd data={productJsonLd(p)} /> */
-export function jsonLdScript(data: unknown): string {
-  return JSON.stringify(data);
-}

@@ -33,13 +33,13 @@ export function Reviews() {
           title="Нам доверяют тысячи клиентов"
           className="max-w-xl"
         />
-        <Reveal className="flex items-center gap-3 rounded-2xl border border-line bg-white px-5 py-4 shadow-soft">
-          <span className="font-display text-4xl font-extrabold text-ink">
+        <Reveal className="border-line shadow-soft flex items-center gap-3 rounded-2xl border bg-white px-5 py-4">
+          <span className="font-display text-ink text-4xl font-extrabold">
             {siteConfig.aggregateRating.value}
           </span>
           <div>
             <Stars value={siteConfig.aggregateRating.value} />
-            <p className="mt-1 text-sm text-muted">
+            <p className="text-muted mt-1 text-sm">
               {siteConfig.aggregateRating.count.toLocaleString("ru-RU")} оценок
             </p>
           </div>
@@ -50,31 +50,31 @@ export function Reviews() {
         {reviews.map((r, i) => (
           <Reveal key={r.name + i} delay={(i % 3) * 0.06}>
             <Tilt max={6}>
-            <figure className="flex h-full flex-col rounded-3xl border border-line bg-white p-6 shadow-soft transition-shadow duration-300 hover:shadow-lift">
-              <Quote className="h-7 w-7 text-accent/30" aria-hidden />
-              <blockquote className="mt-3 flex-1 text-sm leading-relaxed text-ink-soft">
-                {r.text}
-              </blockquote>
-              <figcaption className="mt-5 flex items-center gap-3 border-t border-line pt-4">
-                <span
-                  className="flex h-11 w-11 items-center justify-center rounded-full font-display text-sm font-bold text-white"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, var(--color-accent), #c9341a)",
-                  }}
-                  aria-hidden
-                >
-                  {initials(r.name)}
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-ink">{r.name}</p>
-                  <p className="truncate text-xs text-muted">
-                    {r.context} · {formatMonth(r.date)}
-                  </p>
-                </div>
-                <Stars value={r.rating} size={13} className="ml-auto" />
-              </figcaption>
-            </figure>
+              <figure className="border-line shadow-soft hover:shadow-lift flex h-full flex-col rounded-3xl border bg-white p-6 transition-shadow duration-300">
+                <Quote className="text-accent/30 h-7 w-7" aria-hidden />
+                <blockquote className="text-ink-soft mt-3 flex-1 text-sm leading-relaxed">
+                  {r.text}
+                </blockquote>
+                <figcaption className="border-line mt-5 flex items-center gap-3 border-t pt-4">
+                  <span
+                    className="font-display flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold text-white"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, var(--color-accent), #c9341a)",
+                    }}
+                    aria-hidden
+                  >
+                    {initials(r.name)}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-ink truncate font-semibold">{r.name}</p>
+                    <p className="text-muted truncate text-xs">
+                      {r.context} · {formatMonth(r.date)}
+                    </p>
+                  </div>
+                  <Stars value={r.rating} size={13} className="ml-auto" />
+                </figcaption>
+              </figure>
             </Tilt>
           </Reveal>
         ))}

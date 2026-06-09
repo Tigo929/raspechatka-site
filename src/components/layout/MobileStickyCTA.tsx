@@ -24,11 +24,11 @@ export function MobileStickyCTA() {
         visible ? "translate-y-0" : "translate-y-full"
       }`}
     >
-      <div className="border-t border-line bg-paper/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md">
+      <div className="border-line bg-paper/95 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md">
         <div className="flex items-center gap-2.5">
           <Link
             href="/configurator"
-            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-accent font-semibold text-white shadow-soft active:scale-[0.97]"
+            className="bg-accent shadow-soft flex h-12 flex-1 items-center justify-center gap-2 rounded-full font-semibold text-white active:scale-[0.97]"
           >
             <Sparkles width={18} height={18} /> Собрать футболку
           </Link>
@@ -37,7 +37,7 @@ export function MobileStickyCTA() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Написать в Telegram"
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-ink text-paper active:scale-[0.97]"
+            className="bg-ink text-paper flex h-12 w-12 shrink-0 items-center justify-center rounded-full active:scale-[0.97]"
           >
             <Send width={20} height={20} />
           </a>

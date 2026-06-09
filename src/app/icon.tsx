@@ -1,0 +1,28 @@
+import { ImageResponse } from "next/og";
+
+export const size = { width: 512, height: 512 };
+export const contentType = "image/png";
+
+export default function Icon() {
+  return new ImageResponse(
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#15151b",
+        color: "#ffffff",
+        fontFamily: "sans-serif",
+        fontSize: 104,
+        fontWeight: 900,
+        letterSpacing: -3,
+      }}
+    >
+      <span>PRINT</span>
+      <span style={{ color: "#ff4a1c" }}>LAB</span>
+    </div>,
+    { ...size },
+  );
+}

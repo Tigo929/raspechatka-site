@@ -8,7 +8,9 @@ export function HowItWorks() {
     <Section id="how" className="bg-midnight text-paper">
       <SectionHeading
         eyebrow="Как мы работаем"
-        title={<span className="text-white">Четыре шага до вашей футболки</span>}
+        title={
+          <span className="text-white">Четыре шага до вашей футболки</span>
+        }
         subtitle={
           <span className="text-paper/60">
             Прозрачный процесс без сюрпризов — вы контролируете результат на
@@ -23,11 +25,11 @@ export function HowItWorks() {
               <span className="font-display text-5xl font-extrabold text-white/15">
                 0{i + 1}
               </span>
-              <div className="absolute left-0 top-2 h-px w-12 bg-accent" />
-              <h3 className="mt-4 font-display text-lg font-bold text-white">
+              <div className="bg-accent absolute top-2 left-0 h-px w-12" />
+              <h3 className="font-display mt-4 text-lg font-bold text-white">
                 {step.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-paper/60">
+              <p className="text-paper/60 mt-2 text-sm leading-relaxed">
                 {step.text}
               </p>
             </div>

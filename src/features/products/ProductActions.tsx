@@ -26,7 +26,7 @@ export function ProductActions({ product }: { product: Product }) {
     <div className="flex flex-col gap-6">
       {/* Цвета */}
       <div>
-        <p className="mb-3 text-sm font-semibold text-ink">
+        <p className="text-ink mb-3 text-sm font-semibold">
           Цвет: <span className="text-muted">{color.name}</span>
         </p>
         <div className="flex flex-wrap gap-2.5">
@@ -40,7 +40,7 @@ export function ProductActions({ product }: { product: Product }) {
               title={c.name}
               className={`h-9 w-9 rounded-full border transition-transform hover:scale-110 ${
                 colorIdx === i
-                  ? "border-accent ring-2 ring-accent ring-offset-2 ring-offset-paper"
+                  ? "border-accent ring-accent ring-offset-paper ring-2 ring-offset-2"
                   : "border-line"
               }`}
               style={{ backgroundColor: c.hex }}
@@ -51,7 +51,7 @@ export function ProductActions({ product }: { product: Product }) {
 
       {/* Размеры */}
       <div>
-        <p className="mb-3 text-sm font-semibold text-ink">Размер</p>
+        <p className="text-ink mb-3 text-sm font-semibold">Размер</p>
         <div className="flex flex-wrap gap-2">
           {sizes.map((s) => (
             <button
@@ -62,7 +62,7 @@ export function ProductActions({ product }: { product: Product }) {
               className={`h-10 min-w-12 rounded-xl border px-3 text-sm font-semibold transition-colors ${
                 size === s
                   ? "border-ink bg-ink text-paper"
-                  : "border-line bg-white text-ink hover:border-ink/40"
+                  : "border-line text-ink hover:border-ink/40 bg-white"
               }`}
             >
               {s}
@@ -84,9 +84,9 @@ export function ProductActions({ product }: { product: Product }) {
           <Sparkles width={18} height={18} /> Свой принт
         </Button>
       </div>
-      <p className="text-sm text-muted">
-        Нажмите «Заказать» — менеджер подтвердит детали и поможет с макетом. Заказ
-        ни к чему не обязывает до согласования.
+      <p className="text-muted text-sm">
+        Нажмите «Заказать» — менеджер подтвердит детали и поможет с макетом.
+        Заказ ни к чему не обязывает до согласования.
       </p>
     </div>
   );

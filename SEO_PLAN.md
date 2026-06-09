@@ -8,8 +8,8 @@
   посадочные и карточки товаров (`generateStaticParams`).
 - **Metadata API** на каждой странице: `title`, `description`, `keywords`,
   canonical, Open Graph, Twitter Cards. Базовый шаблон в `src/lib/seo.ts`.
-- **robots.txt** — `src/app/robots.ts` (разрешён обход, закрыт `/configurator`
-  превью-параметры не индексируем; указан sitemap).
+- **robots.txt** — `src/app/robots.ts` (разрешён обход пользовательских страниц,
+  закрыт `/api/`; указан sitemap).
 - **sitemap.xml** — `src/app/sitemap.ts` (главная + все посадочные + товары).
 - **Schema.org JSON-LD** через `src/lib/jsonld.ts`:
   - `Organization` + `LocalBusiness` (в layout),

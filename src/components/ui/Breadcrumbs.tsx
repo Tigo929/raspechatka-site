@@ -9,21 +9,26 @@ export function Breadcrumbs({
 }) {
   return (
     <nav aria-label="Хлебные крошки" className="text-sm">
-      <ol className="flex flex-wrap items-center gap-1.5 text-muted">
+      <ol className="text-muted flex flex-wrap items-center gap-1.5">
         {items.map((item, i) => {
           const last = i === items.length - 1;
           return (
             <li key={item.href} className="flex items-center gap-1.5">
               {last ? (
-                <span className="font-medium text-ink" aria-current="page">
+                <span className="text-ink font-medium" aria-current="page">
                   {item.name}
                 </span>
               ) : (
-                <Link href={item.href} className="transition-colors hover:text-accent">
+                <Link
+                  href={item.href}
+                  className="hover:text-accent transition-colors"
+                >
                   {item.name}
                 </Link>
               )}
-              {!last && <ChevronRight width={14} height={14} className="text-line" />}
+              {!last && (
+                <ChevronRight width={14} height={14} className="text-line" />
+              )}
             </li>
           );
         })}

@@ -37,16 +37,16 @@ export function Faq({
           </Reveal>
         </div>
 
-        <Reveal className="divide-y divide-line rounded-3xl border border-line bg-white px-5 shadow-soft sm:px-7">
+        <Reveal className="divide-line border-line shadow-soft divide-y rounded-3xl border bg-white px-5 sm:px-7">
           {items.map((item) => (
             <details key={item.question} className="group py-5">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-display text-base font-bold text-ink sm:text-lg">
+              <summary className="font-display text-ink flex cursor-pointer list-none items-center justify-between gap-4 text-base font-bold sm:text-lg">
                 {item.question}
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-paper text-ink transition-transform duration-300 group-open:rotate-45 group-open:bg-accent group-open:text-white">
+                <span className="bg-paper text-ink group-open:bg-accent flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-transform duration-300 group-open:rotate-45 group-open:text-white">
                   <Plus width={18} height={18} />
                 </span>
               </summary>
-              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
+              <p className="text-muted mt-3 max-w-2xl text-sm leading-relaxed">
                 {item.answer}
               </p>
             </details>
