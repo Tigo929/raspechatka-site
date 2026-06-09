@@ -52,13 +52,19 @@ export function CustomCursor() {
       view: "Смотреть",
       link: "",
     };
+    const interactiveSelector =
+      'a, button, [role="button"], label, summary, input, select, textarea';
     const onOver = (e: MouseEvent) => {
-      const el = (e.target as HTMLElement)?.closest?.("[data-cursor]");
-      const kind = el?.getAttribute("data-cursor") ?? "";
-      // Состояние пишем и на кольцо, и на точку — точка меняет цвет и светится.
+      const t = e.target as HTMLElement | null;
+      // Явная зона (cta/view/drag) важнее; иначе любой кликабельный → "link".
+      const dataEl = t?.closest?.("[data-cursor]");
+      const interEl = t?.closest?.(interactiveSelector);
+      let kind = dataEl?.getAttribute("data-cursor") ?? "";
+      if (!kind && interEl) kind = "link";
+      // Состояние пишем и на кольцо, и на точку — оба меняют вид.
       ring.dataset.state = kind;
       dot.dataset.state = kind;
-      const text = el?.getAttribute("data-cursor-label") ?? labels[kind] ?? "";
+      const text = dataEl?.getAttribute("data-cursor-label") ?? labels[kind] ?? "";
       label.textContent = text;
     };
     const onLeaveWindow = () => {
@@ -71,8 +77,8 @@ export function CustomCursor() {
     };
 
     window.addEventListener("mousemove", onMove, { passive: true });
+    // Один mouseover: срабатывает при входе в любой элемент (включая пустоту → сброс).
     document.addEventListener("mouseover", onOver, { passive: true });
-    document.addEventListener("mouseout", onOver, { passive: true });
     document.documentElement.addEventListener("mouseleave", onLeaveWindow);
     document.documentElement.addEventListener("mouseenter", onEnterWindow);
     document.documentElement.classList.add("has-custom-cursor");
@@ -81,7 +87,6 @@ export function CustomCursor() {
       cancelAnimationFrame(raf);
       window.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseover", onOver);
-      document.removeEventListener("mouseout", onOver);
       document.documentElement.removeEventListener("mouseleave", onLeaveWindow);
       document.documentElement.removeEventListener("mouseenter", onEnterWindow);
       document.documentElement.classList.remove("has-custom-cursor");

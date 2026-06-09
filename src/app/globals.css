@@ -172,9 +172,22 @@ html.has-custom-cursor * {
     0 0 0 2px var(--color-ink),
     0 0 16px 3px color-mix(in srgb, var(--color-ink) 55%, transparent);
 }
+/* Кликабельный элемент: оранжевая точка превращается в переливающийся
+   градиентный курсор (тёплый перелив под тематику). */
 .cursor-dot[data-state="link"] {
-  background-color: var(--color-accent);
-  box-shadow: 0 0 14px 3px color-mix(in srgb, var(--color-accent) 60%, transparent);
+  width: 0.85rem;
+  height: 0.85rem;
+  background-color: transparent;
+  background-image: conic-gradient(
+    from var(--cursor-angle),
+    #ff4a1c,
+    #ff8a3c,
+    #ffd27a,
+    #ff6a3c,
+    #ff4a1c
+  );
+  box-shadow: 0 0 14px 3px color-mix(in srgb, var(--color-accent) 55%, transparent);
+  animation: cursorSpin 3s linear infinite;
 }
 .cursor-ring[data-state="cta"] {
   box-shadow: 0 0 24px 4px color-mix(in srgb, var(--color-accent) 45%, transparent);
@@ -199,8 +212,17 @@ html.has-custom-cursor * {
 .cursor-ring[data-state="drag"] span {
   opacity: 1;
 }
-.cursor-ring[data-state="link"] {
-  width: 3.25rem;
-  height: 3.25rem;
-  background-color: color-mix(in srgb, var(--color-ink) 8%, transparent);
+/* Угол для «живого» вращающегося градиента (анимируется через @property). */
+@property --cursor-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
 }
+@keyframes cursorSpin {
+  to {
+    --cursor-angle: 360deg;
+  }
+}
+
+/* На обычных кликабельных кольцо остаётся нейтральным (по умолчанию) —
+   индикатором служит переливающаяся точка. */
