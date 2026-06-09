@@ -36,6 +36,9 @@ export interface Category {
   imageAlt: string;
 }
 
+/** Источник отзыва — для бейджа платформы и фильтрации. */
+export type ReviewSource = "yandex" | "avito" | "manual";
+
 export interface Review {
   name: string;
   /** Город/контекст — повышает доверие. */
@@ -43,6 +46,8 @@ export interface Review {
   rating: number;
   text: string;
   date: string;
+  /** Откуда отзыв (Яндекс.Карты / Avito). По умолчанию manual. */
+  source?: ReviewSource;
 }
 
 export interface FaqItem {

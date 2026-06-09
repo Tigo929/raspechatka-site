@@ -12,11 +12,12 @@ import { Reviews } from "@/components/sections/Reviews";
 import { Guarantees } from "@/components/sections/Guarantees";
 import { Faq } from "@/components/sections/Faq";
 import { SeoText } from "@/components/sections/SeoText";
+import { Contacts } from "@/components/sections/Contacts";
 import { FinalCta } from "@/components/sections/FinalCta";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { faqJsonLd, reviewsJsonLd } from "@/lib/jsonld";
 import { faq } from "@/data/faq";
-import { reviews } from "@/data/reviews";
+import { getPositiveReviews } from "@/data/reviews";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
@@ -38,7 +39,7 @@ export default function HomePage() {
   return (
     <>
       <JsonLd data={faqJsonLd(faq)} />
-      <JsonLd data={reviewsJsonLd(reviews)} />
+      <JsonLd data={reviewsJsonLd(getPositiveReviews())} />
       <Hero />
       <TrustBar />
       <Benefits />
@@ -52,6 +53,7 @@ export default function HomePage() {
       <Guarantees />
       <Faq />
       <SeoText />
+      <Contacts />
       <FinalCta />
     </>
   );

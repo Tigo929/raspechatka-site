@@ -23,6 +23,11 @@ export function organizationJsonLd() {
       addressLocality: siteConfig.city,
       addressCountry: "RU",
     },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: siteConfig.geo.lat,
+      longitude: siteConfig.geo.lon,
+    },
     openingHours: "Mo-Su 09:00-21:00",
     sameAs: Object.values(siteConfig.social),
     aggregateRating: {

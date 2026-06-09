@@ -19,7 +19,10 @@ export const siteConfig = {
   phoneHref: "tel:+74950000000",
   email: "hello@printlab.ru",
   city: "Москва",
-  address: "г. Москва, ул. Примерная, 1",
+  // Реальный адрес (подтверждён по карточке организации на Яндекс.Картах).
+  address: "Москва, Верхняя Первомайская ул., 47к11",
+  // Координаты для карты и метки.
+  geo: { lat: 55.800615, lon: 37.796184 },
   hours: "Пн–Вс, 9:00–21:00",
   social: {
     telegram: "https://t.me/printlab",
@@ -27,10 +30,27 @@ export const siteConfig = {
     instagram: "https://instagram.com/printlab",
     vk: "https://vk.com/printlab",
   },
-  // Агрегированный рейтинг для hero и Schema.org.
+  // Рейтинги на внешних площадках (для бейджей и доверия).
+  // Яндекс — подтверждено по карточке организации. Avito — заполнить
+  // (нет публичного API/виджета: укажите значение и ссылку на профиль).
+  platforms: {
+    yandex: {
+      name: "Яндекс.Карты",
+      url: "https://yandex.ru/maps/org/raspechatka/169229058790/",
+      rating: 5.0,
+      count: 177,
+    },
+    avito: {
+      name: "Avito",
+      url: "https://www.avito.ru/brands/720fcc9168b5b0e6cc396f916629bd46/all/predlozheniya_uslug",
+      rating: 0, // ← пришлите значение рейтинга с вашей страницы Avito
+      count: 0, // ← пришлите число отзывов
+    },
+  },
+  // Агрегированный рейтинг для hero и Schema.org (реальные данные Яндекса).
   aggregateRating: {
-    value: 4.9,
-    count: 1842,
+    value: 5.0,
+    count: 177,
   },
 } as const;
 

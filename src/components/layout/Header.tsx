@@ -14,6 +14,7 @@ const navLinks = [
   { label: "Как работаем", href: "/#how" },
   { label: "Отзывы", href: "/#reviews" },
   { label: "Вопросы", href: "/#faq" },
+  { label: "Контакты", href: "/#contacts" },
 ];
 
 export function Header() {
