@@ -1,9 +1,9 @@
 /**
  * Централизованный реестр изображений.
  *
- * Все картинки — легальные стоки (см. IMAGE_SOURCES.md). Чтобы заменить
- * изображение на сайте, поменяйте URL здесь в одном месте. Домены источников
- * перечислены в next.config.ts (remotePatterns).
+ * Картинки — локальные generated-ассеты и легальные стоки (см.
+ * IMAGE_SOURCES.md). Чтобы заменить изображение на сайте, поменяйте URL здесь
+ * в одном месте. Домены внешних источников перечислены в next.config.ts.
  *
  * Помощник `unsplash()` строит оптимизированный URL; next/image затем
  * пережимает в AVIF/WebP под нужный размер.
@@ -64,23 +64,23 @@ export const images = {
   heroSecondary: unsplash("photo-1620799140408-edc6dcb6d633", 900),
 
   // Категории
-  catPrint: unsplash("photo-1576566588028-4147f3842f27", 900),
-  catPhoto: unsplash("photo-1622445275576-721325763afe", 900),
-  catText: unsplash("photo-1618354691373-d851c5c3a990", 900),
-  catLogo: unsplash("photo-1556905055-8f358a7a47b2", 900),
+  catPrint: "/categories/ready-print.webp",
+  catPhoto: "/categories/photo-print.webp",
+  catText: "/categories/text-print.webp",
+  catLogo: "/categories/logo-print.webp",
 
   // Товары
-  prodOversize: unsplash("photo-1521572163474-6864f9cf17ab", 900),
-  prodClassic: unsplash("photo-1583743814966-8936f5b7be1a", 900),
-  prodBlack: unsplash("photo-1593030761757-71fae45fa0e7", 900),
-  prodHanger: unsplash("photo-1571945153237-4929e783af4a", 900),
-  prodRack: unsplash("photo-1562157873-818bc0726f68", 900),
-  prodFolded: unsplash("photo-1523381210434-271e8be1f52b", 900),
+  prodOversize: "/products/oversize-premium.webp",
+  prodClassic: "/products/classic-cotton.webp",
+  prodBlack: "/products/noir-heavy.webp",
+  prodHanger: "/products/pair-edition.webp",
+  prodRack: "/products/corporate-line.webp",
+  prodFolded: "/products/photo-art.webp",
 
   // Сценарии использования
-  useGift: unsplash("photo-1434389677669-e08b4cac3105", 900),
-  useBusiness: unsplash("photo-1503454537195-1dcabb73ffb9", 900),
-  useEvent: unsplash("photo-1551232864-3f0890e580d9", 900),
+  useGift: "/use-cases/use-gift.webp",
+  useBusiness: "/use-cases/use-business.webp",
+  useEvent: "/use-cases/use-event.webp",
 
   // Производство / процесс
   workshop: unsplash("photo-1487222477894-8943e31ef7b2", 1200),

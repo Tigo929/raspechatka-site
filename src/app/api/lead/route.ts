@@ -20,9 +20,9 @@ export async function POST(req: Request) {
   const phone = body.phone?.trim();
   const comment = body.comment?.trim();
 
-  if (!name || !phone) {
+  if (!name || !phone || phone.length < 6) {
     return NextResponse.json(
-      { ok: false, error: "Укажите имя и телефон" },
+      { ok: false, error: "Укажите имя и корректный телефон" },
       { status: 400 },
     );
   }

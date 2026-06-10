@@ -16,7 +16,7 @@ export function LeadCta() {
     <Section id="zayavka" className="bg-paper-dim/60">
       <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
         <Reveal>
-          <h2 className="font-display text-ink text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+          <h2 className="font-display text-ink text-3xl font-bold text-balance sm:text-4xl">
             Не хотите собирать сами? Оставьте заявку
           </h2>
           <p className="text-muted mt-4 text-lg text-pretty">
@@ -25,7 +25,10 @@ export function LeadCta() {
           </p>
           <ul className="mt-6 grid gap-3 sm:grid-cols-2">
             {perks.map((p) => (
-              <li key={p} className="text-ink-soft flex items-center gap-2.5 text-sm">
+              <li
+                key={p}
+                className="text-ink-soft flex items-center gap-2.5 text-sm"
+              >
                 <span className="bg-accent-soft text-accent flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
                   <Check width={14} height={14} />
                 </span>
