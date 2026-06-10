@@ -10,6 +10,7 @@ import { HowItWorks } from "@/components/sections/HowItWorks";
 import { Pricing } from "@/components/sections/Pricing";
 import { Reviews } from "@/components/sections/Reviews";
 import { Guarantees } from "@/components/sections/Guarantees";
+import { LeadCta } from "@/components/sections/LeadCta";
 import { Faq } from "@/components/sections/Faq";
 import { SeoText } from "@/components/sections/SeoText";
 import { Contacts } from "@/components/sections/Contacts";
@@ -51,6 +52,7 @@ export default function HomePage() {
       <Pricing />
       <Reviews />
       <Guarantees />
+      <LeadCta />
       <Faq />
       <SeoText />
       <Contacts />

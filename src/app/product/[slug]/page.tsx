@@ -118,10 +118,6 @@ export default async function ProductPage({
                   <Check width={16} height={16} className="text-accent" />
                   Материал: {product.material}
                 </li>
-                <li className="text-ink-soft flex items-center gap-2">
-                  <Check width={16} height={16} className="text-accent" />
-                  Печать: {product.printMethod}
-                </li>
               </ul>
 
               <div className="mt-6 flex items-baseline gap-2">

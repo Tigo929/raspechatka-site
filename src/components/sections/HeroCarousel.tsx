@@ -9,12 +9,27 @@ import type { HeroSlide } from "@/data/images";
 
 const AUTOPLAY_MS = 4200;
 
+/**
+ * Галерея примеров работ (hero).
+ * Контролы по принципам frontend-design / taste-skill:
+ * - стрелки по центру боковых краёв, появляются при наведении (не в углу);
+ * - точки снизу по центру (не конфликтуют с плавающими карточками);
+ * - тёмная подложка + предзагрузка всех фото → нет серой вспышки между кадрами.
+ */
 export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [paused, setPaused] = useState(false);
   const reduce = useReducedMotion();
   const drag = useRef<{ x: number; y: number } | null>(null);
+
+  // Предзагружаем все кадры — переход всегда мгновенный, без серого фона.
+  useEffect(() => {
+    slides.forEach((s) => {
+      const img = new window.Image();
+      img.src = s.src;
+    });
+  }, [slides]);
 
   const goTo = useCallback(
     (next: number, dir = next > index ? 1 : -1) => {
@@ -48,7 +63,6 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
     drag.current = null;
     setPaused(false);
     if (!start) return;
-
     const dx = e.clientX - start.x;
     const dy = e.clientY - start.y;
     if (Math.abs(dx) < 42 || Math.abs(dx) < Math.abs(dy)) return;
@@ -60,7 +74,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   return (
     <Spotlight className="overflow-hidden rounded-3xl" size={360}>
       <div
-        className="bg-paper-dim shadow-lift relative aspect-[4/5] touch-pan-y overflow-hidden sm:aspect-square lg:aspect-[4/5]"
+        className="group bg-midnight shadow-lift relative aspect-[4/5] touch-pan-y overflow-hidden sm:aspect-square lg:aspect-[4/5]"
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
         onPointerCancel={() => {
@@ -99,52 +113,63 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
           </motion.div>
         </AnimatePresence>
 
-        <div className="from-midnight/45 via-midnight/5 pointer-events-none absolute inset-0 bg-gradient-to-t to-transparent" />
+        <div className="from-midnight/65 via-midnight/10 pointer-events-none absolute inset-0 bg-gradient-to-t to-transparent" />
 
-        <div className="absolute right-4 bottom-4 left-4 flex items-end justify-between gap-4">
-          <div className="max-w-[72%]">
-            <span className="text-ink inline-flex rounded-full bg-white/85 px-3 py-1 text-xs font-semibold backdrop-blur">
-              {active.label}
-            </span>
-            <p className="mt-2 text-sm font-semibold text-pretty text-white drop-shadow">
-              {active.title}
-            </p>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-white/85 px-2.5 py-2 backdrop-blur">
-            {slides.map((slide, i) => (
-              <button
-                key={slide.src}
-                type="button"
-                onClick={() => goTo(i)}
-                aria-label={`Показать фото ${i + 1}`}
-                aria-current={i === index}
-                className={`h-2 rounded-full transition-all ${
-                  i === index ? "bg-accent w-5" : "bg-ink/25 w-2"
-                }`}
-              />
-            ))}
-          </div>
+        {/* Подпись — снизу слева */}
+        <div className="pointer-events-none absolute bottom-5 left-5 max-w-[60%]">
+          <span className="text-ink inline-flex rounded-full bg-white/90 px-3 py-1 text-xs font-semibold backdrop-blur">
+            {active.label}
+          </span>
+          <p className="mt-2 text-sm font-semibold text-pretty text-white drop-shadow-lg">
+            {active.title}
+          </p>
         </div>
 
-        <div className="absolute top-4 right-4 flex gap-2">
-          <CarouselButton label="Предыдущее фото" onClick={() => step(-1)}>
-            <ChevronLeft width={18} height={18} />
-          </CarouselButton>
-          <CarouselButton label="Следующее фото" onClick={() => step(1)}>
-            <ChevronRight width={18} height={18} />
-          </CarouselButton>
+        {/* Точки — снизу по центру */}
+        <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5">
+          {slides.map((slide, i) => (
+            <button
+              key={slide.src}
+              type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                goTo(i);
+              }}
+              aria-label={`Показать фото ${i + 1}`}
+              aria-current={i === index}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                i === index
+                  ? "bg-accent w-6"
+                  : "w-2 bg-white/60 hover:bg-white/90"
+              }`}
+            />
+          ))}
         </div>
+
+        {/* Стрелки — по центру боковых краёв, появляются при наведении */}
+        <EdgeArrow
+          side="left"
+          label="Предыдущее фото"
+          onClick={() => step(-1)}
+        >
+          <ChevronLeft width={20} height={20} />
+        </EdgeArrow>
+        <EdgeArrow side="right" label="Следующее фото" onClick={() => step(1)}>
+          <ChevronRight width={20} height={20} />
+        </EdgeArrow>
       </div>
     </Spotlight>
   );
 }
 
-function CarouselButton({
+function EdgeArrow({
+  side,
   label,
   onClick,
   children,
 }: {
+  side: "left" | "right";
   label: string;
   onClick: () => void;
   children: React.ReactNode;
@@ -153,11 +178,14 @@ function CarouselButton({
     <button
       type="button"
       aria-label={label}
+      onPointerDown={(e) => e.stopPropagation()}
       onClick={(e) => {
         e.stopPropagation();
         onClick();
       }}
-      className="text-ink shadow-soft flex h-10 w-10 items-center justify-center rounded-full bg-white/85 backdrop-blur transition-colors hover:bg-white"
+      className={`text-ink shadow-soft absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 opacity-0 backdrop-blur transition-all duration-200 group-hover:opacity-100 hover:bg-white focus-visible:opacity-100 ${
+        side === "left" ? "left-3" : "right-3"
+      }`}
     >
       {children}
     </button>

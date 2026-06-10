@@ -58,7 +58,10 @@ export function Header() {
         <div className="flex h-16 items-center justify-between lg:h-20">
           <Link
             href="/"
-            onClick={() => setOpen(false)}
+            onClick={() => {
+              setOpen(false);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
             className="font-display text-ink text-xl font-extrabold"
             aria-label={`${siteConfig.name} — на главную`}
           >

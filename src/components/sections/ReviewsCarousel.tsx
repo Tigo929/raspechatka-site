@@ -1,8 +1,4 @@
-"use client";
-
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
-import { useReducedMotion } from "motion/react";
+import { Quote } from "lucide-react";
 import { Stars } from "@/components/ui/Stars";
 import type { Review, ReviewSource } from "@/types";
 
@@ -29,76 +25,24 @@ function formatMonth(iso: string) {
 }
 
 /**
- * Карусель отзывов: scroll-snap + автопрокрутка (пауза на наведении/драге),
- * стрелки и перетаскивание мышью на desktop. Уважает reduced-motion.
+ * Отзывы плавно едут непрерывной лентой (marquee) — без стрелок, точек и
+ * остановки на наведении. Плавные края (mask). Чистый CSS, без клиентского JS.
+ * Уважает prefers-reduced-motion (глобальное правило останавливает анимацию).
  */
 export function ReviewsCarousel({ reviews }: { reviews: Review[] }) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
-  const [paused, setPaused] = useState(false);
-
-  const step = useCallback((dir: number) => {
-    const el = trackRef.current;
-    if (!el) return;
-    const card = el.querySelector<HTMLElement>("[data-card]");
-    const w = card ? card.offsetWidth + 16 : el.clientWidth * 0.85;
-    const maxScroll = el.scrollWidth - el.clientWidth;
-    if (dir > 0 && el.scrollLeft >= maxScroll - 4) {
-      el.scrollTo({ left: 0, behavior: "smooth" });
-    } else {
-      el.scrollBy({ left: dir * w, behavior: "smooth" });
-    }
-  }, []);
-
-  // Автопрокрутка.
-  useEffect(() => {
-    if (paused || reduce) return;
-    const id = setInterval(() => step(1), 4500);
-    return () => clearInterval(id);
-  }, [paused, reduce, step]);
-
-  // Перетаскивание мышью (desktop).
-  const drag = useRef<{ x: number; left: number } | null>(null);
-  const [dragging, setDragging] = useState(false);
-  const onPointerDown = (e: React.PointerEvent) => {
-    const el = trackRef.current;
-    if (!el || e.pointerType !== "mouse") return;
-    drag.current = { x: e.clientX, left: el.scrollLeft };
-    setDragging(true);
-  };
-  const onPointerMove = (e: React.PointerEvent) => {
-    const el = trackRef.current;
-    if (!el || !drag.current) return;
-    el.scrollLeft = drag.current.left - (e.clientX - drag.current.x);
-  };
-  const endDrag = () => {
-    drag.current = null;
-    setDragging(false);
-  };
+  if (reviews.length === 0) return null;
+  // Дублируем ленту для бесшовного цикла (-50% == одна копия).
+  const track = [...reviews, ...reviews];
 
   return (
-    <div
-      className="relative"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      <div
-        ref={trackRef}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        className={`flex snap-x snap-mandatory [scrollbar-width:none] gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
-          dragging ? "cursor-grabbing select-none" : "cursor-grab"
-        }`}
-      >
-        {reviews.map((r, i) => {
+    <div className="mask-fade-x overflow-hidden">
+      <ul className="flex w-max gap-4 animate-[marquee_60s_linear_infinite] py-1">
+        {track.map((r, i) => {
           const meta = sourceMeta[r.source ?? "manual"];
           return (
-            <figure
-              key={r.name + i}
-              data-card
-              className="border-line shadow-soft flex w-[85%] shrink-0 snap-start flex-col rounded-3xl border bg-white p-6 sm:w-[46%] lg:w-[31.5%]"
+            <li
+              key={i}
+              className="border-line shadow-soft flex w-[300px] shrink-0 flex-col rounded-3xl border bg-white p-6 sm:w-[360px]"
             >
               <div className="flex items-center justify-between">
                 <Quote className="text-accent/30 h-7 w-7" aria-hidden />
@@ -128,35 +72,15 @@ export function ReviewsCarousel({ reviews }: { reviews: Review[] }) {
                 <div className="min-w-0">
                   <p className="text-ink truncate font-semibold">{r.name}</p>
                   <p className="text-muted truncate text-xs">
-                    {r.context} · {formatMonth(r.date)}
+                    {formatMonth(r.date)}
                   </p>
                 </div>
                 <Stars value={r.rating} size={13} className="ml-auto" />
               </figcaption>
-            </figure>
+            </li>
           );
         })}
-      </div>
-
-      {/* Стрелки */}
-      <div className="mt-6 flex items-center justify-end gap-2">
-        <button
-          type="button"
-          onClick={() => step(-1)}
-          aria-label="Предыдущий отзыв"
-          className="border-line text-ink hover:border-accent hover:text-accent flex h-11 w-11 items-center justify-center rounded-full border bg-white transition-colors"
-        >
-          <ChevronLeft width={20} height={20} />
-        </button>
-        <button
-          type="button"
-          onClick={() => step(1)}
-          aria-label="Следующий отзыв"
-          className="border-line text-ink hover:border-accent hover:text-accent flex h-11 w-11 items-center justify-center rounded-full border bg-white transition-colors"
-        >
-          <ChevronRight width={20} height={20} />
-        </button>
-      </div>
+      </ul>
     </div>
   );
 }

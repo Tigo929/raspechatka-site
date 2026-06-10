@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import {
   Upload,
@@ -11,6 +12,7 @@ import {
   Check,
   X,
   ShieldCheck,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Magnetic } from "@/components/interaction/Magnetic";
@@ -368,7 +370,7 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
             </div>
             <span className="text-muted flex items-center gap-1.5 text-xs">
               <ShieldCheck width={14} height={14} className="text-accent" />
-              макет бесплатно
+              макет в подарок
             </span>
           </div>
           {/* Заказ запускается ТОЛЬКО по этой кнопке */}
@@ -383,6 +385,14 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
               Оформить заказ
             </Button>
           </Magnetic>
+          <Link
+            href="/#zayavka"
+            data-cursor="link"
+            className="bg-accent-soft text-accent hover:bg-accent mt-3 flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors hover:text-white"
+          >
+            <HelpCircle width={18} height={18} />
+            Затрудняетесь? Оставьте заявку — поможем
+          </Link>
         </div>
       </div>
 

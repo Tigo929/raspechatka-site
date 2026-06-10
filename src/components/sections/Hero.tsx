@@ -23,15 +23,18 @@ export function Hero() {
       <Container>
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-8">
           <div className="flex flex-col items-start">
-            <span className="animate-rise border-line text-ink-soft inline-flex items-center gap-2 rounded-full border bg-white/60 px-4 py-1.5 text-sm font-medium backdrop-blur">
-              <Star
-                width={15}
-                height={15}
-                className="fill-accent text-accent"
-              />
-              {siteConfig.aggregateRating.value} · больше{" "}
-              {siteConfig.aggregateRating.count.toLocaleString("ru-RU")}{" "}
-              довольных клиентов
+            <span className="animate-rise border-line shadow-soft inline-flex items-center gap-2.5 rounded-full border bg-white/85 py-1.5 pr-4 pl-1.5 backdrop-blur">
+              <span className="bg-ink inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold text-white">
+                <Star
+                  width={13}
+                  height={13}
+                  className="fill-accent text-accent"
+                />
+                {siteConfig.aggregateRating.value.toFixed(1)}
+              </span>
+              <span className="text-ink-soft text-sm font-medium">
+                {siteConfig.aggregateRating.count} оценок на Яндекс.Картах
+              </span>
             </span>
 
             <h1 className="font-display text-ink mt-6 text-4xl leading-[1.05] font-extrabold text-balance sm:text-5xl lg:text-6xl">
@@ -44,9 +47,9 @@ export function Hero() {
               className="animate-rise text-muted mt-5 max-w-xl text-lg text-pretty"
               style={{ animationDelay: "0.08s" }}
             >
-              Премиальная печать на плотном хлопке. Без минимального тиража,
-              бесплатный макет и стойкие цвета, которые держатся 50+ стирок.
-              Соберите свою футболку за пару минут.
+              Премиальная печать на плотном хлопке. Без минимального тиража и с
+              макетом в подарок при первом заказе. Соберите свою футболку за пару
+              минут.
             </p>
 
             <div
@@ -78,7 +81,7 @@ export function Hero() {
               style={{ animationDelay: "0.24s" }}
             >
               <Stat value={1} prefix="от " label="дня на заказ" />
-              <Stat value={50} suffix="+" label="стирок без потерь" />
+              <Stat value={100} suffix="%" label="хлопок премиум" />
               <Stat value={0} label="минимальный тираж" />
             </dl>
           </div>
@@ -88,7 +91,7 @@ export function Hero() {
             <HeroCarousel slides={heroSlides} />
 
             <div
-              className="animate-float shadow-lift absolute top-8 -left-3 flex items-center gap-2.5 rounded-2xl bg-white/90 px-4 py-3 backdrop-blur sm:-left-5"
+              className="animate-float shadow-lift border-line/70 absolute top-6 -left-3 flex items-center gap-2.5 rounded-2xl border bg-white/95 px-4 py-3 backdrop-blur sm:-left-6"
               style={{ animationDelay: "0.2s" }}
             >
               <span className="bg-accent-soft text-accent flex h-9 w-9 items-center justify-center rounded-full">
@@ -103,7 +106,7 @@ export function Hero() {
             </div>
 
             <div
-              className="animate-float shadow-lift absolute -right-3 bottom-8 flex items-center gap-2.5 rounded-2xl bg-white/90 px-4 py-3 backdrop-blur sm:-right-5"
+              className="animate-float shadow-lift border-line/70 absolute -right-3 bottom-6 flex items-center gap-2.5 rounded-2xl border bg-white/95 px-4 py-3 backdrop-blur sm:-right-6"
               style={{ animationDelay: "1.2s" }}
             >
               <span className="bg-accent-soft text-accent flex h-9 w-9 items-center justify-center rounded-full">
