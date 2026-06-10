@@ -148,11 +148,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
         </div>
 
         {/* Стрелки — по центру боковых краёв, появляются при наведении */}
-        <EdgeArrow
-          side="left"
-          label="Предыдущее фото"
-          onClick={() => step(-1)}
-        >
+        <EdgeArrow side="left" label="Предыдущее фото" onClick={() => step(-1)}>
           <ChevronLeft width={20} height={20} />
         </EdgeArrow>
         <EdgeArrow side="right" label="Следующее фото" onClick={() => step(1)}>

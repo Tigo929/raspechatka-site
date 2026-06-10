@@ -1,42 +1,32 @@
 # IMAGE_SOURCES — PRINTLAB
 
-Большая часть демонстрационных изображений — со стока **Unsplash** по
-[лицензии Unsplash](https://unsplash.com/license) (бесплатное коммерческое
-использование, без обязательной атрибуции).
-
 Главный экран, категории, каталог, сценарии использования и конфигуратор
 используют локальные сгенерированные ассеты без реальных брендов, логотипов и
-читаемого текста. Это временный демонстрационный контент: перед запуском
-замените его на собственные фото готовых работ, если они есть.
+читаемого текста. Перед запуском их можно заменить собственными фото работ.
 
 ## Как заменить
 
-Все ссылки собраны в одном месте — [`src/data/images.ts`](src/data/images.ts).
-Поменяйте URL у нужного ключа (или подставьте локальный файл из `/public`).
-Разрешённые домены для `next/image` заданы в [`next.config.ts`](next.config.ts)
-(`images.remotePatterns`). Размер и качество настраиваются хелпером `unsplash()`.
+Пути базовых изображений собраны в [`src/data/images.ts`](src/data/images.ts).
+Файлы находятся в `/public`. Изображения товаров из админ-панели автоматически
+сохраняются в `public/uploads/products`.
 
 ## Реестр
 
-| Ключ (`images.*`) | Где используется                   | Источник                         | Ссылка                                   |
-| ----------------- | ---------------------------------- | -------------------------------- | ---------------------------------------- |
-| `hero`            | Главный экран (Hero), первый слайд | generated                        | `public/home/hero-print-01.webp`         |
-| `heroSecondary`   | Резерв для Hero                    | photo-1620799140408-edc6dcb6d633 | https://unsplash.com/photos/edc6dcb6d633 |
-| `catPrint`        | Категория «С готовым принтом»      | generated                        | `public/categories/ready-print.webp`     |
-| `catPhoto`        | Категория «С вашим фото»           | generated                        | `public/categories/photo-print.webp`     |
-| `catText`         | Категория «С надписью»             | generated                        | `public/categories/text-print.webp`      |
-| `catLogo`         | Категория «С логотипом»            | generated                        | `public/categories/logo-print.webp`      |
-| `prodOversize`    | Товар «Oversize Premium»           | generated                        | `public/products/oversize-premium.webp`  |
-| `prodClassic`     | Товар «Classic Cotton»             | generated                        | `public/products/classic-cotton.webp`    |
-| `prodBlack`       | Товар «Noir Heavy»                 | generated                        | `public/products/noir-heavy.webp`        |
-| `prodHanger`      | Товар «Pair Edition»               | generated                        | `public/products/pair-edition.webp`      |
-| `prodRack`        | Товар «Corporate Line»             | generated                        | `public/products/corporate-line.webp`    |
-| `prodFolded`      | Товар «Photo Art»                  | generated                        | `public/products/photo-art.webp`         |
-| `useGift`         | Сценарий «Подарок»                 | generated                        | `public/use-cases/use-gift.webp`         |
-| `useBusiness`     | Сценарий «Мерч и брендинг»         | generated                        | `public/use-cases/use-business.webp`     |
-| `useEvent`        | Сценарий «Мероприятия»             | generated                        | `public/use-cases/use-event.webp`        |
-| `workshop`        | Резерв (процесс/производство)      | photo-1487222477894-8943e31ef7b2 | https://unsplash.com/photos/8943e31ef7b2 |
-| `fabric`          | Резерв (ткань)                     | photo-1581655353564-df123a1eb820 | https://unsplash.com/photos/df123a1eb820 |
+| Ключ (`images.*`) | Где используется              | Источник  | Ссылка                                  |
+| ----------------- | ----------------------------- | --------- | --------------------------------------- |
+| `catPrint`        | Категория «С готовым принтом» | generated | `public/categories/ready-print.webp`    |
+| `catPhoto`        | Категория «С вашим фото»      | generated | `public/categories/photo-print.webp`    |
+| `catText`         | Категория «С надписью»        | generated | `public/categories/text-print.webp`     |
+| `catLogo`         | Категория «С логотипом»       | generated | `public/categories/logo-print.webp`     |
+| `prodOversize`    | Товар «Oversize Premium»      | generated | `public/products/oversize-premium.webp` |
+| `prodClassic`     | Товар «Classic Cotton»        | generated | `public/products/classic-cotton.webp`   |
+| `prodBlack`       | Товар «Noir Heavy»            | generated | `public/products/noir-heavy.webp`       |
+| `prodHanger`      | Товар «Pair Edition»          | generated | `public/products/pair-edition.webp`     |
+| `prodRack`        | Товар «Corporate Line»        | generated | `public/products/corporate-line.webp`   |
+| `prodFolded`      | Товар «Photo Art»             | generated | `public/products/photo-art.webp`        |
+| `useGift`         | Сценарий «Подарок»            | generated | `public/use-cases/use-gift.webp`        |
+| `useBusiness`     | Сценарий «Мерч и брендинг»    | generated | `public/use-cases/use-business.webp`    |
+| `useEvent`        | Сценарий «Мероприятия»        | generated | `public/use-cases/use-event.webp`       |
 
 ## Прочая графика
 

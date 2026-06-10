@@ -13,8 +13,8 @@ export function SeoText() {
         </h2>
         <div className="text-ink-soft mt-5 space-y-4 text-[0.95rem] leading-relaxed">
           <p>
-            Распечатка — это студия премиальной печати на футболках. Мы наносим на
-            ткань{" "}
+            Распечатка — это студия премиальной печати на футболках. Мы наносим
+            на ткань{" "}
             <Link
               href="/catalog/futbolka-s-printom"
               className="text-accent underline-offset-2 hover:underline"

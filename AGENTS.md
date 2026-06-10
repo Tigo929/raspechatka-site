@@ -54,13 +54,16 @@ src/
 
 ### Принципы
 
-- **Контент в `src/data`**, не в JSX. Добавить товар/отзыв/посадочную = правка данных.
+- **Контент в `src/data`**, не в JSX. Базовые товары лежат в data-слое, а
+  управляемые товары создаются через `/admin` и сохраняются в
+  `data/catalog-products.json`.
 - **Server Components по умолчанию.** `"use client"` только там, где нужна
   интерактивность (конфигуратор, анимации, мобильное меню).
 - **SEO как первый класс.** Каждая страница экспортирует `metadata`/`generateMetadata`,
   JSON-LD рендерится через хелперы из `lib/jsonld.ts`.
 - **Mobile-first.** Базовые стили — мобильные, `md:`/`lg:` — это апгрейд.
-- **Изображения** — `next/image`, источники в `src/data`, домены в `next.config.ts`.
+- **Изображения** — `next/image`, базовые источники в `src/data`, загрузки
+  админки в `public/uploads/products`.
 
 ## Конфигуратор
 
@@ -90,7 +93,9 @@ npm run format     # Prettier
 ## Замена контента под реальный бизнес
 
 1. Реквизиты, контакты, домен, соцсети — `src/data/site.ts`.
-2. Товары — `src/data/products.ts`. Категории — `src/data/categories.ts`.
+2. Базовые товары — `src/data/products.ts`; новые готовые принты — `/admin`.
+   Категории — `src/data/categories.ts`.
 3. Изображения — заменить URL в data-файлах (см. `IMAGE_SOURCES.md`).
 4. Отзывы/FAQ — `src/data/reviews.ts`, `src/data/faq.ts`.
-5. Подключить приём заявок (форма/CRM) в `src/features/order` (точка расширения).
+5. Telegram-приём заявок настраивается через `TELEGRAM_BOT_TOKEN` и
+   `TELEGRAM_CHAT_ID`; CRM остаётся точкой расширения в `src/features/order`.

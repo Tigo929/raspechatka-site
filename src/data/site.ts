@@ -53,5 +53,3 @@ export const siteConfig = {
     count: 177,
   },
 } as const;
-
-export type SiteConfig = typeof siteConfig;

@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/data/site";
-import { products } from "@/data/products";
+import { getAllProducts } from "@/lib/product-repository";
 import { seoLandings } from "@/data/seoLandings";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const base = siteConfig.url;
 
@@ -35,6 +35,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.85,
   }));
 
+  const products = await getAllProducts();
   const productRoutes: MetadataRoute.Sitemap = products.map((p) => ({
     url: `${base}/product/${p.slug}`,
     lastModified: now,

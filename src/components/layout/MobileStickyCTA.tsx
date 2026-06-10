@@ -20,6 +20,7 @@ export function MobileStickyCTA() {
 
   return (
     <div
+      data-site-chrome
       className={`fixed inset-x-0 bottom-0 z-40 transition-transform duration-300 lg:hidden ${
         visible ? "translate-y-0" : "translate-y-full"
       }`}

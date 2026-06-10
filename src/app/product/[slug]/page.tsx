@@ -13,12 +13,15 @@ import { FinalCta } from "@/components/sections/FinalCta";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd, productJsonLd } from "@/lib/jsonld";
 import { buildMetadata } from "@/lib/seo";
-import { getProduct, products } from "@/data/products";
+import { baseProducts } from "@/data/products";
+import { getAllProducts, getProduct } from "@/lib/product-repository";
 import { formatPrice } from "@/lib/utils";
 
 export function generateStaticParams() {
-  return products.map((p) => ({ slug: p.slug }));
+  return baseProducts.map((p) => ({ slug: p.slug }));
 }
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -26,7 +29,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   if (!product) return {};
   return buildMetadata({
     title: `${product.title} — футболка с печатью`,
@@ -43,9 +46,10 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   if (!product) notFound();
 
+  const products = await getAllProducts();
   const related = products.filter((p) => p.slug !== product.slug).slice(0, 4);
 
   const specs = [
@@ -100,14 +104,20 @@ export default async function ProductPage({
               <h1 className="font-display text-ink text-3xl font-extrabold sm:text-4xl">
                 {product.title}
               </h1>
-              <div className="mt-3 flex items-center gap-2 text-sm">
-                <Stars value={product.rating} />
-                <span className="text-ink font-medium">{product.rating}</span>
-                <span className="text-line">·</span>
-                <span className="text-muted">
-                  {product.reviewsCount} отзывов
-                </span>
-              </div>
+              {product.reviewsCount > 0 ? (
+                <div className="mt-3 flex items-center gap-2 text-sm">
+                  <Stars value={product.rating} />
+                  <span className="text-ink font-medium">{product.rating}</span>
+                  <span className="text-line">·</span>
+                  <span className="text-muted">
+                    {product.reviewsCount} отзывов
+                  </span>
+                </div>
+              ) : (
+                <p className="text-accent mt-3 text-sm font-semibold">
+                  Новый принт в каталоге
+                </p>
+              )}
 
               <p className="text-ink-soft mt-5 text-base leading-relaxed">
                 {product.description}

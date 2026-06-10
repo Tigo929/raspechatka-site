@@ -47,6 +47,7 @@ export function Header() {
 
   return (
     <header
+      data-site-chrome
       className={cn(
         "sticky top-0 z-50 transition-all duration-300",
         scrolled

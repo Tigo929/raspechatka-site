@@ -74,14 +74,18 @@ export function productJsonLd(product: Product) {
     "@type": "Product",
     name: product.title,
     description: product.description,
-    image: product.image,
+    image: abs(product.image),
     material: product.material,
     brand: { "@type": "Brand", name: siteConfig.name },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: product.rating,
-      reviewCount: product.reviewsCount,
-    },
+    ...(product.reviewsCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: product.rating,
+            reviewCount: product.reviewsCount,
+          },
+        }
+      : {}),
     offers: {
       "@type": "Offer",
       price: product.priceFrom,

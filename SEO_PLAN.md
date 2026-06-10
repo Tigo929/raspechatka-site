@@ -28,18 +28,18 @@
 Каждая посадочная — отдельный URL `/catalog/[slug]` с уникальными title/description,
 H1, продающим текстом, подборкой товаров и FAQ под интент:
 
-| URL slug                 | Ключевой запрос                 |
-| ------------------------ | ------------------------------- |
-| futbolka-s-printom       | футболка с принтом              |
-| pechat-na-futbolkah      | печать на футболках             |
-| futbolka-s-foto          | футболка с фото                 |
-| futbolka-s-nadpisyu      | футболка с надписью             |
-| futbolka-s-logotipom     | футболка с логотипом            |
-| korporativnye-futbolki   | корпоративные футболки          |
-| merch-na-zakaz           | мерч на заказ                   |
-| podarok-s-printom        | подарок с принтом               |
-| parnye-futbolki          | парные футболки                 |
-| futbolki-dlya-biznesa    | футболки для бизнеса            |
+| URL slug               | Ключевой запрос        |
+| ---------------------- | ---------------------- |
+| futbolka-s-printom     | футболка с принтом     |
+| pechat-na-futbolkah    | печать на футболках    |
+| futbolka-s-foto        | футболка с фото        |
+| futbolka-s-nadpisyu    | футболка с надписью    |
+| futbolka-s-logotipom   | футболка с логотипом   |
+| korporativnye-futbolki | корпоративные футболки |
+| merch-na-zakaz         | мерч на заказ          |
+| podarok-s-printom      | подарок с принтом      |
+| parnye-futbolki        | парные футболки        |
+| futbolki-dlya-biznesa  | футболки для бизнеса   |
 
 ## Контент-стратегия (Фаза 2+)
 

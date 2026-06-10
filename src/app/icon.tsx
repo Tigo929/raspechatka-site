@@ -17,7 +17,7 @@ export default function Icon() {
         fontFamily: "sans-serif",
         fontSize: 104,
         fontWeight: 900,
-        letterSpacing: -3,
+        letterSpacing: 0,
       }}
     >
       <span>PRINT</span>

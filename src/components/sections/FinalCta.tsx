@@ -9,14 +9,6 @@ export function FinalCta() {
     <Section>
       <Reveal>
         <div className="bg-ink relative overflow-hidden rounded-3xl px-6 py-14 text-center sm:px-12 sm:py-20">
-          <div
-            aria-hidden
-            className="bg-accent/30 pointer-events-none absolute -top-20 -right-20 h-72 w-72 rounded-full blur-[100px]"
-          />
-          <div
-            aria-hidden
-            className="bg-accent/20 pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full blur-[100px]"
-          />
           <div className="relative mx-auto max-w-2xl">
             <h2 className="font-display text-3xl font-extrabold text-balance text-white sm:text-4xl lg:text-5xl">
               Готовы напечатать свою футболку?

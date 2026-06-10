@@ -1,17 +1,9 @@
 /**
  * Централизованный реестр изображений.
  *
- * Картинки — локальные generated-ассеты и легальные стоки (см.
- * IMAGE_SOURCES.md). Чтобы заменить изображение на сайте, поменяйте URL здесь
- * в одном месте. Домены внешних источников перечислены в next.config.ts.
- *
- * Помощник `unsplash()` строит оптимизированный URL; next/image затем
- * пережимает в AVIF/WebP под нужный размер.
+ * Все публичные картинки хранятся локально. Чтобы заменить изображение на
+ * сайте, поменяйте путь здесь в одном месте.
  */
-
-function unsplash(id: string, w = 1200, q = 70): string {
-  return `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=${q}`;
-}
 
 export interface HeroSlide {
   src: string;
@@ -60,9 +52,6 @@ export const heroSlides: HeroSlide[] = [
 ];
 
 export const images = {
-  hero: heroSlides[0].src,
-  heroSecondary: unsplash("photo-1620799140408-edc6dcb6d633", 900),
-
   // Категории
   catPrint: "/categories/ready-print.webp",
   catPhoto: "/categories/photo-print.webp",
@@ -81,10 +70,4 @@ export const images = {
   useGift: "/use-cases/use-gift.webp",
   useBusiness: "/use-cases/use-business.webp",
   useEvent: "/use-cases/use-event.webp",
-
-  // Производство / процесс
-  workshop: unsplash("photo-1487222477894-8943e31ef7b2", 1200),
-  fabric: unsplash("photo-1581655353564-df123a1eb820", 1200),
 } as const;
-
-export type ImageKey = keyof typeof images;

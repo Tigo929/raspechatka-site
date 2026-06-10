@@ -10,7 +10,7 @@ const baseColors: ProductColor[] = [
   { name: "Бордовый", hex: "#6E2331" },
 ];
 
-export const products: Product[] = [
+export const baseProducts: Product[] = [
   {
     slug: "oversize-premium",
     title: "Oversize Premium",
@@ -119,17 +119,3 @@ export const products: Product[] = [
     printMethod: "Сублимация / DTG",
   },
 ];
-
-export function getProduct(slug: string): Product | undefined {
-  return products.find((p) => p.slug === slug);
-}
-
-export function getProductsByCategory(category: string): Product[] {
-  return products.filter((p) => p.category === category);
-}
-
-export function getPopularProducts(limit = 4): Product[] {
-  return [...products]
-    .sort((a, b) => b.reviewsCount - a.reviewsCount)
-    .slice(0, limit);
-}

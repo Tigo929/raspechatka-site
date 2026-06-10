@@ -27,7 +27,7 @@ export default function OpengraphImage() {
             fontSize: 40,
             fontWeight: 800,
             color: "white",
-            letterSpacing: -1,
+            letterSpacing: 0,
           }}
         >
           <span>Распечат</span>
@@ -42,7 +42,7 @@ export default function OpengraphImage() {
             color: "white",
             lineHeight: 1.05,
             maxWidth: 900,
-            letterSpacing: -2,
+            letterSpacing: 0,
           }}
         >
           Печать на футболках, которой хочется хвастаться

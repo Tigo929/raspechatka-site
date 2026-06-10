@@ -26,6 +26,19 @@ export interface Product {
   /** Метод печати. */
   printMethod: string;
   badge?: string;
+  /** Управляемые из админ-панели товары можно скрывать без удаления. */
+  published?: boolean;
+  /** Системное поле для административного интерфейса. */
+  managed?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ManagedProduct extends Product {
+  managed: true;
+  published: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Category {

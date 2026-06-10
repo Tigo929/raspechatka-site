@@ -45,12 +45,18 @@ export function ProductCard({
         </div>
 
         <div className="flex flex-1 flex-col p-5">
-          <div className="flex items-center gap-2 text-sm">
-            <Stars value={product.rating} size={14} />
-            <span className="text-muted">{product.rating}</span>
-            <span className="text-line">·</span>
-            <span className="text-muted">{product.reviewsCount} отзывов</span>
-          </div>
+          {product.reviewsCount > 0 ? (
+            <div className="flex items-center gap-2 text-sm">
+              <Stars value={product.rating} size={14} />
+              <span className="text-muted">{product.rating}</span>
+              <span className="text-line">·</span>
+              <span className="text-muted">{product.reviewsCount} отзывов</span>
+            </div>
+          ) : (
+            <span className="text-accent text-xs font-semibold uppercase">
+              Новый принт
+            </span>
+          )}
           <h3 className="font-display text-ink mt-2 text-lg font-bold">
             {product.title}
           </h3>

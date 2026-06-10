@@ -17,6 +17,7 @@ export function LeadForm() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [comment, setComment] = useState("");
+  const [website, setWebsite] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +40,7 @@ export function LeadForm() {
       const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, comment }),
+        body: JSON.stringify({ name, phone, comment, website }),
       });
       if (!res.ok) throw new Error("fail");
       setStatus("done");
@@ -51,7 +52,7 @@ export function LeadForm() {
 
   if (status === "done") {
     return (
-      <div className="border-line rounded-3xl border bg-white p-8 text-center shadow-soft">
+      <div className="border-line shadow-soft rounded-3xl border bg-white p-8 text-center">
         <span className="bg-accent mx-auto flex h-14 w-14 items-center justify-center rounded-full text-white">
           <Check width={28} height={28} strokeWidth={3} />
         </span>
@@ -66,7 +67,11 @@ export function LeadForm() {
           <Button href={whatsappHref} external>
             <Phone width={18} height={18} /> WhatsApp
           </Button>
-          <Button href={siteConfig.social.telegram} external variant="secondary">
+          <Button
+            href={siteConfig.social.telegram}
+            external
+            variant="secondary"
+          >
             <Send width={18} height={18} /> Telegram
           </Button>
         </div>
@@ -77,8 +82,19 @@ export function LeadForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="border-line flex flex-col gap-4 rounded-3xl border bg-white p-6 shadow-soft sm:p-8"
+      className="border-line shadow-soft flex flex-col gap-4 rounded-3xl border bg-white p-6 sm:p-8"
     >
+      <div className="sr-only" aria-hidden>
+        <label htmlFor="lead-website">Сайт</label>
+        <input
+          id="lead-website"
+          name="website"
+          value={website}
+          onChange={(event) => setWebsite(event.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="lead-name" className="text-ink text-sm font-semibold">
           Имя
@@ -90,7 +106,9 @@ export function LeadForm() {
           onChange={(e) => setName(e.target.value)}
           placeholder="Как к вам обращаться"
           autoComplete="name"
-          className="border-line focus:border-accent h-12 rounded-2xl border bg-paper px-4 text-ink outline-none transition-colors"
+          required
+          maxLength={80}
+          className="border-line focus:border-accent bg-paper text-ink h-12 rounded-2xl border px-4 transition-colors outline-none"
         />
       </div>
       <div className="flex flex-col gap-1.5">
@@ -104,11 +122,16 @@ export function LeadForm() {
           onChange={(e) => setPhone(e.target.value)}
           placeholder="+7 (___) ___-__-__"
           autoComplete="tel"
-          className="border-line focus:border-accent h-12 rounded-2xl border bg-paper px-4 text-ink outline-none transition-colors"
+          required
+          maxLength={40}
+          className="border-line focus:border-accent bg-paper text-ink h-12 rounded-2xl border px-4 transition-colors outline-none"
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="lead-comment" className="text-ink text-sm font-semibold">
+        <label
+          htmlFor="lead-comment"
+          className="text-ink text-sm font-semibold"
+        >
           Что хотите напечатать?{" "}
           <span className="text-muted font-normal">(необязательно)</span>
         </label>
@@ -117,12 +140,17 @@ export function LeadForm() {
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           rows={3}
+          maxLength={1000}
           placeholder="Идея, надпись, фото или ссылка"
-          className="border-line focus:border-accent resize-none rounded-2xl border bg-paper px-4 py-3 text-ink outline-none transition-colors"
+          className="border-line focus:border-accent bg-paper text-ink resize-none rounded-2xl border px-4 py-3 transition-colors outline-none"
         />
       </div>
 
-      {error && <p className="text-accent text-sm">{error}</p>}
+      {error && (
+        <p className="text-accent text-sm" role="alert">
+          {error}
+        </p>
+      )}
 
       <Magnetic className="block w-full" strength={0.2}>
         <Button

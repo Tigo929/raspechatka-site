@@ -32,7 +32,7 @@ export function ProductActions({ product }: { product: Product }) {
         <div className="flex flex-wrap gap-2.5">
           {product.colors.map((c, i) => (
             <button
-              key={c.hex}
+              key={`${c.name}-${c.hex}`}
               type="button"
               onClick={() => setColorIdx(i)}
               aria-label={c.name}

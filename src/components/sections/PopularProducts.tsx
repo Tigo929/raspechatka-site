@@ -3,10 +3,10 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 import { Button } from "@/components/ui/Button";
 import { ProductCard } from "@/features/products/ProductCard";
-import { getPopularProducts } from "@/data/products";
+import { getPopularProducts } from "@/lib/product-repository";
 
-export function PopularProducts() {
-  const popular = getPopularProducts(4);
+export async function PopularProducts() {
+  const popular = await getPopularProducts(4);
 
   return (
     <Section id="popular">

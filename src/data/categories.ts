@@ -35,7 +35,3 @@ export const categories: Category[] = [
     imageAlt: "Футболка с логотипом компании",
   },
 ];
-
-export function getCategory(slug: string): Category | undefined {
-  return categories.find((c) => c.slug === slug);
-}

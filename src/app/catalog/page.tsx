@@ -12,7 +12,9 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/jsonld";
 import { buildMetadata } from "@/lib/seo";
 import { categories } from "@/data/categories";
-import { getProductsByCategory, products } from "@/data/products";
+import { getAllProducts } from "@/lib/product-repository";
+
+export const dynamic = "force-dynamic";
 
 const catalogMetadata = buildMetadata({
   title: "Каталог футболок с печатью",
@@ -32,7 +34,7 @@ export async function generateMetadata({
   searchParams?: Promise<{ q?: string }>;
 }): Promise<Metadata> {
   const params = await searchParams;
-  const query = params?.q?.trim();
+  const query = params?.q?.trim().slice(0, 100);
 
   if (!query) return catalogMetadata;
 
@@ -52,7 +54,8 @@ export default async function CatalogPage({
   searchParams?: Promise<{ q?: string }>;
 }) {
   const params = await searchParams;
-  const query = params?.q?.trim() ?? "";
+  const query = params?.q?.trim().slice(0, 100) ?? "";
+  const products = await getAllProducts();
   const normalizedQuery = query.toLowerCase();
   const searchResults = normalizedQuery
     ? products.filter((product) => {
@@ -75,6 +78,10 @@ export default async function CatalogPage({
         return haystack.includes(normalizedQuery);
       })
     : [];
+  const categoryGroups = categories.map((category) => ({
+    category,
+    items: products.filter((product) => product.category === category.slug),
+  }));
 
   return (
     <>
@@ -169,8 +176,7 @@ export default async function CatalogPage({
           </Container>
         </Section>
       ) : (
-        categories.map((category) => {
-          const items = getProductsByCategory(category.slug);
+        categoryGroups.map(({ category, items }) => {
           if (items.length === 0) return null;
           return (
             <Section

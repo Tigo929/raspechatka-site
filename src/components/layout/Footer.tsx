@@ -11,7 +11,7 @@ export function Footer() {
   const popularLandings = seoLandings.slice(0, 6);
 
   return (
-    <footer className="bg-midnight text-paper/70">
+    <footer data-site-chrome className="bg-midnight text-paper/70">
       <Container className="py-16 lg:py-20">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-12">
           <div className="lg:col-span-4">

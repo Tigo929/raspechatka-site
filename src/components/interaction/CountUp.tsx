@@ -27,8 +27,12 @@ export function CountUp({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (!inView || reduce) {
+    if (reduce) {
       el.textContent = `${prefix}${value}${suffix}`;
+      return;
+    }
+    if (!inView) {
+      el.textContent = `${prefix}0${suffix}`;
       return;
     }
     const controls = animate(0, value, {

@@ -68,6 +68,3 @@ export const reviews: Review[] = [
 export function getPositiveReviews(): Review[] {
   return reviews.filter((r) => r.rating >= 4);
 }
-
-export const aggregateReviewRating =
-  reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;

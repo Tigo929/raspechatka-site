@@ -36,7 +36,7 @@ export function ReviewsCarousel({ reviews }: { reviews: Review[] }) {
 
   return (
     <div className="mask-fade-x overflow-hidden">
-      <ul className="flex w-max gap-4 animate-[marquee_60s_linear_infinite] py-1">
+      <ul className="flex w-max animate-[marquee_60s_linear_infinite] gap-4 py-1">
         {track.map((r, i) => {
           const meta = sourceMeta[r.source ?? "manual"];
           return (

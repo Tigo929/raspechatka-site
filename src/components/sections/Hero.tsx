@@ -16,10 +16,6 @@ import { siteConfig } from "@/data/site";
 export function Hero() {
   return (
     <section className="relative overflow-hidden pt-10 sm:pt-14 lg:pt-20">
-      <div
-        aria-hidden
-        className="bg-accent/15 pointer-events-none absolute -top-40 right-0 h-[520px] w-[520px] rounded-full blur-[120px]"
-      />
       <Container>
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-8">
           <div className="flex flex-col items-start">
@@ -48,8 +44,8 @@ export function Hero() {
               style={{ animationDelay: "0.08s" }}
             >
               Премиальная печать на плотном хлопке. Без минимального тиража и с
-              макетом в подарок при первом заказе. Соберите свою футболку за пару
-              минут.
+              макетом в подарок при первом заказе. Соберите свою футболку за
+              пару минут.
             </p>
 
             <div

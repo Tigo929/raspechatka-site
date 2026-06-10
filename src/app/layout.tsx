@@ -17,7 +17,7 @@ const inter = Inter({
 
 const manrope = Manrope({
   subsets: ["latin", "cyrillic"],
-  variable: "--font-display",
+  variable: "--font-manrope",
   weight: ["600", "700", "800"],
   display: "swap",
 });
@@ -58,11 +58,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ru" className={`${inter.variable} ${manrope.variable}`}>
-      <head>
-        <link rel="preconnect" href="https://images.unsplash.com" />
-        <link rel="dns-prefetch" href="https://images.unsplash.com" />
-      </head>
+    <html
+      lang="ru"
+      data-scroll-behavior="smooth"
+      className={`${inter.variable} ${manrope.variable}`}
+    >
       <body className="min-h-dvh antialiased">
         <JsonLd data={organizationJsonLd()} />
         <JsonLd data={websiteJsonLd()} />

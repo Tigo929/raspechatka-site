@@ -13,12 +13,14 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd, faqJsonLd, reviewsJsonLd } from "@/lib/jsonld";
 import { buildMetadata } from "@/lib/seo";
 import { getLanding, seoLandings } from "@/data/seoLandings";
-import { getProduct } from "@/data/products";
+import { getAllProducts } from "@/lib/product-repository";
 import { reviews } from "@/data/reviews";
 
 export function generateStaticParams() {
   return seoLandings.map((l) => ({ slug: l.slug }));
 }
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -45,9 +47,14 @@ export default async function LandingPage({
   const landing = getLanding(slug);
   if (!landing) notFound();
 
-  const products = landing.productSlugs
-    .map((s) => getProduct(s))
-    .filter((p): p is NonNullable<typeof p> => Boolean(p));
+  const allProducts = await getAllProducts();
+  const requested = new Set(landing.productSlugs);
+  const products = allProducts.filter(
+    (product) =>
+      requested.has(product.slug) ||
+      (landing.slug === "futbolka-s-printom" &&
+        product.category === "s-printom"),
+  );
 
   return (
     <>
