@@ -9,11 +9,11 @@ export function SeoText() {
     <Section className="bg-paper-dim/60">
       <Reveal className="mx-auto max-w-3xl">
         <h2 className="font-display text-ink text-2xl font-bold sm:text-3xl">
-          Печать на футболках на заказ в студии PRINTLAB
+          Печать на футболках на заказ в студии Распечатка
         </h2>
         <div className="text-ink-soft mt-5 space-y-4 text-[0.95rem] leading-relaxed">
           <p>
-            PRINTLAB — это студия премиальной печати на футболках. Мы наносим на
+            Распечатка — это студия премиальной печати на футболках. Мы наносим на
             ткань{" "}
             <Link
               href="/catalog/futbolka-s-printom"

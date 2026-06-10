@@ -31,7 +31,7 @@ import { TshirtPreview } from "./TshirtPreview";
 
 const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
 const sides: PrintSide[] = ["front", "back"];
-const BASE_PRICE = 1190;
+const BASE_PRICE = 949;
 const allowedImageTypes = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 interface PrintDesign {
@@ -361,14 +361,21 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
 
         {/* Цена + заказ */}
         <div className="border-line mt-auto rounded-2xl border bg-white p-5">
-          <div className="flex items-end justify-between">
+          <div className="flex items-end justify-between gap-3">
             <div>
-              <p className="text-muted text-xs">Стоимость</p>
-              <p className="font-display text-ink text-2xl font-bold">
-                от {formatPrice(BASE_PRICE)}
+              <span className="bg-accent inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-wide text-white uppercase">
+                🎉 Цена в честь открытия
+              </span>
+              <p className="mt-1.5 flex items-baseline gap-2">
+                <span className="font-display text-ink text-3xl font-extrabold">
+                  от {formatPrice(BASE_PRICE)}
+                </span>
+                <span className="text-muted text-sm line-through">
+                  {formatPrice(1190)}
+                </span>
               </p>
             </div>
-            <span className="text-muted flex items-center gap-1.5 text-xs">
+            <span className="text-muted flex shrink-0 items-center gap-1.5 text-xs">
               <ShieldCheck width={14} height={14} className="text-accent" />
               макет в подарок
             </span>

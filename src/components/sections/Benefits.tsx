@@ -9,7 +9,7 @@ export function Benefits() {
   return (
     <Section id="benefits">
       <SectionHeading
-        eyebrow="Почему PRINTLAB"
+        eyebrow="Почему Распечатка"
         title="Качество, за которое не стыдно"
         subtitle="Мы отвечаем за каждую футболку — от ткани до последней стирки."
       />

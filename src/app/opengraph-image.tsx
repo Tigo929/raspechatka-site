@@ -30,8 +30,8 @@ export default function OpengraphImage() {
             letterSpacing: -1,
           }}
         >
-          <span>PRINT</span>
-          <span style={{ color: "#ff4a1c" }}>LAB</span>
+          <span>Распечат</span>
+          <span style={{ color: "#ff4a1c" }}>ка</span>
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>

@@ -8,7 +8,7 @@ export const categories: Category[] = [
     description:
       "Сотни дизайнов в каталоге — выберите готовый принт и закажите в один клик.",
     image: images.catPrint,
-    imageAlt: "Футболка с готовым принтом из каталога PRINTLAB",
+    imageAlt: "Футболка с готовым принтом из каталога Распечатка",
   },
   {
     slug: "s-foto",

@@ -9,20 +9,24 @@ import { formatPrice } from "@/lib/utils";
 const tiers = [
   {
     name: "Один заказ",
-    price: 1190,
+    price: 949,
+    oldPrice: 1190,
+    badge: "🎉 В честь открытия",
     note: "за футболку",
     features: [
       "Без минимального тиража",
-      "Бесплатный макет",
+      "Макет в подарок",
       "Печать от 1 дня",
       "Премиальный хлопок",
     ],
     cta: { label: "Собрать футболку", href: "/configurator" },
-    featured: false,
+    featured: true,
   },
   {
     name: "Малый тираж",
-    price: 990,
+    price: 849,
+    oldPrice: null,
+    badge: null,
     note: "за футболку от 10 шт.",
     features: [
       "Скидка за объём",
@@ -31,11 +35,13 @@ const tiers = [
       "Приоритетная печать",
     ],
     cta: { label: "Рассчитать тираж", href: "/catalog/merch-na-zakaz" },
-    featured: true,
+    featured: false,
   },
   {
     name: "Корпоративный",
-    price: 790,
+    price: 749,
+    oldPrice: null,
+    badge: null,
     note: "за футболку от 50 шт.",
     features: [
       "Лучшая цена за штуку",
@@ -67,17 +73,24 @@ export function Pricing() {
                     : "border-line text-ink shadow-soft hover:shadow-lift bg-white"
                 }`}
               >
-                {t.featured && (
+                {t.badge && (
                   <span className="bg-accent mb-4 inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold tracking-wide text-white uppercase">
-                    Популярный выбор
+                    {t.badge}
                   </span>
                 )}
                 <h3 className="font-display text-lg font-bold">{t.name}</h3>
-                <div className="mt-3 flex items-baseline gap-1.5">
+                <div className="mt-3 flex items-baseline gap-2">
                   <span className="text-sm opacity-70">от</span>
                   <span className="font-display text-4xl font-extrabold">
                     {formatPrice(t.price)}
                   </span>
+                  {t.oldPrice && (
+                    <span
+                      className={`text-base line-through ${t.featured ? "text-paper/50" : "text-muted"}`}
+                    >
+                      {formatPrice(t.oldPrice)}
+                    </span>
+                  )}
                 </div>
                 <p
                   className={`mt-1 text-sm ${t.featured ? "text-paper/60" : "text-muted"}`}

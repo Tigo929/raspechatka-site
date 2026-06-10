@@ -19,7 +19,7 @@ export function Footer() {
               href="/"
               className="font-display text-2xl font-extrabold text-white"
             >
-              PRINT<span className="text-accent">LAB</span>
+              Распечат<span className="text-accent">ка</span>
             </Link>
             <p className="text-paper/60 mt-4 max-w-xs text-sm leading-relaxed">
               {siteConfig.description}

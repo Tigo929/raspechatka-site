@@ -41,12 +41,12 @@ export const shirtColors: ShirtColorOption[] = [
     views: {
       front: {
         image: "/mockups/tshirt-white-front.webp",
-        alt: "Белая футболка спереди для конструктора PRINTLAB",
+        alt: "Белая футболка спереди для конструктора Распечатка",
         zone: { left: 50, top: 48, width: 30, height: 36 },
       },
       back: {
         image: "/mockups/tshirt-white-back.webp",
-        alt: "Белая футболка сзади для конструктора PRINTLAB",
+        alt: "Белая футболка сзади для конструктора Распечатка",
         zone: { left: 50, top: 46, width: 34, height: 42 },
       },
     },
@@ -59,12 +59,12 @@ export const shirtColors: ShirtColorOption[] = [
     views: {
       front: {
         image: "/mockups/tshirt-black-front.webp",
-        alt: "Чёрная футболка спереди для конструктора PRINTLAB",
+        alt: "Чёрная футболка спереди для конструктора Распечатка",
         zone: { left: 50, top: 49, width: 30, height: 36 },
       },
       back: {
         image: "/mockups/tshirt-black-back.webp",
-        alt: "Чёрная футболка сзади для конструктора PRINTLAB",
+        alt: "Чёрная футболка сзади для конструктора Распечатка",
         zone: { left: 50, top: 46, width: 34, height: 42 },
       },
     },

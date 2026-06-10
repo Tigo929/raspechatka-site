@@ -65,7 +65,7 @@ export function Header() {
             className="font-display text-ink text-xl font-extrabold"
             aria-label={`${siteConfig.name} — на главную`}
           >
-            PRINT<span className="text-accent">LAB</span>
+            Распечат<span className="text-accent">ка</span>
           </Link>
 
           <nav

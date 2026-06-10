@@ -4,8 +4,8 @@
  */
 
 export const siteConfig = {
-  name: "PRINTLAB",
-  legalName: "PRINTLAB — студия печати",
+  name: "Распечатка",
+  legalName: "Распечатка — студия печати",
   // Используется для canonical, sitemap, OG, JSON-LD.
   url:
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
@@ -15,9 +15,9 @@ export const siteConfig = {
   tagline: "Печать на футболках, которой хочется хвастаться",
   locale: "ru_RU",
   // Контакты (заглушки — заменить на реальные).
-  phone: "+7 (495) 000-00-00",
-  phoneHref: "tel:+74950000000",
-  email: "hello@printlab.ru",
+  phone: "+7 (919) 999-02-82",
+  phoneHref: "tel:+79199990282",
+  email: "shkaubiva@yandex.ru",
   city: "Москва",
   // Реальный адрес (подтверждён по карточке организации на Яндекс.Картах).
   address: "Москва, Верхняя Первомайская ул., 47к11",
@@ -25,10 +25,10 @@ export const siteConfig = {
   geo: { lat: 55.800615, lon: 37.796184 },
   hours: "Пн–Вс, 9:00–21:00",
   social: {
-    telegram: "https://t.me/printlab",
-    whatsapp: "https://wa.me/74950000000",
-    instagram: "https://instagram.com/printlab",
-    vk: "https://vk.com/printlab",
+    telegram: "https://t.me/raspichatka",
+    whatsapp: "https://wa.me/79199990282",
+    instagram: "",
+    vk: "",
   },
   // Рейтинги на внешних площадках (для бейджей и доверия).
   // Яндекс — подтверждено по карточке организации. Avito — заполнить

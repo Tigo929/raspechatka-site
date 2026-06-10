@@ -29,7 +29,7 @@ export function organizationJsonLd() {
       longitude: siteConfig.geo.lon,
     },
     openingHours: "Mo-Su 09:00-21:00",
-    sameAs: Object.values(siteConfig.social),
+    sameAs: Object.values(siteConfig.social).filter(Boolean),
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: siteConfig.aggregateRating.value,
