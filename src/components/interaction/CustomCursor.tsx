@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { useInteractive } from "@/hooks/useInteractive";
 
 /**
@@ -12,7 +13,10 @@ import { useInteractive } from "@/hooks/useInteractive";
  * Монтируется только на desktop без reduced-motion (см. useInteractive).
  */
 export function CustomCursor() {
-  const enabled = useInteractive();
+  const pathname = usePathname();
+  // В админке кастомный курсор не нужен — там обычная системная мышь.
+  const onAdmin = pathname?.startsWith("/admin") ?? false;
+  const enabled = useInteractive() && !onAdmin;
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLSpanElement>(null);

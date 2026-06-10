@@ -1,0 +1,95 @@
+// Схема данных интернет-магазина «Распечатка».
+// Применение миграций: npm run prisma:migrate (dev) / prisma:deploy (prod).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Пользователи админ-панели ────────────────────────────────
+enum AdminRole {
+  OWNER
+  MANAGER
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         AdminRole @default(OWNER)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// ── Каталог ──────────────────────────────────────────────────
+model Category {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  description String    @default("")
+  image       String    @default("")
+  sortOrder   Int       @default(0)
+  published   Boolean   @default(true)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  /// Артикул — уникальный код товара для учёта.
+  sku         String   @unique
+  title       String
+  excerpt     String   @default("")
+  description String   @default("")
+  /// Цены в рублях (целые). oldPriceRub — зачёркнутая цена для акций.
+  priceRub    Int
+  oldPriceRub Int?
+  badge       String?
+  material    String   @default("")
+  /// Размерный ряд, например ["XS","S","M","L","XL","XXL"].
+  sizes       String[] @default(["XS", "S", "M", "L", "XL", "XXL"])
+  /// Остаток на складе; null — не отслеживаем.
+  stock       Int?
+  published   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+
+  images ProductImage[]
+  colors ProductColor[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId, published])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  url       String
+  alt       String  @default("")
+  sortOrder Int     @default(0)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+
+  @@index([productId])
+}
+
+model ProductColor {
+  id        String  @id @default(cuid())
+  name      String
+  /// HEX вида #RRGGBB.
+  hex       String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+
+  @@index([productId])
+}
