@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Send, Sparkles } from "lucide-react";
+import { MessageCircle, Send, Sparkles } from "lucide-react";
 import { siteConfig } from "@/data/site";
 
 /**
@@ -26,13 +26,22 @@ export function MobileStickyCTA() {
       }`}
     >
       <div className="border-line bg-paper/95 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <Link
             href="/configurator"
-            className="bg-accent shadow-soft flex h-12 flex-1 items-center justify-center gap-2 rounded-full font-semibold text-white active:scale-[0.97]"
+            className="bg-accent shadow-soft flex h-12 flex-1 items-center justify-center gap-2 rounded-full text-sm font-semibold text-white active:scale-[0.97]"
           >
-            <Sparkles width={18} height={18} /> Собрать футболку
+            <Sparkles width={17} height={17} /> Собрать футболку
           </Link>
+          <a
+            href={siteConfig.social.whatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Написать в WhatsApp"
+            className="bg-ink text-paper flex h-12 w-12 shrink-0 items-center justify-center rounded-full active:scale-[0.97]"
+          >
+            <MessageCircle width={20} height={20} />
+          </a>
           <a
             href={siteConfig.social.telegram}
             target="_blank"

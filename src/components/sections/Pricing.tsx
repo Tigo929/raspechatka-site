@@ -57,7 +57,7 @@ export async function Pricing() {
                       <Check
                         width={18}
                         height={18}
-                        className={t.featured ? "text-accent" : "text-accent"}
+                        className="text-accent"
                       />
                       {f}
                     </li>

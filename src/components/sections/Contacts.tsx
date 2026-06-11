@@ -1,4 +1,4 @@
-import { MapPin, Clock, Phone, Send } from "lucide-react";
+import { MapPin, Clock, Phone, Send, MessageCircle } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
@@ -70,9 +70,14 @@ export function Contacts() {
 
           <PlatformRatings />
 
-          <Button href={siteConfig.social.telegram} external className="w-fit">
-            <Send width={18} height={18} /> Написать в Telegram
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <Button href={siteConfig.social.telegram} external className="w-fit">
+              <Send width={18} height={18} /> Telegram
+            </Button>
+            <Button href={siteConfig.social.whatsapp} external variant="secondary" className="w-fit">
+              <MessageCircle width={18} height={18} /> WhatsApp
+            </Button>
+          </div>
         </Reveal>
 
         {/* Карта */}

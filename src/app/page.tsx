@@ -43,19 +43,33 @@ export default async function HomePage() {
     <>
       <JsonLd data={faqJsonLd(publicFaq)} />
       <JsonLd data={reviewsJsonLd(publicReviews)} />
+      {/* 1. Хук — кто мы и что делаем */}
       <Hero />
+      {/* 2. Быстрые доверительные сигналы */}
       <TrustBar />
-      <Benefits />
+      {/* 3. Что заказать — пользователь ориентируется */}
       <Categories />
+      {/* 4. Конкретные товары — пощупать руками */}
       <PopularProducts />
-      <ConfiguratorSection />
+      {/* 5. Сценарии — «это для меня» */}
       <UseCases />
+      {/* 6. Процесс — снимаем неопределённость */}
       <HowItWorks />
-      <Pricing />
+      {/* 7. Преимущества — почему именно мы */}
+      <Benefits />
+      {/* 8. Социальное доказательство */}
       <Reviews />
+      {/* 9. Гарантии — снимаем страх */}
       <Guarantees />
+      {/* 10. Цены — теперь готов воспринять */}
+      <Pricing />
+      {/* 11. Конверсия — оставить заявку */}
       <LeadCta />
+      {/* 12. FAQ — последние возражения */}
       <Faq />
+      {/* 13. Конструктор — исследователям */}
+      <ConfiguratorSection />
+      {/* 14-16. SEO, контакты, финальный CTA */}
       <SeoText />
       <Contacts />
       <FinalCta />

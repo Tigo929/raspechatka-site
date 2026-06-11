@@ -6,11 +6,14 @@ import { Button } from "@/components/ui/Button";
 import { Magnetic } from "@/components/interaction/Magnetic";
 import { ConsentCheckbox } from "@/components/legal/ConsentCheckbox";
 
+type ContactMethod = "phone" | "telegram";
 type Status = "idle" | "sending" | "done" | "error";
 
 export function LeadForm() {
   const [name, setName] = useState("");
+  const [method, setMethod] = useState<ContactMethod>("phone");
   const [phone, setPhone] = useState("");
+  const [telegram, setTelegram] = useState("");
   const [comment, setComment] = useState("");
   const [website, setWebsite] = useState("");
   const [pdConsent, setPdConsent] = useState(false);
@@ -19,14 +22,23 @@ export function LeadForm() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || phone.trim().length < 6) {
-      setError("Укажите имя и корректный телефон.");
+    if (!name.trim()) {
+      setError("Укажите ваше имя.");
+      return;
+    }
+    if (method === "phone" && phone.trim().length < 6) {
+      setError("Укажите корректный номер телефона.");
+      return;
+    }
+    if (method === "telegram" && !telegram.trim()) {
+      setError("Укажите ваш Telegram-юзернейм.");
       return;
     }
     if (!pdConsent) {
       setError("Необходимо согласие на обработку персональных данных.");
       return;
     }
+
     setError(null);
     setStatus("sending");
 
@@ -35,8 +47,8 @@ export function LeadForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
-          phone,
+          name: name.trim(),
+          phone: method === "phone" ? phone.trim() : telegram.trim(),
           comment,
           website,
           personalDataConsent: pdConsent,
@@ -68,6 +80,7 @@ export function LeadForm() {
       onSubmit={onSubmit}
       className="border-line shadow-soft flex flex-col gap-4 rounded-3xl border bg-white p-6 sm:p-8"
     >
+      {/* Honeypot */}
       <div className="sr-only" aria-hidden>
         <label htmlFor="lead-website">Сайт</label>
         <input
@@ -80,6 +93,7 @@ export function LeadForm() {
         />
       </div>
 
+      {/* Имя */}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="lead-name" className="text-ink text-sm font-semibold">Имя</label>
         <input
@@ -95,21 +109,61 @@ export function LeadForm() {
         />
       </div>
 
+      {/* Способ связи */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="lead-phone" className="text-ink text-sm font-semibold">Телефон</label>
-        <input
-          id="lead-phone"
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="+7 (___) ___-__-__"
-          autoComplete="tel"
-          required
-          maxLength={40}
-          className="border-line focus:border-accent bg-paper text-ink h-12 rounded-2xl border px-4 outline-none transition-colors"
-        />
+        <span className="text-ink text-sm font-semibold">Как с вами связаться?</span>
+        <div className="border-line grid grid-cols-2 gap-1 rounded-2xl border bg-white p-1">
+          {(["phone", "telegram"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMethod(m)}
+              className={`rounded-xl py-2 text-sm font-semibold transition-colors ${
+                method === m ? "bg-ink text-paper" : "text-muted hover:text-ink"
+              }`}
+            >
+              {m === "phone" ? "Телефон" : "Telegram"}
+            </button>
+          ))}
+        </div>
       </div>
 
+      {/* Поле контакта */}
+      {method === "phone" ? (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="lead-phone" className="text-ink text-sm font-semibold">Телефон</label>
+          <input
+            id="lead-phone"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="+7 (___) ___-__-__"
+            autoComplete="tel"
+            required
+            maxLength={40}
+            className="border-line focus:border-accent bg-paper text-ink h-12 rounded-2xl border px-4 outline-none transition-colors"
+          />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="lead-tg" className="text-ink text-sm font-semibold">Telegram-юзернейм</label>
+          <div className="relative">
+            <span className="text-muted pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm">@</span>
+            <input
+              id="lead-tg"
+              type="text"
+              value={telegram}
+              onChange={(e) => setTelegram(e.target.value.replace(/^@/, ""))}
+              placeholder="username"
+              autoComplete="off"
+              maxLength={80}
+              className="border-line focus:border-accent bg-paper text-ink h-12 w-full rounded-2xl border pl-8 pr-4 outline-none transition-colors"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Комментарий */}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="lead-comment" className="text-ink text-sm font-semibold">
           Что хотите напечатать?{" "}
@@ -126,6 +180,7 @@ export function LeadForm() {
         />
       </div>
 
+      {/* Согласие */}
       <ConsentCheckbox
         id="lead-pd-consent"
         checked={pdConsent}

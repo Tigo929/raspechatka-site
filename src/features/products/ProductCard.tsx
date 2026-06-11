@@ -63,7 +63,24 @@ export function ProductCard({
           <p className="text-muted mt-1.5 line-clamp-2 text-sm">
             {product.excerpt}
           </p>
-          <div className="mt-4 flex items-end justify-between pt-2">
+          {/* Цвета */}
+          {product.colors.length > 0 && (
+            <div className="mt-3 flex items-center gap-1.5">
+              {product.colors.slice(0, 5).map((c) => (
+                <span
+                  key={c.hex}
+                  title={c.name}
+                  className="border-line h-4 w-4 rounded-full border"
+                  style={{ backgroundColor: c.hex }}
+                />
+              ))}
+              {product.colors.length > 5 && (
+                <span className="text-muted text-xs">+{product.colors.length - 5}</span>
+              )}
+            </div>
+          )}
+
+          <div className="mt-3 flex items-end justify-between pt-2">
             <div>
               <span className="text-muted text-xs">от</span>
               <p className="font-display text-ink text-xl font-bold">

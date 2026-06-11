@@ -1,4 +1,4 @@
-import { Sparkles, Send } from "lucide-react";
+import { Sparkles, Send, MessageCircle } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { Button } from "@/components/ui/Button";
@@ -28,7 +28,15 @@ export function FinalCta() {
                 variant="dark"
                 size="lg"
               >
-                <Send width={18} height={18} /> Написать в Telegram
+                <Send width={18} height={18} /> Telegram
+              </Button>
+              <Button
+                href={siteConfig.social.whatsapp}
+                external
+                variant="dark"
+                size="lg"
+              >
+                <MessageCircle width={18} height={18} /> WhatsApp
               </Button>
             </div>
             <p className="text-paper/50 mt-6 text-sm">

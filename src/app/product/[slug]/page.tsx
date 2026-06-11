@@ -50,7 +50,13 @@ export default async function ProductPage({
   if (!product) notFound();
 
   const products = await getAllProducts();
-  const related = products.filter((p) => p.slug !== product.slug).slice(0, 4);
+  const sameCategory = products.filter(
+    (p) => p.slug !== product.slug && p.category === product.category,
+  );
+  const otherCategory = products.filter(
+    (p) => p.slug !== product.slug && p.category !== product.category,
+  );
+  const related = [...sameCategory, ...otherCategory].slice(0, 4);
 
   const specs = [
     { icon: Clock, label: "Срок", value: "от 1 дня" },

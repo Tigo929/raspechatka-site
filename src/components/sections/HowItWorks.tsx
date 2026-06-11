@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Sparkles } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
@@ -37,6 +39,18 @@ export async function HowItWorks() {
           </Reveal>
         ))}
       </ol>
+
+      <Reveal className="mt-14 flex flex-col items-center gap-4 text-center">
+        <p className="text-paper/60 text-sm">
+          Весь процесс — от заявки до готовой футболки — занимает от одного рабочего дня
+        </p>
+        <Link
+          href="/configurator"
+          className="bg-accent hover:bg-accent-hover inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-sm font-semibold text-white transition-colors"
+        >
+          <Sparkles width={16} height={16} /> Начать прямо сейчас
+        </Link>
+      </Reveal>
     </Section>
   );
 }
