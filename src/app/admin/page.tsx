@@ -1,10 +1,8 @@
 import { redirect } from "next/navigation";
 import { AdminDashboard } from "@/features/admin/AdminDashboard";
-import { categories } from "@/data/categories";
-import { baseProducts } from "@/data/products";
 import { isAdminAuthenticated, isAdminConfigured } from "@/lib/admin-auth";
-import { getManagedProducts } from "@/lib/product-repository";
-import { getReviews, getFaq, getSettings } from "@/lib/content-repository";
+import { getManagedProducts, getBaseProducts } from "@/lib/product-repository";
+import { getReviews, getFaq, getSettings, getContent, getCategories } from "@/lib/content-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -13,11 +11,14 @@ export default async function AdminPage() {
     redirect("/admin/login");
   }
 
-  const [products, reviews, faqItems, settings] = await Promise.all([
+  const [products, baseProducts, categories, reviews, faqItems, settings, content] = await Promise.all([
     getManagedProducts(),
+    getBaseProducts(),
+    getCategories(),
     getReviews(),
     getFaq(),
     getSettings(),
+    getContent(),
   ]);
 
   return (
@@ -28,6 +29,7 @@ export default async function AdminPage() {
       initialReviews={reviews}
       initialFaq={faqItems}
       initialSettings={settings}
+      initialContent={content}
     />
   );
 }

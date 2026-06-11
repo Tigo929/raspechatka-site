@@ -19,7 +19,7 @@ export function Section({
   return (
     <section
       id={id}
-      className={cn("scroll-mt-24 py-16 sm:py-20 lg:py-28", className)}
+      className={cn("scroll-mt-24 py-10 sm:py-14 lg:py-16", className)}
     >
       {bare ? (
         children

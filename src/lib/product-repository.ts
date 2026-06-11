@@ -5,6 +5,7 @@ import type { ManagedProduct, Product, ProductColor } from "@/types";
 
 const dataDir = path.join(process.cwd(), "data");
 const catalogFile = path.join(dataDir, "catalog-products.json");
+const baseProductsFile = path.join(dataDir, "base-products.json");
 const uploadDir = path.join(process.cwd(), "public", "uploads", "products");
 
 let mutationQueue: Promise<void> = Promise.resolve();
@@ -93,14 +94,41 @@ async function mutateManagedProducts<T>(
   return operation;
 }
 
+// ─── Base products (editable via admin) ──────────────────────────────────────
+
+export async function getBaseProducts(): Promise<Product[]> {
+  try {
+    const raw = JSON.parse(await readFile(baseProductsFile, "utf8")) as unknown;
+    if (Array.isArray(raw) && raw.length > 0) return raw as Product[];
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
+    await mkdir(dataDir, { recursive: true });
+    await writeFile(baseProductsFile, `${JSON.stringify(baseProducts, null, 2)}\n`, "utf8");
+    return baseProducts;
+  }
+  return baseProducts;
+}
+
+export async function updateBaseProduct(slug: string, update: Partial<Omit<Product, "slug" | "managed" | "createdAt" | "updatedAt">>): Promise<Product> {
+  const all = await getBaseProducts();
+  const idx = all.findIndex((p) => p.slug === slug);
+  if (idx === -1) throw new Error("not_found");
+  const updated = [...all];
+  updated[idx] = { ...updated[idx], ...update };
+  const tmp = `${baseProductsFile}.${process.pid}.tmp`;
+  await writeFile(tmp, `${JSON.stringify(updated, null, 2)}\n`, "utf8");
+  await rename(tmp, baseProductsFile);
+  return updated[idx];
+}
+
 export async function getAllProducts(options?: {
   includeUnpublished?: boolean;
 }): Promise<Product[]> {
-  const managed = await getManagedProducts();
+  const [base, managed] = await Promise.all([getBaseProducts(), getManagedProducts()]);
   const visible = options?.includeUnpublished
     ? managed
     : managed.filter((product) => product.published);
-  return [...baseProducts, ...visible];
+  return [...base, ...visible];
 }
 
 export async function getProduct(

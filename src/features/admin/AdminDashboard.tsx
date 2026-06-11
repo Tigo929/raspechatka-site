@@ -12,6 +12,7 @@ import {
   HelpCircle,
   Image as ImageIcon,
   ImagePlus,
+  Layers,
   LogOut,
   MessageSquare,
   PackagePlus,
@@ -27,13 +28,18 @@ import {
   X,
 } from "lucide-react";
 import type {
+  Benefit,
   Category,
+  ManagedContent,
   ManagedFaqItem,
   ManagedProduct,
   ManagedReview,
   ManagedSettings,
+  PricingTier,
   Product,
   ProductColor,
+  Step,
+  UseCase,
 } from "@/types";
 import { formatPrice } from "@/lib/utils";
 
@@ -106,10 +112,11 @@ function StatCard({ label, value, icon: Icon }: { label: string; value: number |
 
 // ─── Tab navigation ───────────────────────────────────────────────────────────
 
-type Tab = "products" | "reviews" | "faq" | "settings" | "analytics" | "media";
+type Tab = "products" | "reviews" | "faq" | "settings" | "analytics" | "media" | "content";
 
 const tabs: { id: Tab; label: string; icon: typeof Archive }[] = [
   { id: "products", label: "Товары", icon: Archive },
+  { id: "content", label: "Контент", icon: Layers },
   { id: "reviews", label: "Отзывы", icon: Star },
   { id: "faq", label: "FAQ", icon: HelpCircle },
   { id: "settings", label: "Настройки", icon: Settings },
@@ -122,10 +129,11 @@ const tabs: { id: Tab; label: string; icon: typeof Archive }[] = [
 export function AdminDashboard({
   initialProducts,
   baseProducts,
-  categories,
+  categories: initialCategories,
   initialReviews,
   initialFaq,
   initialSettings,
+  initialContent,
 }: {
   initialProducts: ManagedProduct[];
   baseProducts: Product[];
@@ -133,6 +141,7 @@ export function AdminDashboard({
   initialReviews: ManagedReview[];
   initialFaq: ManagedFaqItem[];
   initialSettings: ManagedSettings;
+  initialContent: ManagedContent;
 }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("products");
@@ -210,7 +219,14 @@ export function AdminDashboard({
           <ProductsPanel
             initialProducts={initialProducts}
             baseProducts={baseProducts}
-            categories={categories}
+            categories={initialCategories}
+            onNotify={notify}
+          />
+        )}
+        {activeTab === "content" && (
+          <ContentPanel
+            initialContent={initialContent}
+            initialCategories={initialCategories}
             onNotify={notify}
           />
         )}
@@ -354,27 +370,7 @@ function ProductsPanel({
         )}
       </section>
 
-      <section className="mt-8">
-        <h2 className="text-sm font-semibold">Базовые товары (только просмотр)</h2>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {baseProducts.map((product) => (
-            <Link
-              key={product.slug}
-              href={`/product/${product.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3 hover:border-neutral-400"
-            >
-              <Image src={product.image} alt="" width={56} height={70} className="h-14 w-12 rounded-md object-cover" />
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold">{product.title}</span>
-                <span className="text-xs text-neutral-500">{formatPrice(product.priceFrom)}</span>
-              </span>
-              <ExternalLink className="ml-auto h-4 w-4 text-neutral-400" />
-            </Link>
-          ))}
-        </div>
-      </section>
+      <BaseProductsSection baseProducts={baseProducts} categories={categories} onNotify={onNotify} router={router} />
 
       {editor && (
         <ProductEditor
@@ -572,6 +568,674 @@ function ProductEditor({
           </button>
         </div>
       </form>
+    </div>
+  );
+}
+
+// ─── Base Products Section ────────────────────────────────────────────────────
+
+function BaseProductsSection({
+  baseProducts,
+  categories,
+  onNotify,
+  router,
+}: {
+  baseProducts: Product[];
+  categories: Category[];
+  onNotify: (msg: string) => void;
+  router: ReturnType<typeof useRouter>;
+}) {
+  const [products, setProducts] = useState(baseProducts);
+  const [editing, setEditing] = useState<Product | null>(null);
+
+  const saved = (updated: Product) => {
+    setProducts((cur) => cur.map((p) => (p.slug === updated.slug ? updated : p)));
+    setEditing(null);
+    onNotify("Базовый товар обновлён.");
+    router.refresh();
+  };
+
+  return (
+    <section className="mt-8">
+      <h2 className="text-sm font-semibold">Базовые товары</h2>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {products.map((product) => (
+          <div key={product.slug} className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3">
+            <Image src={product.image} alt="" width={56} height={70} className="h-14 w-12 rounded-md object-cover" />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold">{product.title}</span>
+              <span className="text-xs text-neutral-500">{formatPrice(product.priceFrom)}</span>
+            </span>
+            <button type="button" onClick={() => setEditing(product)} aria-label="Редактировать" className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100">
+              <Pencil className="h-4 w-4" />
+            </button>
+            <Link href={`/product/${product.slug}`} target="_blank" rel="noopener noreferrer" aria-label="Открыть" className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100">
+              <ExternalLink className="h-4 w-4" />
+            </Link>
+          </div>
+        ))}
+      </div>
+      {editing && (
+        <BaseProductEditor
+          product={editing}
+          categories={categories}
+          onClose={() => setEditing(null)}
+          onSaved={saved}
+        />
+      )}
+    </section>
+  );
+}
+
+function BaseProductEditor({
+  product, categories, onClose, onSaved,
+}: {
+  product: Product;
+  categories: Category[];
+  onClose: () => void;
+  onSaved: (p: Product) => void;
+}) {
+  const [title, setTitle] = useState(product.title);
+  const [excerpt, setExcerpt] = useState(product.excerpt);
+  const [description, setDescription] = useState(product.description);
+  const [priceFrom, setPriceFrom] = useState(String(product.priceFrom));
+  const [category, setCategory] = useState(product.category);
+  const [material, setMaterial] = useState(product.material);
+  const [printMethod, setPrintMethod] = useState(product.printMethod);
+  const [imageAlt, setImageAlt] = useState(product.imageAlt);
+  const [badge, setBadge] = useState(product.badge ?? "");
+  const [colors, setColors] = useState<ProductColor[]>(product.colors);
+  const [file, setFile] = useState<File | null>(null);
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
+  const preview = useMemo(() => (file ? URL.createObjectURL(file) : product.image), [file, product.image]);
+
+  useEffect(() => { return () => { if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview); }; }, [preview]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
+  }, [onClose]);
+
+  const toggleColor = (color: ProductColor) => {
+    setColors((cur) => {
+      const exists = cur.some((c) => c.hex === color.hex);
+      if (exists && cur.length === 1) return cur;
+      return exists ? cur.filter((c) => c.hex !== color.hex) : [...cur, color];
+    });
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPending(true); setError("");
+    const data = new FormData();
+    data.set("title", title); data.set("excerpt", excerpt);
+    data.set("description", description); data.set("priceFrom", priceFrom);
+    data.set("category", category); data.set("material", material);
+    data.set("printMethod", printMethod); data.set("imageAlt", imageAlt);
+    data.set("badge", badge); data.set("colors", JSON.stringify(colors));
+    if (file) data.set("image", file);
+    try {
+      const res = await fetch(`/api/admin/base-products/${product.slug}`, { method: "PUT", body: data });
+      const result = (await res.json()) as { product?: Product; error?: string };
+      if (!res.ok || !result.product) throw new Error(result.error || "Ошибка сохранения.");
+      onSaved(result.product);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка.");
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/35" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <form onSubmit={submit} className="flex h-full w-full max-w-2xl flex-col bg-white shadow-xl">
+        <div className="flex h-16 shrink-0 items-center justify-between border-b border-neutral-200 px-5 sm:px-6">
+          <div>
+            <h2 className="font-semibold">Редактирование базового товара</h2>
+            <p className="text-xs text-neutral-500">{product.slug}</p>
+          </div>
+          <button type="button" onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100" aria-label="Закрыть"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="flex-1 space-y-6 overflow-y-auto px-5 py-6 sm:px-6">
+          <div className="grid gap-5 sm:grid-cols-[160px_1fr]">
+            <label className="group relative flex aspect-[4/5] cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-neutral-300 bg-neutral-50">
+              <Image src={preview} alt="Предпросмотр" fill unoptimized={preview.startsWith("blob:")} className="object-cover" />
+              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="sr-only" />
+            </label>
+            <div className="grid content-start gap-4">
+              <Field label="Название"><input value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={100} className={inputClass} /></Field>
+              <Field label="Alt изображения"><input value={imageAlt} onChange={(e) => setImageAlt(e.target.value)} required maxLength={180} className={inputClass} /></Field>
+              <Field label="Бейдж" hint="Необязательно"><input value={badge} onChange={(e) => setBadge(e.target.value)} maxLength={30} placeholder="Хит" className={inputClass} /></Field>
+            </div>
+          </div>
+          <Field label="Короткое описание" hint={`${excerpt.length}/220`}><textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} required maxLength={220} rows={2} className={textareaClass} /></Field>
+          <Field label="Полное описание" hint={`${description.length}/3000`}><textarea value={description} onChange={(e) => setDescription(e.target.value)} required maxLength={3000} rows={5} className={textareaClass} /></Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Цена от, ₽"><input type="number" min={1} value={priceFrom} onChange={(e) => setPriceFrom(e.target.value)} required className={inputClass} /></Field>
+            <Field label="Категория"><select value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>{categories.map((c) => <option key={c.slug} value={c.slug}>{c.title}</option>)}</select></Field>
+            <Field label="Материал"><input value={material} onChange={(e) => setMaterial(e.target.value)} required maxLength={140} className={inputClass} /></Field>
+            <Field label="Метод печати"><input value={printMethod} onChange={(e) => setPrintMethod(e.target.value)} required maxLength={140} className={inputClass} /></Field>
+          </div>
+          <fieldset>
+            <legend className="text-sm font-semibold">Доступные цвета</legend>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {colorOptions.map((color) => {
+                const selected = colors.some((c) => c.hex === color.hex);
+                return (
+                  <button key={color.hex} type="button" onClick={() => toggleColor(color)} aria-pressed={selected} className={`inline-flex h-9 items-center gap-2 rounded-md border px-3 text-xs font-medium ${selected ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-300 bg-white"}`}>
+                    <span className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: color.hex }} />{color.name}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+          {error && <p role="alert" className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+        </div>
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-5 py-4 sm:px-6">
+          <button type="button" onClick={onClose} className="h-10 rounded-md border border-neutral-300 px-4 text-sm font-semibold hover:bg-neutral-50">Отмена</button>
+          <button type="submit" disabled={pending} className="h-10 rounded-md bg-neutral-900 px-5 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-60">
+            {pending ? "Сохраняем..." : "Сохранить"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// ─── Content Panel ────────────────────────────────────────────────────────────
+
+type ContentSection = "pricing" | "benefits" | "steps" | "trustbar" | "useCases" | "categories";
+
+function ContentPanel({
+  initialContent,
+  initialCategories,
+  onNotify,
+}: {
+  initialContent: ManagedContent;
+  initialCategories: Category[];
+  onNotify: (msg: string) => void;
+}) {
+  const [section, setSection] = useState<ContentSection>("pricing");
+  const [content, setContent] = useState(initialContent);
+  const [categories, setCategories] = useState(initialCategories);
+
+  const saveSection = async (key: keyof ManagedContent, data: ManagedContent[keyof ManagedContent]) => {
+    const res = await fetch(`/api/admin/content?section=${key}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Ошибка сохранения.");
+    setContent((c) => ({ ...c, [key]: data }));
+    onNotify("Сохранено.");
+  };
+
+  const saveCategory = async (slug: string, data: Omit<Category, "slug">, imageFile?: File | null) => {
+    const form = new FormData();
+    Object.entries(data).forEach(([k, v]) => form.set(k, v));
+    if (imageFile) form.set("image", imageFile);
+    const res = await fetch(`/api/admin/categories/${slug}`, { method: "PUT", body: form });
+    const result = (await res.json()) as { category?: Category; error?: string };
+    if (!res.ok || !result.category) throw new Error(result.error ?? "Ошибка сохранения.");
+    setCategories((cur) => cur.map((c) => (c.slug === slug ? result.category! : c)));
+    onNotify("Категория сохранена.");
+  };
+
+  const sectionTabs: { id: ContentSection; label: string }[] = [
+    { id: "pricing", label: "Цены" },
+    { id: "benefits", label: "Преимущества" },
+    { id: "steps", label: "Как мы работаем" },
+    { id: "trustbar", label: "Trust Bar" },
+    { id: "useCases", label: "Сценарии" },
+    { id: "categories", label: "Категории" },
+  ];
+
+  return (
+    <>
+      <div>
+        <p className="text-xs font-semibold uppercase text-neutral-500">Контент сайта</p>
+        <h1 className="mt-1 text-3xl font-bold">Редактор контента</h1>
+        <p className="mt-2 text-sm text-neutral-600">Измените тексты, цены и изображения секций главной страницы.</p>
+      </div>
+
+      <div className="mt-6 flex gap-1 overflow-x-auto border-b border-neutral-200">
+        {sectionTabs.map((t) => (
+          <button key={t.id} type="button" onClick={() => setSection(t.id)} className={`inline-flex h-10 items-center whitespace-nowrap border-b-2 px-4 text-sm font-medium transition-colors ${section === t.id ? "border-neutral-900 text-neutral-900" : "border-transparent text-neutral-500 hover:text-neutral-700"}`}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-8">
+        {section === "pricing" && <PricingEditor tiers={content.pricing} onSave={(d) => saveSection("pricing", d)} />}
+        {section === "benefits" && <BenefitsEditor items={content.benefits} onSave={(d) => saveSection("benefits", d)} />}
+        {section === "steps" && <StepsEditor items={content.steps} onSave={(d) => saveSection("steps", d)} />}
+        {section === "trustbar" && <TrustBarEditor items={content.trustbar} onSave={(d) => saveSection("trustbar", d)} />}
+        {section === "useCases" && <UseCasesEditor items={content.useCases} onSave={(d) => saveSection("useCases", d)} />}
+        {section === "categories" && <CategoriesEditor categories={categories} onSave={saveCategory} />}
+      </div>
+    </>
+  );
+}
+
+// ─── Pricing Editor ───────────────────────────────────────────────────────────
+
+function PricingEditor({ tiers, onSave }: { tiers: PricingTier[]; onSave: (d: PricingTier[]) => Promise<void> }) {
+  const [items, setItems] = useState(tiers);
+  const [editing, setEditing] = useState<{ idx: number; tier: PricingTier } | null>(null);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+
+  const empty = (): PricingTier => ({ name: "", price: 0, oldPrice: null, badge: null, note: "", features: [], ctaLabel: "Заказать", ctaHref: "/configurator", featured: false });
+
+  const save = async () => {
+    setPending(true); setError("");
+    try { await onSave(items); } catch (e) { setError(e instanceof Error ? e.message : "Ошибка."); } finally { setPending(false); }
+  };
+
+  const commitEditing = (tier: PricingTier) => {
+    if (!editing) return;
+    setItems((cur) => editing.idx === -1 ? [...cur, tier] : cur.map((t, i) => i === editing.idx ? tier : t));
+    setEditing(null);
+  };
+
+  return (
+    <div className="max-w-3xl space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold">Тарифные карточки ({items.length})</p>
+        <button type="button" onClick={() => setEditing({ idx: -1, tier: empty() })} className="inline-flex h-9 items-center gap-1.5 rounded-md bg-neutral-900 px-3 text-xs font-semibold text-white hover:bg-neutral-800"><Plus className="h-3.5 w-3.5" /> Добавить</button>
+      </div>
+      {items.map((tier, i) => (
+        <div key={i} className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white p-4">
+          <div>
+            <p className="font-semibold text-sm">{tier.name} <span className="ml-2 text-xs text-neutral-500">₽{tier.price} / {tier.note}</span></p>
+            <p className="text-xs text-neutral-400 mt-0.5">{tier.features.slice(0, 2).join(" · ")}</p>
+          </div>
+          <div className="flex items-center gap-1">
+            {tier.featured && <span className="rounded bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">Хит</span>}
+            <button type="button" onClick={() => setEditing({ idx: i, tier })} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100"><Pencil className="h-4 w-4" /></button>
+            <button type="button" onClick={() => setItems((c) => c.filter((_, j) => j !== i))} className="flex h-9 w-9 items-center justify-center rounded-md text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button>
+          </div>
+        </div>
+      ))}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <button type="button" onClick={save} disabled={pending} className="inline-flex h-10 items-center gap-2 rounded-md bg-neutral-900 px-5 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-60"><Save className="h-4 w-4" />{pending ? "Сохраняем..." : "Сохранить"}</button>
+      {editing && <PricingTierEditor tier={editing.tier} onClose={() => setEditing(null)} onSave={commitEditing} />}
+    </div>
+  );
+}
+
+function PricingTierEditor({ tier, onClose, onSave }: { tier: PricingTier; onClose: () => void; onSave: (t: PricingTier) => void }) {
+  const [t, setT] = useState(tier);
+  const [featureInput, setFeatureInput] = useState(tier.features.join("\n"));
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
+  }, [onClose]);
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({ ...t, features: featureInput.split("\n").map((s) => s.trim()).filter(Boolean) });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/35" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <form onSubmit={submit} className="flex h-full w-full max-w-lg flex-col bg-white shadow-xl">
+        <div className="flex h-16 shrink-0 items-center justify-between border-b border-neutral-200 px-5">
+          <h2 className="font-semibold">Тарифная карточка</h2>
+          <button type="button" onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100" aria-label="Закрыть"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-6">
+          <Field label="Название тарифа"><input value={t.name} onChange={(e) => setT((p) => ({ ...p, name: e.target.value }))} required className={inputClass} /></Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Цена, ₽"><input type="number" min={0} value={t.price} onChange={(e) => setT((p) => ({ ...p, price: Number(e.target.value) }))} required className={inputClass} /></Field>
+            <Field label="Зачёркнутая цена, ₽" hint="Необязательно"><input type="number" min={0} value={t.oldPrice ?? ""} onChange={(e) => setT((p) => ({ ...p, oldPrice: e.target.value ? Number(e.target.value) : null }))} className={inputClass} /></Field>
+          </div>
+          <Field label="Подпись к цене" hint="Например: за футболку"><input value={t.note} onChange={(e) => setT((p) => ({ ...p, note: e.target.value }))} required className={inputClass} /></Field>
+          <Field label="Бейдж" hint="Необязательно"><input value={t.badge ?? ""} onChange={(e) => setT((p) => ({ ...p, badge: e.target.value || null }))} className={inputClass} /></Field>
+          <Field label="Фичи (по одной на строку)" hint="Enter = новая строка"><textarea value={featureInput} onChange={(e) => setFeatureInput(e.target.value)} rows={5} className={textareaClass} /></Field>
+          <Field label="Текст кнопки"><input value={t.ctaLabel} onChange={(e) => setT((p) => ({ ...p, ctaLabel: e.target.value }))} required className={inputClass} /></Field>
+          <Field label="Ссылка кнопки"><input value={t.ctaHref} onChange={(e) => setT((p) => ({ ...p, ctaHref: e.target.value }))} required className={inputClass} /></Field>
+          <label className="flex items-center gap-3">
+            <input type="checkbox" checked={t.featured} onChange={(e) => setT((p) => ({ ...p, featured: e.target.checked }))} className="h-4 w-4 accent-neutral-900" />
+            <span className="text-sm font-semibold">Выделить как основной</span>
+          </label>
+        </div>
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-5 py-4">
+          <button type="button" onClick={onClose} className="h-10 rounded-md border border-neutral-300 px-4 text-sm font-semibold hover:bg-neutral-50">Отмена</button>
+          <button type="submit" className="h-10 rounded-md bg-neutral-900 px-5 text-sm font-semibold text-white hover:bg-neutral-800">Готово</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// ─── Benefits Editor ──────────────────────────────────────────────────────────
+
+function BenefitsEditor({ items, onSave }: { items: Benefit[]; onSave: (d: Benefit[]) => Promise<void> }) {
+  const [list, setList] = useState(items);
+  const [editing, setEditing] = useState<{ idx: number; item: Benefit } | null>(null);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+
+  const save = async () => {
+    setPending(true); setError("");
+    try { await onSave(list); } catch (e) { setError(e instanceof Error ? e.message : "Ошибка."); } finally { setPending(false); }
+  };
+
+  const commit = (item: Benefit) => {
+    if (!editing) return;
+    setList((cur) => editing.idx === -1 ? [...cur, item] : cur.map((b, i) => i === editing.idx ? item : b));
+    setEditing(null);
+  };
+
+  return (
+    <div className="max-w-3xl space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold">Карточки преимуществ ({list.length})</p>
+        <button type="button" onClick={() => setEditing({ idx: -1, item: { icon: "star", title: "", text: "" } })} className="inline-flex h-9 items-center gap-1.5 rounded-md bg-neutral-900 px-3 text-xs font-semibold text-white hover:bg-neutral-800"><Plus className="h-3.5 w-3.5" /> Добавить</button>
+      </div>
+      {list.map((b, i) => (
+        <div key={i} className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white p-4">
+          <div>
+            <p className="font-semibold text-sm">{b.title}</p>
+            <p className="text-xs text-neutral-500 mt-0.5 line-clamp-1">{b.text}</p>
+          </div>
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => setEditing({ idx: i, item: b })} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100"><Pencil className="h-4 w-4" /></button>
+            <button type="button" onClick={() => setList((c) => c.filter((_, j) => j !== i))} className="flex h-9 w-9 items-center justify-center rounded-md text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button>
+          </div>
+        </div>
+      ))}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <button type="button" onClick={save} disabled={pending} className="inline-flex h-10 items-center gap-2 rounded-md bg-neutral-900 px-5 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-60"><Save className="h-4 w-4" />{pending ? "Сохраняем..." : "Сохранить"}</button>
+      {editing && (
+        <SimpleDrawer title="Преимущество" onClose={() => setEditing(null)} onSave={() => commit(editing.item)}>
+          <Field label="Иконка" hint="Название из lucide-react, напр. star"><input value={editing.item.icon} onChange={(e) => setEditing((p) => p && ({ ...p, item: { ...p.item, icon: e.target.value } }))} required className={inputClass} /></Field>
+          <Field label="Заголовок"><input value={editing.item.title} onChange={(e) => setEditing((p) => p && ({ ...p, item: { ...p.item, title: e.target.value } }))} required className={inputClass} /></Field>
+          <Field label="Описание"><textarea value={editing.item.text} onChange={(e) => setEditing((p) => p && ({ ...p, item: { ...p.item, text: e.target.value } }))} required rows={3} className={textareaClass} /></Field>
+        </SimpleDrawer>
+      )}
+    </div>
+  );
+}
+
+// ─── Steps Editor ─────────────────────────────────────────────────────────────
+
+function StepsEditor({ items, onSave }: { items: Step[]; onSave: (d: Step[]) => Promise<void> }) {
+  const [list, setList] = useState(items);
+  const [editing, setEditing] = useState<{ idx: number; item: Step } | null>(null);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+
+  const save = async () => {
+    setPending(true); setError("");
+    try { await onSave(list); } catch (e) { setError(e instanceof Error ? e.message : "Ошибка."); } finally { setPending(false); }
+  };
+
+  const commit = (item: Step) => {
+    if (!editing) return;
+    setList((cur) => editing.idx === -1 ? [...cur, item] : cur.map((s, i) => i === editing.idx ? item : s));
+    setEditing(null);
+  };
+
+  return (
+    <div className="max-w-3xl space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold">Шаги ({list.length})</p>
+        <button type="button" onClick={() => setEditing({ idx: -1, item: { title: "", text: "" } })} className="inline-flex h-9 items-center gap-1.5 rounded-md bg-neutral-900 px-3 text-xs font-semibold text-white hover:bg-neutral-800"><Plus className="h-3.5 w-3.5" /> Добавить</button>
+      </div>
+      {list.map((s, i) => (
+        <div key={i} className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white p-4">
+          <div>
+            <p className="font-semibold text-sm">0{i + 1}. {s.title}</p>
+            <p className="text-xs text-neutral-500 mt-0.5 line-clamp-1">{s.text}</p>
+          </div>
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => setEditing({ idx: i, item: s })} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100"><Pencil className="h-4 w-4" /></button>
+            <button type="button" onClick={() => setList((c) => c.filter((_, j) => j !== i))} className="flex h-9 w-9 items-center justify-center rounded-md text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button>
+          </div>
+        </div>
+      ))}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <button type="button" onClick={save} disabled={pending} className="inline-flex h-10 items-center gap-2 rounded-md bg-neutral-900 px-5 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-60"><Save className="h-4 w-4" />{pending ? "Сохраняем..." : "Сохранить"}</button>
+      {editing && (
+        <SimpleDrawer title="Шаг" onClose={() => setEditing(null)} onSave={() => commit(editing.item)}>
+          <Field label="Заголовок шага"><input value={editing.item.title} onChange={(e) => setEditing((p) => p && ({ ...p, item: { ...p.item, title: e.target.value } }))} required className={inputClass} /></Field>
+          <Field label="Описание"><textarea value={editing.item.text} onChange={(e) => setEditing((p) => p && ({ ...p, item: { ...p.item, text: e.target.value } }))} required rows={3} className={textareaClass} /></Field>
+        </SimpleDrawer>
+      )}
+    </div>
+  );
+}
+
+// ─── TrustBar Editor ──────────────────────────────────────────────────────────
+
+function TrustBarEditor({ items, onSave }: { items: string[]; onSave: (d: string[]) => Promise<void> }) {
+  const [list, setList] = useState(items);
+  const [newItem, setNewItem] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+
+  const save = async () => {
+    setPending(true); setError("");
+    try { await onSave(list); } catch (e) { setError(e instanceof Error ? e.message : "Ошибка."); } finally { setPending(false); }
+  };
+
+  const add = () => {
+    const v = newItem.trim();
+    if (!v) return;
+    setList((c) => [...c, v]);
+    setNewItem("");
+  };
+
+  return (
+    <div className="max-w-2xl space-y-4">
+      <p className="text-sm font-semibold">Строки бегущей строки ({list.length})</p>
+      <div className="space-y-2">
+        {list.map((item, i) => (
+          <div key={i} className="flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2">
+            <span className="flex-1 text-sm">{item}</span>
+            <button type="button" onClick={() => setList((c) => c.filter((_, j) => j !== i))} className="flex h-7 w-7 items-center justify-center rounded text-red-500 hover:bg-red-50"><Trash2 className="h-3.5 w-3.5" /></button>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <input value={newItem} onChange={(e) => setNewItem(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), add())} placeholder="Новый пункт..." className={`${inputClass} flex-1`} />
+        <button type="button" onClick={add} className="inline-flex h-10 items-center gap-1 rounded-md bg-neutral-100 px-3 text-sm font-medium hover:bg-neutral-200"><Plus className="h-4 w-4" /></button>
+      </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <button type="button" onClick={save} disabled={pending} className="inline-flex h-10 items-center gap-2 rounded-md bg-neutral-900 px-5 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-60"><Save className="h-4 w-4" />{pending ? "Сохраняем..." : "Сохранить"}</button>
+    </div>
+  );
+}
+
+// ─── UseCases Editor ──────────────────────────────────────────────────────────
+
+function UseCasesEditor({ items, onSave }: { items: UseCase[]; onSave: (d: UseCase[]) => Promise<void> }) {
+  const [list, setList] = useState(items);
+  const [editing, setEditing] = useState<{ idx: number; item: UseCase } | null>(null);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+
+  const save = async () => {
+    setPending(true); setError("");
+    try { await onSave(list); } catch (e) { setError(e instanceof Error ? e.message : "Ошибка."); } finally { setPending(false); }
+  };
+
+  const commit = (item: UseCase) => {
+    if (!editing) return;
+    setList((cur) => editing.idx === -1 ? [...cur, item] : cur.map((u, i) => i === editing.idx ? item : u));
+    setEditing(null);
+  };
+
+  return (
+    <div className="max-w-3xl space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold">Сценарии ({list.length})</p>
+        <button type="button" onClick={() => setEditing({ idx: -1, item: { title: "", text: "", image: "", imageAlt: "" } })} className="inline-flex h-9 items-center gap-1.5 rounded-md bg-neutral-900 px-3 text-xs font-semibold text-white hover:bg-neutral-800"><Plus className="h-3.5 w-3.5" /> Добавить</button>
+      </div>
+      {list.map((u, i) => (
+        <div key={i} className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-4">
+          {u.image && <Image src={u.image} alt={u.imageAlt} width={64} height={40} className="h-10 w-16 rounded-md object-cover" />}
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-sm">{u.title}</p>
+            <p className="text-xs text-neutral-500 mt-0.5 line-clamp-1">{u.text}</p>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <button type="button" onClick={() => setEditing({ idx: i, item: u })} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100"><Pencil className="h-4 w-4" /></button>
+            <button type="button" onClick={() => setList((c) => c.filter((_, j) => j !== i))} className="flex h-9 w-9 items-center justify-center rounded-md text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button>
+          </div>
+        </div>
+      ))}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <button type="button" onClick={save} disabled={pending} className="inline-flex h-10 items-center gap-2 rounded-md bg-neutral-900 px-5 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-60"><Save className="h-4 w-4" />{pending ? "Сохраняем..." : "Сохранить"}</button>
+      {editing && (
+        <SimpleDrawer title="Сценарий" onClose={() => setEditing(null)} onSave={() => commit(editing.item)}>
+          <Field label="Заголовок"><input value={editing.item.title} onChange={(e) => setEditing((p) => p && ({ ...p, item: { ...p.item, title: e.target.value } }))} required className={inputClass} /></Field>
+          <Field label="Описание"><textarea value={editing.item.text} onChange={(e) => setEditing((p) => p && ({ ...p, item: { ...p.item, text: e.target.value } }))} required rows={3} className={textareaClass} /></Field>
+          <Field label="URL изображения" hint="Или замените через Медиа"><input value={editing.item.image} onChange={(e) => setEditing((p) => p && ({ ...p, item: { ...p.item, image: e.target.value } }))} required className={inputClass} /></Field>
+          <Field label="Alt изображения"><input value={editing.item.imageAlt} onChange={(e) => setEditing((p) => p && ({ ...p, item: { ...p.item, imageAlt: e.target.value } }))} required className={inputClass} /></Field>
+        </SimpleDrawer>
+      )}
+    </div>
+  );
+}
+
+// ─── Categories Editor ────────────────────────────────────────────────────────
+
+function CategoriesEditor({
+  categories,
+  onSave,
+}: {
+  categories: Category[];
+  onSave: (slug: string, data: Omit<Category, "slug">, imageFile?: File | null) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState<Category | null>(null);
+
+  return (
+    <div className="max-w-3xl space-y-4">
+      <p className="text-sm font-semibold">Категории ({categories.length})</p>
+      {categories.map((c) => (
+        <div key={c.slug} className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-4">
+          <Image src={c.image} alt={c.imageAlt} width={48} height={64} className="h-16 w-12 rounded-md object-cover" />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-sm">{c.title}</p>
+            <p className="text-xs text-neutral-500 mt-0.5 line-clamp-1">{c.description}</p>
+          </div>
+          <button type="button" onClick={() => setEditing(c)} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100"><Pencil className="h-4 w-4" /></button>
+        </div>
+      ))}
+      {editing && (
+        <CategoryEditor
+          category={editing}
+          onClose={() => setEditing(null)}
+          onSave={async (data, file) => { await onSave(editing.slug, data, file); setEditing(null); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function CategoryEditor({
+  category, onClose, onSave,
+}: {
+  category: Category;
+  onClose: () => void;
+  onSave: (data: Omit<Category, "slug">, file?: File | null) => Promise<void>;
+}) {
+  const [title, setTitle] = useState(category.title);
+  const [description, setDescription] = useState(category.description);
+  const [imageAlt, setImageAlt] = useState(category.imageAlt);
+  const [file, setFile] = useState<File | null>(null);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const preview = useMemo(() => (file ? URL.createObjectURL(file) : category.image), [file, category.image]);
+
+  useEffect(() => { return () => { if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview); }; }, [preview]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
+  }, [onClose]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPending(true); setError("");
+    try {
+      await onSave({ title, description, image: category.image, imageAlt }, file);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка.");
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/35" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <form onSubmit={submit} className="flex h-full w-full max-w-lg flex-col bg-white shadow-xl">
+        <div className="flex h-16 shrink-0 items-center justify-between border-b border-neutral-200 px-5">
+          <h2 className="font-semibold">Редактирование категории</h2>
+          <button type="button" onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100" aria-label="Закрыть"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-6">
+          <label className="group relative flex aspect-[3/4] w-32 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-neutral-300 bg-neutral-50">
+            <Image src={preview} alt="Предпросмотр" fill unoptimized={preview.startsWith("blob:")} className="object-cover" />
+            <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="sr-only" />
+          </label>
+          <Field label="Заголовок категории"><input value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={100} className={inputClass} /></Field>
+          <Field label="Описание (подпись)"><textarea value={description} onChange={(e) => setDescription(e.target.value)} required maxLength={200} rows={2} className={textareaClass} /></Field>
+          <Field label="Alt изображения"><input value={imageAlt} onChange={(e) => setImageAlt(e.target.value)} required maxLength={180} className={inputClass} /></Field>
+          {error && <p role="alert" className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+        </div>
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-5 py-4">
+          <button type="button" onClick={onClose} className="h-10 rounded-md border border-neutral-300 px-4 text-sm font-semibold hover:bg-neutral-50">Отмена</button>
+          <button type="submit" disabled={pending} className="h-10 rounded-md bg-neutral-900 px-5 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-60">{pending ? "Сохраняем..." : "Сохранить"}</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// ─── SimpleDrawer helper ──────────────────────────────────────────────────────
+
+function SimpleDrawer({
+  title,
+  children,
+  onClose,
+  onSave,
+}: {
+  title: string;
+  children: React.ReactNode;
+  onClose: () => void;
+  onSave: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/35" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="flex h-full w-full max-w-lg flex-col bg-white shadow-xl">
+        <div className="flex h-16 shrink-0 items-center justify-between border-b border-neutral-200 px-5">
+          <h2 className="font-semibold">{title}</h2>
+          <button type="button" onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100" aria-label="Закрыть"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-6">{children}</div>
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 px-5 py-4">
+          <button type="button" onClick={onClose} className="h-10 rounded-md border border-neutral-300 px-4 text-sm font-semibold hover:bg-neutral-50">Отмена</button>
+          <button type="button" onClick={onSave} className="h-10 rounded-md bg-neutral-900 px-5 text-sm font-semibold text-white hover:bg-neutral-800">Готово</button>
+        </div>
+      </div>
     </div>
   );
 }

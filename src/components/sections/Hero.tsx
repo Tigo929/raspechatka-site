@@ -6,6 +6,7 @@ import { CountUp } from "@/components/interaction/CountUp";
 import { HeroCarousel } from "@/components/sections/HeroCarousel";
 import { heroSlides } from "@/data/images";
 import { siteConfig } from "@/data/site";
+import { getMediaVersions, applyVersion } from "@/lib/media-repository";
 
 /**
  * Серверный hero: H1 и изображение рендерятся сразу с opacity:1 (бережём LCP).
@@ -13,7 +14,9 @@ import { siteConfig } from "@/data/site";
  * (магнитные CTA), CountUp (счётчики). Появление — через CSS-анимацию rise
  * (без гидрационной задержки), LCP-элементы не анимируются.
  */
-export function Hero() {
+export async function Hero() {
+  const versions = await getMediaVersions();
+  const slides = heroSlides.map((s) => ({ ...s, src: applyVersion(s.src, versions) }));
   return (
     <section className="relative overflow-hidden pt-10 sm:pt-14 lg:pt-20">
       <Container>
@@ -84,7 +87,7 @@ export function Hero() {
 
           {/* Визуал */}
           <div className="relative">
-            <HeroCarousel slides={heroSlides} />
+            <HeroCarousel slides={slides} />
 
             <div
               className="animate-float shadow-lift border-line/70 absolute top-6 -left-3 flex items-center gap-2.5 rounded-2xl border bg-white/95 px-4 py-3 backdrop-blur sm:-left-6"

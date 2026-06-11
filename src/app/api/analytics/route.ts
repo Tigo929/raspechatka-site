@@ -1,7 +1,9 @@
+﻿import "reflect-metadata";
 import { NextResponse } from "next/server";
 import { appendEvent } from "@/lib/analytics-repository";
 import { allowRequest, getRequestIp } from "@/lib/rate-limit";
-import type { AnalyticsEvent } from "@/types";
+import { validateDto } from "@/lib/validate";
+import { AnalyticsDto } from "@/lib/dto/analytics.dto";
 
 export const runtime = "nodejs";
 
@@ -12,24 +14,17 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = (await request.json()) as Partial<Omit<AnalyticsEvent, "id" | "timestamp">>;
-    const { type, page, sessionId, device } = body;
-    if (!type || !page || !sessionId || !device) {
-      return NextResponse.json({ ok: true });
-    }
-    if (!["pageview", "session_end"].includes(type)) {
-      return NextResponse.json({ ok: true });
-    }
+    const plain = await request.json();
+    const { data } = await validateDto(AnalyticsDto, plain);
+    if (!data) return NextResponse.json({ ok: true }); // silently ignore invalid
 
     await appendEvent({
-      type: type as AnalyticsEvent["type"],
-      page: String(page).slice(0, 200),
-      sessionId: String(sessionId).slice(0, 64),
-      device: (["mobile", "desktop", "tablet"].includes(String(device))
-        ? device
-        : "desktop") as AnalyticsEvent["device"],
-      duration: typeof body.duration === "number" ? Math.min(body.duration, 7200) : undefined,
-      referrer: body.referrer ? String(body.referrer).slice(0, 300) : undefined,
+      type: data.type,
+      page: data.page,
+      sessionId: data.sessionId,
+      device: data.device,
+      duration: data.duration,
+      referrer: data.referrer,
     });
   } catch {
     // never surface analytics errors to client

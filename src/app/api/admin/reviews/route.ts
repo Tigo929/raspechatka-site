@@ -1,7 +1,10 @@
+﻿import "reflect-metadata";
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated, isSameOriginRequest } from "@/lib/admin-auth";
 import { createReview, getReviews } from "@/lib/content-repository";
-import type { ManagedReview } from "@/types";
+import { validateDto } from "@/lib/validate";
+import { ReviewDto } from "@/lib/dto/review.dto";
+import { stripHtml } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
 
@@ -17,18 +20,21 @@ export async function POST(request: Request) {
   if (!(await isSameOriginRequest(request)))
     return NextResponse.json({ error: "Недопустимый источник." }, { status: 403 });
 
-  const body = (await request.json()) as Partial<ManagedReview>;
-  if (!body.name?.trim() || !body.text?.trim() || !body.date)
-    return NextResponse.json({ error: "Заполните обязательные поля." }, { status: 400 });
+  let plain: unknown;
+  try { plain = await request.json(); }
+  catch { return NextResponse.json({ error: "Некорректный формат данных." }, { status: 400 }); }
+
+  const { data, errors } = await validateDto(ReviewDto, plain);
+  if (errors) return NextResponse.json({ error: errors[0] }, { status: 422 });
 
   const review = await createReview({
-    name: body.name.trim(),
-    context: body.context?.trim() ?? "",
-    rating: Number(body.rating) || 5,
-    text: body.text.trim(),
-    date: body.date,
-    source: body.source ?? "manual",
-    published: body.published ?? true,
+    name: stripHtml(data.name),
+    context: data.context ? stripHtml(data.context) : "",
+    rating: data.rating,
+    text: stripHtml(data.text),
+    date: data.date,
+    source: (data.source ?? "manual") as import("@/types").ReviewSource,
+    published: data.published ?? true,
   });
   return NextResponse.json({ review }, { status: 201 });
 }

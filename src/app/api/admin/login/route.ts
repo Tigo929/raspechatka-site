@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   }
   if (
     !allowRequest(`admin-login:${getRequestIp(request)}`, {
-      limit: 8,
+      limit: 5,
       windowMs: 15 * 60 * 1000,
     })
   ) {

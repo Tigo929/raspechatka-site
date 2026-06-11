@@ -3,9 +3,10 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 import { Icon } from "@/components/ui/Icon";
 import { Tilt } from "@/components/interaction/Tilt";
-import { benefits } from "@/data/benefits";
+import { getBenefits } from "@/lib/content-repository";
 
-export function Benefits() {
+export async function Benefits() {
+  const benefits = await getBenefits();
   return (
     <Section id="benefits">
       <SectionHeading

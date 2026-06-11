@@ -13,7 +13,7 @@ export function Footer() {
   return (
     <footer data-site-chrome className="bg-midnight text-paper/70">
       <Container className="py-16 lg:py-20">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-12">
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-12 xl:gap-12">
           <div className="lg:col-span-4">
             <Link
               href="/"
@@ -35,10 +35,8 @@ export function Footer() {
                 <Send width={18} height={18} />
               </a>
               <a
-                href={siteConfig.social.whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="WhatsApp"
+                href={siteConfig.phoneHref}
+                aria-label="Позвонить"
                 className="hover:bg-accent flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors"
               >
                 <Phone width={18} height={18} />
@@ -82,6 +80,27 @@ export function Footer() {
             </ul>
           </div>
 
+          <div className="lg:col-span-2">
+            <h3 className="text-sm font-semibold tracking-wide text-white uppercase">
+              Информация
+            </h3>
+            <ul className="mt-4 space-y-2.5 text-sm">
+              {[
+                { href: "/contacts", label: "Контакты" },
+                { href: "/terms", label: "Условия заказа" },
+                { href: "/delivery-and-return", label: "Доставка и возврат" },
+                { href: "/privacy", label: "Конфиденциальность" },
+                { href: "/cookie-policy", label: "Cookie" },
+              ].map(({ href, label }) => (
+                <li key={href}>
+                  <Link href={href} className="hover:text-accent transition-colors">
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           <div className="lg:col-span-3">
             <h3 className="text-sm font-semibold tracking-wide text-white uppercase">
               Контакты
@@ -114,11 +133,15 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="text-paper/50 mt-14 flex flex-col gap-3 border-t border-white/10 pt-8 text-xs sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-paper/50 mt-14 flex flex-col gap-3 border-t border-white/10 pt-8 text-xs sm:flex-row sm:items-start sm:justify-between">
           <p>
             © {year} {siteConfig.legalName}. Все права защищены.
           </p>
-          <p>Печать на футболках на заказ · {siteConfig.city}</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 sm:text-right">
+            <Link href="/privacy" className="hover:text-paper/80 transition-colors">Персональные данные</Link>
+            <Link href="/personal-data-consent" className="hover:text-paper/80 transition-colors">Согласие на обработку</Link>
+            <Link href="/cookie-policy" className="hover:text-paper/80 transition-colors">Cookie</Link>
+          </div>
         </div>
       </Container>
     </footer>

@@ -5,9 +5,10 @@ import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 import { Tilt } from "@/components/interaction/Tilt";
-import { categories } from "@/data/categories";
+import { getCategories } from "@/lib/content-repository";
 
-export function Categories() {
+export async function Categories() {
+  const categories = await getCategories();
   return (
     <Section id="categories" className="bg-paper-dim/60">
       <SectionHeading
@@ -20,7 +21,7 @@ export function Categories() {
           <Reveal key={c.slug} delay={i * 0.06}>
             <Tilt max={8}>
               <Link
-                href={`/catalog/${categorySlugToLanding(c.slug)}`}
+                href={categoryHref(c.slug)}
                 data-cursor="view"
                 className="group shadow-soft hover:shadow-lift relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-3xl transition-shadow duration-300"
               >
@@ -54,13 +55,12 @@ export function Categories() {
   );
 }
 
-/** Привязка категории к релевантной SEO-посадочной. */
-function categorySlugToLanding(slug: string): string {
+function categoryHref(slug: string): string {
   const map: Record<string, string> = {
-    "s-printom": "futbolka-s-printom",
-    "s-foto": "futbolka-s-foto",
-    "s-nadpisyu": "futbolka-s-nadpisyu",
-    "s-logotipom": "futbolka-s-logotipom",
+    "s-printom": "/catalog/futbolka-s-printom",
+    "s-foto": "/configurator",
+    "s-nadpisyu": "/catalog/futbolka-s-nadpisyu",
+    "s-logotipom": "/catalog/futbolka-s-logotipom",
   };
-  return map[slug] ?? "futbolka-s-printom";
+  return map[slug] ?? "/configurator";
 }

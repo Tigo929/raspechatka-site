@@ -5,56 +5,10 @@ import { Reveal } from "@/components/ui/Reveal";
 import { Button } from "@/components/ui/Button";
 import { Tilt } from "@/components/interaction/Tilt";
 import { formatPrice } from "@/lib/utils";
+import { getPricing } from "@/lib/content-repository";
 
-const tiers = [
-  {
-    name: "Один заказ",
-    price: 949,
-    oldPrice: 1190,
-    badge: "🎉 В честь открытия",
-    note: "за футболку",
-    features: [
-      "Без минимального тиража",
-      "Макет в подарок",
-      "Печать от 1 дня",
-      "Премиальный хлопок",
-    ],
-    cta: { label: "Собрать футболку", href: "/configurator" },
-    featured: true,
-  },
-  {
-    name: "Малый тираж",
-    price: 849,
-    oldPrice: null,
-    badge: null,
-    note: "за футболку от 10 шт.",
-    features: [
-      "Скидка за объём",
-      "Единое качество тиража",
-      "Сортировка по размерам",
-      "Приоритетная печать",
-    ],
-    cta: { label: "Рассчитать тираж", href: "/catalog/merch-na-zakaz" },
-    featured: false,
-  },
-  {
-    name: "Корпоративный",
-    price: 749,
-    oldPrice: null,
-    badge: null,
-    note: "за футболку от 50 шт.",
-    features: [
-      "Лучшая цена за штуку",
-      "Работа по договору",
-      "Документы для юрлиц",
-      "Персональный менеджер",
-    ],
-    cta: { label: "Для бизнеса", href: "/catalog/korporativnye-futbolki" },
-    featured: false,
-  },
-];
-
-export function Pricing() {
+export async function Pricing() {
+  const tiers = await getPricing();
   return (
     <Section id="pricing">
       <SectionHeading
@@ -110,11 +64,11 @@ export function Pricing() {
                   ))}
                 </ul>
                 <Button
-                  href={t.cta.href}
+                  href={t.ctaHref}
                   variant={t.featured ? "primary" : "ghost"}
                   className="mt-7 w-full"
                 >
-                  {t.cta.label}
+                  {t.ctaLabel}
                 </Button>
               </div>
             </Tilt>

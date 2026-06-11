@@ -1,24 +1,28 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import type { FaqItem, ManagedFaqItem, ManagedReview, ManagedSettings, Review } from "@/types";
+import type { Benefit, Category, FaqItem, ManagedContent, ManagedFaqItem, ManagedReview, ManagedSettings, PricingTier, Review, Step, UseCase } from "@/types";
 import { reviews as staticReviews } from "@/data/reviews";
 import { faq as staticFaq } from "@/data/faq";
+import { benefits as staticBenefits, steps as staticSteps } from "@/data/benefits";
+import { useCases as staticUseCases } from "@/data/useCases";
+import { categories as staticCategories } from "@/data/categories";
 import { siteConfig } from "@/data/site";
+import { getMediaVersions, applyVersion } from "@/lib/media-repository";
 
 const dataDir = path.join(process.cwd(), "data");
 const reviewsFile = path.join(dataDir, "managed-reviews.json");
 const faqFile = path.join(dataDir, "managed-faq.json");
 const settingsFile = path.join(dataDir, "managed-settings.json");
+const categoriesFile = path.join(dataDir, "managed-categories.json");
+const contentFile = path.join(dataDir, "managed-content.json");
 
 let reviewsMutationQueue: Promise<void> = Promise.resolve();
 let faqMutationQueue: Promise<void> = Promise.resolve();
 
 async function safeWrite(file: string, data: unknown) {
   await mkdir(dataDir, { recursive: true });
-  const tmp = `${file}.${process.pid}.tmp`;
-  await writeFile(tmp, `${JSON.stringify(data, null, 2)}\n`, "utf8");
-  await rename(tmp, file);
+  await writeFile(file, `${JSON.stringify(data, null, 2)}\n`, "utf8");
 }
 
 // ─── REVIEWS ────────────────────────────────────────────────────────────────
@@ -190,4 +194,132 @@ export async function getSettings(): Promise<ManagedSettings> {
 export async function updateSettings(data: ManagedSettings): Promise<ManagedSettings> {
   await safeWrite(settingsFile, data);
   return data;
+}
+
+// ─── CATEGORIES ───────────────────────────────────────────────────────────────
+
+export async function getCategories(): Promise<Category[]> {
+  let cats: Category[];
+  try {
+    const raw = JSON.parse(await readFile(categoriesFile, "utf8")) as unknown;
+    cats = Array.isArray(raw) && raw.length > 0 ? (raw as Category[]) : staticCategories;
+    if (!(Array.isArray(raw) && raw.length > 0)) {
+      await safeWrite(categoriesFile, staticCategories);
+    }
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
+    await safeWrite(categoriesFile, staticCategories);
+    cats = staticCategories;
+  }
+  const versions = await getMediaVersions();
+  return cats.map((c) => ({ ...c, image: applyVersion(c.image, versions) }));
+}
+
+export async function updateCategory(slug: string, data: Omit<Category, "slug">): Promise<Category> {
+  const all = await getCategories();
+  const idx = all.findIndex((c) => c.slug === slug);
+  if (idx === -1) throw new Error("not_found");
+  const updated = [...all];
+  updated[idx] = { ...data, slug };
+  await safeWrite(categoriesFile, updated);
+  return updated[idx];
+}
+
+// ─── MANAGED CONTENT (pricing / benefits / steps / trustbar / useCases) ───────
+
+const defaultPricing: PricingTier[] = [
+  {
+    name: "Один заказ",
+    price: 949,
+    oldPrice: 1190,
+    badge: "🎉 В честь открытия",
+    note: "за футболку",
+    features: ["Без минимального тиража", "Макет в подарок", "Печать от 1 дня", "Премиальный хлопок"],
+    ctaLabel: "Собрать футболку",
+    ctaHref: "/configurator",
+    featured: true,
+  },
+  {
+    name: "Малый тираж",
+    price: 849,
+    oldPrice: null,
+    badge: null,
+    note: "за футболку от 10 шт.",
+    features: ["Скидка за объём", "Единое качество тиража", "Сортировка по размерам", "Приоритетная печать"],
+    ctaLabel: "Рассчитать тираж",
+    ctaHref: "/catalog/merch-na-zakaz",
+    featured: false,
+  },
+  {
+    name: "Корпоративный",
+    price: 749,
+    oldPrice: null,
+    badge: null,
+    note: "за футболку от 50 шт.",
+    features: ["Лучшая цена за штуку", "Работа по договору", "Документы для юрлиц", "Персональный менеджер"],
+    ctaLabel: "Для бизнеса",
+    ctaHref: "/catalog/korporativnye-futbolki",
+    featured: false,
+  },
+];
+
+function defaultContent(): ManagedContent {
+  return {
+    pricing: defaultPricing,
+    benefits: staticBenefits,
+    steps: staticSteps,
+    trustbar: [
+      "Без минимального тиража",
+      "Макет в подарок при первом заказе",
+      "Печать от 1 дня",
+      "Премиальный хлопок 180–240 г/м²",
+      "Гарантия на результат",
+      "Доставка по всей России",
+      "Работаем с юрлицами",
+    ],
+    useCases: staticUseCases,
+  };
+}
+
+export async function getContent(): Promise<ManagedContent> {
+  try {
+    const raw = JSON.parse(await readFile(contentFile, "utf8")) as unknown;
+    if (raw && typeof raw === "object") {
+      const def = defaultContent();
+      return { ...def, ...(raw as Partial<ManagedContent>) };
+    }
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
+    const def = defaultContent();
+    await safeWrite(contentFile, def);
+    return def;
+  }
+  return defaultContent();
+}
+
+export async function updateContent(section: keyof ManagedContent, data: ManagedContent[keyof ManagedContent]): Promise<void> {
+  const current = await getContent();
+  await safeWrite(contentFile, { ...current, [section]: data });
+}
+
+export async function getPricing(): Promise<PricingTier[]> {
+  return (await getContent()).pricing;
+}
+
+export async function getBenefits(): Promise<Benefit[]> {
+  return (await getContent()).benefits;
+}
+
+export async function getSteps(): Promise<Step[]> {
+  return (await getContent()).steps;
+}
+
+export async function getTrustBar(): Promise<string[]> {
+  return (await getContent()).trustbar;
+}
+
+export async function getUseCases(): Promise<UseCase[]> {
+  const useCases = (await getContent()).useCases;
+  const versions = await getMediaVersions();
+  return useCases.map((u) => ({ ...u, image: applyVersion(u.image, versions) }));
 }

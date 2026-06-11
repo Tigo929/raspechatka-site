@@ -40,36 +40,31 @@ export default function ConfiguratorPage() {
         ])}
       />
 
-      <Section className="pt-10 sm:pt-14">
+      <Section className="pt-6 sm:pt-8 pb-10 sm:pb-14">
         <Breadcrumbs
           items={[
             { name: "Главная", href: "/" },
             { name: "Конструктор", href: "/configurator" },
           ]}
         />
-        <Reveal className="mt-6 max-w-3xl">
-          <h1 className="font-display text-ink text-4xl font-extrabold text-balance sm:text-5xl">
+        <Reveal className="mt-4">
+          <h1 className="font-display text-ink text-3xl font-extrabold text-balance sm:text-4xl">
             Соберите свою футболку
           </h1>
-          <p className="text-muted mt-4 text-lg text-pretty">
-            Выберите цвет, загрузите принт, настройте размер и положение — и
-            сразу увидите результат. Когда всё готово, оформите заказ в один
-            клик.
-          </p>
-          <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2">
+          <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5">
             {perks.map((p) => (
               <li
                 key={p}
                 className="text-ink-soft flex items-center gap-2 text-sm"
               >
-                <Check width={16} height={16} className="text-accent" />
+                <Check width={14} height={14} className="text-accent" />
                 {p}
               </li>
             ))}
           </ul>
         </Reveal>
 
-        <div className="mt-10">
+        <div className="mt-6">
           <Configurator />
         </div>
       </Section>

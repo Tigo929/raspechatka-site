@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { isAdminAuthenticated, isSameOriginRequest } from "@/lib/admin-auth";
+import { bumpMediaVersion } from "@/lib/media-repository";
+import { revalidatePath } from "next/cache";
 
 export const runtime = "nodejs";
 
@@ -52,5 +54,10 @@ export async function POST(request: Request) {
   await mkdir(path.dirname(destAbs), { recursive: true });
   await writeFile(destAbs, bytes);
 
-  return NextResponse.json({ url: `/${normalized}`, ok: true });
+  const v = await bumpMediaVersion(normalized);
+  revalidatePath("/");
+  revalidatePath("/configurator");
+  revalidatePath("/catalog", "layout");
+
+  return NextResponse.json({ url: `/${normalized}?v=${v}`, ok: true });
 }

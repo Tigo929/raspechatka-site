@@ -1,7 +1,10 @@
+﻿import "reflect-metadata";
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated, isSameOriginRequest } from "@/lib/admin-auth";
 import { createFaqItem, getFaq } from "@/lib/content-repository";
-import type { ManagedFaqItem } from "@/types";
+import { validateDto } from "@/lib/validate";
+import { FaqDto } from "@/lib/dto/faq.dto";
+import { stripHtml } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
 
@@ -17,15 +20,18 @@ export async function POST(request: Request) {
   if (!(await isSameOriginRequest(request)))
     return NextResponse.json({ error: "Недопустимый источник." }, { status: 403 });
 
-  const body = (await request.json()) as Partial<ManagedFaqItem>;
-  if (!body.question?.trim() || !body.answer?.trim())
-    return NextResponse.json({ error: "Вопрос и ответ обязательны." }, { status: 400 });
+  let plain: unknown;
+  try { plain = await request.json(); }
+  catch { return NextResponse.json({ error: "Некорректный формат данных." }, { status: 400 }); }
+
+  const { data, errors } = await validateDto(FaqDto, plain);
+  if (errors) return NextResponse.json({ error: errors[0] }, { status: 422 });
 
   const item = await createFaqItem({
-    question: body.question.trim(),
-    answer: body.answer.trim(),
-    order: 0,
-    published: body.published ?? true,
+    question: stripHtml(data.question),
+    answer: stripHtml(data.answer),
+    order: data.order ?? 0,
+    published: data.published ?? true,
   });
   return NextResponse.json({ item }, { status: 201 });
 }

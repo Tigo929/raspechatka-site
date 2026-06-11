@@ -108,6 +108,26 @@ export interface UseCase {
   imageAlt: string;
 }
 
+export interface PricingTier {
+  name: string;
+  price: number;
+  oldPrice: number | null;
+  badge: string | null;
+  note: string;
+  features: string[];
+  ctaLabel: string;
+  ctaHref: string;
+  featured: boolean;
+}
+
+export interface ManagedContent {
+  pricing: PricingTier[];
+  benefits: Benefit[];
+  steps: Step[];
+  trustbar: string[];
+  useCases: UseCase[];
+}
+
 export interface SeoLanding {
   slug: string;
   heading: string;

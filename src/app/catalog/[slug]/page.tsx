@@ -7,6 +7,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { Button } from "@/components/ui/Button";
 import { ProductCard } from "@/features/products/ProductCard";
 import { LeadCta } from "@/components/sections/LeadCta";
+import { BusinessBenefits } from "@/components/sections/BusinessBenefits";
 import { Faq } from "@/components/sections/Faq";
 import { Reviews } from "@/components/sections/Reviews";
 import { FinalCta } from "@/components/sections/FinalCta";
@@ -79,7 +80,7 @@ export default async function LandingPage({
       <JsonLd data={reviewsJsonLd(publicReviews)} />
 
       {/* Hero посадочной */}
-      <Section className="pt-10 pb-8 sm:pt-14">
+      <Section className="pt-6 pb-6 sm:pt-10 sm:pb-8">
         <Breadcrumbs
           items={[
             { name: "Главная", href: "/" },
@@ -161,8 +162,34 @@ export default async function LandingPage({
         </Section>
       )}
 
+      {/* Преимущества для бизнеса — только для страницы с логотипом */}
+      {slug === "futbolka-s-logotipom" && <BusinessBenefits />}
+
       {/* Форма обратной связи — для страниц с надписью и логотипом */}
-      {showLeadForm && <LeadCta />}
+      {slug === "futbolka-s-nadpisyu" && (
+        <LeadCta
+          title="Напишите нам — подберём надпись и шрифт"
+          description="Опишите идею: что хотите написать, для кого, какой повод. Дизайнер подберёт шрифт и вёрстку — покажем макет до печати. Бесплатно."
+          perks={[
+            "Поможем придумать текст",
+            "Подберём шрифт под стиль",
+            "Покажем макет до печати",
+            "От одной штуки, без тиража",
+          ]}
+        />
+      )}
+      {slug === "futbolka-s-logotipom" && (
+        <LeadCta
+          title="Оставьте заявку — рассчитаем тираж"
+          description="Пришлите логотип и расскажите о задаче. Менеджер подберёт технологию, согласует макет и выставит коммерческое предложение. Работаем по договору."
+          perks={[
+            "КП за 2 часа",
+            "Точные цвета по Pantone",
+            "Договор и закрывающие документы",
+            "Персональный менеджер",
+          ]}
+        />
+      )}
 
       <Reviews />
 

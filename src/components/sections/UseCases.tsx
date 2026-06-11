@@ -3,9 +3,10 @@ import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 import { Tilt } from "@/components/interaction/Tilt";
-import { useCases } from "@/data/useCases";
+import { getUseCases } from "@/lib/content-repository";
 
-export function UseCases() {
+export async function UseCases() {
+  const useCases = await getUseCases();
   return (
     <Section id="usecases">
       <SectionHeading

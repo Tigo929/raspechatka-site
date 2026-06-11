@@ -7,8 +7,6 @@ import {
   Upload,
   Trash2,
   RotateCcw,
-  Send,
-  Phone,
   Check,
   X,
   ShieldCheck,
@@ -16,8 +14,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Magnetic } from "@/components/interaction/Magnetic";
-import { siteConfig } from "@/data/site";
 import { formatPrice } from "@/lib/utils";
+import { OrderForm } from "@/features/order/OrderForm";
 import {
   defaultTransforms,
   shirtColors,
@@ -140,7 +138,6 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
   const orderText = encodeURIComponent(
     `Здравствуйте! Хочу заказать футболку:\n• Цвет: ${color.name}\n• Размер: ${size}\n• Перед: ${formatPrintForMessage(prints.front)}\n• Спина: ${formatPrintForMessage(prints.back)}`,
   );
-  const whatsappHref = `${siteConfig.social.whatsapp}?text=${orderText}`;
 
   return (
     <div
@@ -411,7 +408,10 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
             front: prints.front.fileName,
             back: prints.back.fileName,
           }}
-          whatsappHref={whatsappHref}
+          imageUrls={{
+            front: prints.front.imageUrl,
+            back: prints.back.imageUrl,
+          }}
           onClose={() => setOrderOpen(false)}
         />
       )}
@@ -433,17 +433,26 @@ function Label({
   );
 }
 
+function printSideLabel(prints: Record<PrintSide, string | null>): string {
+  const hasFront = Boolean(prints.front);
+  const hasBack = Boolean(prints.back);
+  if (hasFront && hasBack) return "Двухсторонняя";
+  if (hasFront) return "Передняя сторона";
+  if (hasBack) return "Задняя сторона";
+  return "Без принта";
+}
+
 function OrderDialog({
   color,
   size,
   prints,
-  whatsappHref,
+  imageUrls,
   onClose,
 }: {
   color: string;
   size: string;
   prints: Record<PrintSide, string | null>;
-  whatsappHref: string;
+  imageUrls: Record<PrintSide, string | null>;
   onClose: () => void;
 }) {
   const reduce = useReducedMotion();
@@ -505,33 +514,25 @@ function OrderDialog({
         <dl className="border-line mt-4 space-y-2 rounded-2xl border bg-white p-4 text-sm">
           <Row label="Цвет" value={color} />
           <Row label="Размер" value={size} />
-          <Row label="Перед" value={prints.front ?? "без принта"} />
-          <Row label="Спина" value={prints.back ?? "без принта"} />
+          <Row label="Печать" value={printSideLabel(prints)} />
+          {prints.front && <Row label="Файл (перед)" value={prints.front} />}
+          {prints.back && <Row label="Файл (спина)" value={prints.back} />}
         </dl>
 
-        <p className="text-muted mt-4 text-sm">
-          Отправьте заявку в мессенджер — менеджер подтвердит детали, поможет с
-          макетом и назовёт точный срок. Это ни к чему не обязывает.
-        </p>
-
-        <div className="mt-5 flex flex-col gap-2.5">
-          <Button href={whatsappHref} external size="lg" className="w-full">
-            <Phone width={18} height={18} /> Отправить в WhatsApp
-          </Button>
-          <Button
-            href={siteConfig.social.telegram}
-            external
-            variant="secondary"
-            size="lg"
-            className="w-full"
-          >
-            <Send width={18} height={18} /> Написать в Telegram
-          </Button>
+        <div className="mt-5">
+          <OrderForm
+            orderDetails={{
+              color,
+              size,
+              prints: { front: prints.front, back: prints.back },
+              imageUrls: { front: imageUrls.front, back: imageUrls.back },
+            }}
+            onSuccess={() => setTimeout(onClose, 2000)}
+          />
         </div>
 
-        <p className="text-muted mt-4 text-center text-xs">
-          Ваше изображение остаётся на вашем устройстве и не загружается на
-          сервер.
+        <p className="text-muted mt-2 text-center text-xs">
+          Изображения передаются менеджеру и нигде не хранятся.
         </p>
       </motion.div>
     </div>

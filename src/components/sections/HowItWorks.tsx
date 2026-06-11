@@ -1,9 +1,10 @@
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
-import { steps } from "@/data/benefits";
+import { getSteps } from "@/lib/content-repository";
 
-export function HowItWorks() {
+export async function HowItWorks() {
+  const steps = await getSteps();
   return (
     <Section id="how" className="bg-midnight text-paper">
       <SectionHeading

@@ -1,17 +1,8 @@
 import { Check } from "lucide-react";
+import { getTrustBar } from "@/lib/content-repository";
 
-const items = [
-  "Без минимального тиража",
-  "Макет в подарок при первом заказе",
-  "Печать от 1 дня",
-  "Премиальный хлопок 180–240 г/м²",
-  "Гарантия на результат",
-  "Доставка по всей России",
-  "Работаем с юрлицами",
-];
-
-/** Бегущая строка преимуществ под hero — снимает базовые возражения сразу. */
-export function TrustBar() {
+export async function TrustBar() {
+  const items = await getTrustBar();
   return (
     <div className="border-line border-y bg-white/50 py-4">
       <div className="mask-fade-x overflow-hidden">
