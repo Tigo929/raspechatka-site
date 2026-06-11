@@ -3,16 +3,12 @@ import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 import { Button } from "@/components/ui/Button";
-import { faq as defaultFaq } from "@/data/faq";
+import { getPublicFaq } from "@/lib/content-repository";
 import { siteConfig } from "@/data/site";
 import type { FaqItem } from "@/types";
 
-/**
- * FAQ на нативных <details> — доступно, работает без JS и индексируется.
- * JSON-LD FAQPage подключается на уровне страницы.
- */
-export function Faq({
-  items = defaultFaq,
+export async function Faq({
+  items,
   title = "Частые вопросы",
   eyebrow = "FAQ",
 }: {
@@ -20,6 +16,7 @@ export function Faq({
   title?: string;
   eyebrow?: string;
 }) {
+  const resolvedItems = items ?? await getPublicFaq();
   return (
     <Section id="faq">
       <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
@@ -38,7 +35,7 @@ export function Faq({
         </div>
 
         <Reveal className="divide-line border-line shadow-soft divide-y rounded-3xl border bg-white px-5 sm:px-7">
-          {items.map((item) => (
+          {resolvedItems.map((item) => (
             <details key={item.question} className="group py-5">
               <summary className="font-display text-ink flex cursor-pointer list-none items-center justify-between gap-4 text-base font-bold sm:text-lg">
                 {item.question}

@@ -5,6 +5,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Reveal } from "@/components/ui/Reveal";
 import { Configurator } from "@/features/configurator/Configurator";
 import { HowItWorks } from "@/components/sections/HowItWorks";
+import { Reviews } from "@/components/sections/Reviews";
 import { Faq } from "@/components/sections/Faq";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/jsonld";
@@ -74,6 +75,7 @@ export default function ConfiguratorPage() {
       </Section>
 
       <HowItWorks />
+      <Reviews />
       <Faq />
     </>
   );

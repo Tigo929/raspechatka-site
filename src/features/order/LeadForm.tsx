@@ -36,18 +36,20 @@ export function LeadForm() {
     }
     setError(null);
     setStatus("sending");
-    try {
-      const res = await fetch("/api/lead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, comment, website }),
-      });
-      if (!res.ok) throw new Error("fail");
-      setStatus("done");
-    } catch {
-      setStatus("error");
-      setError("Не удалось отправить. Напишите нам в мессенджер ниже.");
-    }
+
+    // Логируем заявку на сервере (не блокируем UX)
+    fetch("/api/lead", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, phone, comment, website }),
+    }).catch(() => {});
+
+    // Перенаправляем в Telegram с предзаполненным сообщением
+    const text = encodeURIComponent(
+      `Здравствуйте! Хочу оформить заказ.\n• Имя: ${name}\n• Телефон: ${phone}${comment ? `\n• Детали: ${comment}` : ""}`,
+    );
+    window.open(`${siteConfig.social.telegram}?text=${text}`, "_blank");
+    setStatus("done");
   };
 
   if (status === "done") {

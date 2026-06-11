@@ -6,6 +6,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Reveal } from "@/components/ui/Reveal";
 import { Button } from "@/components/ui/Button";
 import { ProductCard } from "@/features/products/ProductCard";
+import { LeadCta } from "@/components/sections/LeadCta";
 import { Faq } from "@/components/sections/Faq";
 import { Reviews } from "@/components/sections/Reviews";
 import { FinalCta } from "@/components/sections/FinalCta";
@@ -14,7 +15,7 @@ import { breadcrumbJsonLd, faqJsonLd, reviewsJsonLd } from "@/lib/jsonld";
 import { buildMetadata } from "@/lib/seo";
 import { getLanding, seoLandings } from "@/data/seoLandings";
 import { getAllProducts } from "@/lib/product-repository";
-import { reviews } from "@/data/reviews";
+import { getPublicReviews } from "@/lib/content-repository";
 
 export function generateStaticParams() {
   return seoLandings.map((l) => ({ slug: l.slug }));
@@ -38,6 +39,12 @@ export async function generateMetadata({
   });
 }
 
+/** Скрываем «Подходящие модели» для страниц, где они не нужны */
+const HIDE_PRODUCTS = new Set(["futbolka-s-nadpisyu", "futbolka-s-logotipom", "futbolka-s-foto"]);
+
+/** Показываем форму обратной связи вместо кнопок */
+const SHOW_LEAD_FORM = new Set(["futbolka-s-nadpisyu", "futbolka-s-logotipom"]);
+
 export default async function LandingPage({
   params,
 }: {
@@ -47,7 +54,7 @@ export default async function LandingPage({
   const landing = getLanding(slug);
   if (!landing) notFound();
 
-  const allProducts = await getAllProducts();
+  const [allProducts, publicReviews] = await Promise.all([getAllProducts(), getPublicReviews()]);
   const requested = new Set(landing.productSlugs);
   const products = allProducts.filter(
     (product) =>
@@ -55,6 +62,9 @@ export default async function LandingPage({
       (landing.slug === "futbolka-s-printom" &&
         product.category === "s-printom"),
   );
+
+  const hideProducts = HIDE_PRODUCTS.has(slug);
+  const showLeadForm = SHOW_LEAD_FORM.has(slug);
 
   return (
     <>
@@ -66,7 +76,7 @@ export default async function LandingPage({
         ])}
       />
       <JsonLd data={faqJsonLd(landing.faq)} />
-      <JsonLd data={reviewsJsonLd(reviews)} />
+      <JsonLd data={reviewsJsonLd(publicReviews)} />
 
       {/* Hero посадочной */}
       <Section className="pt-10 pb-8 sm:pt-14">
@@ -85,14 +95,34 @@ export default async function LandingPage({
             <p className="text-muted mt-5 max-w-xl text-lg text-pretty">
               {landing.intro}
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button href="/configurator" size="lg">
-                Собрать футболку
-              </Button>
-              <Button href="/catalog" variant="ghost" size="lg">
-                Весь каталог
-              </Button>
-            </div>
+
+            {/* Кнопки: зависят от slug */}
+            {slug === "futbolka-s-printom" && (
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Button href="/catalog" size="lg">
+                  Весь каталог
+                </Button>
+              </div>
+            )}
+
+            {slug === "futbolka-s-foto" && (
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Button href="/configurator" size="lg">
+                  Открыть конструктор
+                </Button>
+              </div>
+            )}
+
+            {!showLeadForm && slug !== "futbolka-s-printom" && slug !== "futbolka-s-foto" && (
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Button href="/configurator" size="lg">
+                  Собрать футболку
+                </Button>
+                <Button href="/catalog" variant="ghost" size="lg">
+                  Весь каталог
+                </Button>
+              </div>
+            )}
           </Reveal>
 
           <Reveal delay={0.1}>
@@ -113,8 +143,8 @@ export default async function LandingPage({
         </div>
       </Section>
 
-      {/* Подборка товаров */}
-      {products.length > 0 && (
+      {/* Подборка товаров — скрываем для некоторых страниц */}
+      {!hideProducts && products.length > 0 && (
         <Section className="py-12 sm:py-16">
           <Reveal>
             <h2 className="font-display text-ink text-2xl font-bold sm:text-3xl">
@@ -131,7 +161,11 @@ export default async function LandingPage({
         </Section>
       )}
 
+      {/* Форма обратной связи — для страниц с надписью и логотипом */}
+      {showLeadForm && <LeadCta />}
+
       <Reviews />
+
       <Faq items={landing.faq} title={`Вопросы про «${landing.keyword}»`} />
       <FinalCta />
     </>

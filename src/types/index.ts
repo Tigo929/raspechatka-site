@@ -2,33 +2,25 @@
 
 export interface ProductColor {
   name: string;
-  /** HEX для свотча и превью в конфигураторе. */
   hex: string;
 }
 
 export interface Product {
   slug: string;
   title: string;
-  /** Короткое описание для карточки. */
   excerpt: string;
-  /** Полное описание для страницы товара. */
   description: string;
   priceFrom: number;
   rating: number;
   reviewsCount: number;
-  /** Категория (slug из categories). */
   category: string;
   image: string;
   imageAlt: string;
   colors: ProductColor[];
-  /** Материал/состав — снижает возражения по качеству. */
   material: string;
-  /** Метод печати. */
   printMethod: string;
   badge?: string;
-  /** Управляемые из админ-панели товары можно скрывать без удаления. */
   published?: boolean;
-  /** Системное поле для административного интерфейса. */
   managed?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -49,18 +41,21 @@ export interface Category {
   imageAlt: string;
 }
 
-/** Источник отзыва — для бейджа платформы и фильтрации. */
 export type ReviewSource = "yandex" | "avito" | "manual";
 
 export interface Review {
   name: string;
-  /** Город/контекст — повышает доверие. */
   context: string;
   rating: number;
   text: string;
   date: string;
-  /** Откуда отзыв (Яндекс.Карты / Avito). По умолчанию manual. */
   source?: ReviewSource;
+}
+
+export interface ManagedReview extends Review {
+  id: string;
+  source: ReviewSource;
+  published: boolean;
 }
 
 export interface FaqItem {
@@ -68,8 +63,34 @@ export interface FaqItem {
   answer: string;
 }
 
+export interface ManagedFaqItem extends FaqItem {
+  id: string;
+  order: number;
+  published: boolean;
+}
+
+export interface ManagedSettings {
+  phone: string;
+  email: string;
+  address: string;
+  hours: string;
+  telegram: string;
+  whatsapp: string;
+  yandexMetrikaId: string;
+}
+
+export interface AnalyticsEvent {
+  id: string;
+  type: "pageview" | "session_end";
+  page: string;
+  sessionId: string;
+  duration?: number;
+  device: "mobile" | "desktop" | "tablet";
+  referrer?: string;
+  timestamp: string;
+}
+
 export interface Benefit {
-  /** Имя иконки из lucide-react. */
   icon: string;
   title: string;
   text: string;
@@ -87,18 +108,14 @@ export interface UseCase {
   imageAlt: string;
 }
 
-/** SEO-посадочная под конкретный поисковый интент. */
 export interface SeoLanding {
   slug: string;
-  /** H1 и заголовок страницы. */
   heading: string;
   metaTitle: string;
   metaDescription: string;
   keyword: string;
   intro: string;
-  /** Продающие подзаголовки/абзацы. */
   sellingPoints: { title: string; text: string }[];
-  /** Slug'и товаров для подборки. */
   productSlugs: string[];
   faq: FaqItem[];
 }

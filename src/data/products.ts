@@ -14,9 +14,9 @@ export const baseProducts: Product[] = [
   {
     slug: "oversize-premium",
     title: "Oversize Premium",
-    excerpt: "Плотный хлопок 240 г/м², свободный крой, насыщенная DTG-печать.",
+    excerpt: "Плотный хлопок 240 г/м², свободный крой, насыщенная печать принтов.",
     description:
-      "Флагманская модель для принта на всю грудь и спину. Плотный кулирный хлопок 240 г/м² держит форму после десятков стирок, спущенное плечо и удлинённый силуэт дают актуальный oversize-крой. Печатаем методом DTG — без ограничений по цветам и градиентам.",
+      "Флагманская модель для принта на всю грудь и спину. Плотный кулирный хлопок 240 г/м² держит форму после десятков стирок, спущенное плечо и удлинённый силуэт дают актуальный oversize-крой. Без ограничений по цветам и градиентам.",
     priceFrom: 1690,
     rating: 4.9,
     reviewsCount: 312,
@@ -25,7 +25,7 @@ export const baseProducts: Product[] = [
     imageAlt: "Футболка Oversize Premium с принтом",
     colors: baseColors,
     material: "100% хлопок, 240 г/м²",
-    printMethod: "DTG / прямая цифровая печать",
+    printMethod: "Печать на заказ",
     badge: "Хит",
   },
   {
@@ -42,7 +42,7 @@ export const baseProducts: Product[] = [
     imageAlt: "Классическая футболка Classic Cotton",
     colors: baseColors,
     material: "100% хлопок, 180 г/м²",
-    printMethod: "DTG / сублимация",
+    printMethod: "Печать на заказ",
     badge: "Бестселлер",
   },
   {
@@ -63,7 +63,7 @@ export const baseProducts: Product[] = [
       { name: "Тёмно-синий", hex: "#1E2540" },
     ],
     material: "100% хлопок, 220 г/м²",
-    printMethod: "DTG с белой подложкой",
+    printMethod: "Печать на заказ",
   },
   {
     slug: "pair-edition",
@@ -79,7 +79,7 @@ export const baseProducts: Product[] = [
     imageAlt: "Парные футболки Pair Edition",
     colors: baseColors,
     material: "100% хлопок, 180 г/м² (×2)",
-    printMethod: "DTG / шелкография",
+    printMethod: "Печать на заказ",
     badge: "Для пары",
   },
   {
@@ -96,7 +96,7 @@ export const baseProducts: Product[] = [
     imageAlt: "Корпоративные футболки Corporate Line с логотипом",
     colors: baseColors,
     material: "Хлопок/пике, 160–200 г/м²",
-    printMethod: "Шелкография / вышивка / DTF",
+    printMethod: "Печать и вышивка на заказ",
   },
   {
     slug: "photo-art",
@@ -116,6 +116,6 @@ export const baseProducts: Product[] = [
       { name: "Серый меланж", hex: "#9CA0A6" },
     ],
     material: "100% хлопок премиум, 190 г/м²",
-    printMethod: "Сублимация / DTG",
+    printMethod: "Печать на заказ",
   },
 ];

@@ -25,7 +25,7 @@ export const siteConfig = {
   geo: { lat: 55.800615, lon: 37.796184 },
   hours: "Пн–Вс, 9:00–21:00",
   social: {
-    telegram: "https://t.me/raspichatka",
+    telegram: "https://t.me/photo_avito",
     whatsapp: "https://wa.me/79199990282",
     instagram: "",
     vk: "",

@@ -17,8 +17,7 @@ import { Contacts } from "@/components/sections/Contacts";
 import { FinalCta } from "@/components/sections/FinalCta";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { faqJsonLd, reviewsJsonLd } from "@/lib/jsonld";
-import { faq } from "@/data/faq";
-import { getPositiveReviews } from "@/data/reviews";
+import { getPublicFaq, getPublicReviews } from "@/lib/content-repository";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
@@ -36,11 +35,12 @@ export const metadata: Metadata = buildMetadata({
   ],
 });
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [publicFaq, publicReviews] = await Promise.all([getPublicFaq(), getPublicReviews()]);
   return (
     <>
-      <JsonLd data={faqJsonLd(faq)} />
-      <JsonLd data={reviewsJsonLd(getPositiveReviews())} />
+      <JsonLd data={faqJsonLd(publicFaq)} />
+      <JsonLd data={reviewsJsonLd(publicReviews)} />
       <Hero />
       <TrustBar />
       <Benefits />

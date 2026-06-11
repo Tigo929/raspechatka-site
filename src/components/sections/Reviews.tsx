@@ -3,10 +3,10 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 import { PlatformRatings } from "@/components/sections/PlatformRatings";
 import { ReviewsCarousel } from "@/components/sections/ReviewsCarousel";
-import { getPositiveReviews } from "@/data/reviews";
+import { getPublicReviews } from "@/lib/content-repository";
 
-export function Reviews() {
-  const positive = getPositiveReviews();
+export async function Reviews() {
+  const positive = await getPublicReviews();
 
   return (
     <Section id="reviews" className="bg-paper-dim/60">
