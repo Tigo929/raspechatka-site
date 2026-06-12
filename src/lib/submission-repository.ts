@@ -3,6 +3,7 @@ import path from "node:path";
 import { randomBytes, randomUUID } from "node:crypto";
 import { getDataDirectory, readJsonFile, writeJsonAtomic } from "@/lib/data-storage";
 import type {
+  ProcessingStatus,
   StoredSubmission,
   SubmissionContact,
   SubmissionFile,
@@ -99,6 +100,7 @@ export async function createSubmission(
       id,
       reference: makeReference(),
       status: "pending",
+      processingStatus: "new",
       files,
       attempts: 0,
       createdAt,
@@ -131,6 +133,25 @@ export async function updateSubmissionDelivery(
       updatedAt: now,
       deliveredAt: status === "delivered" ? now : items[index].deliveredAt,
       lastError: status === "delivered" ? undefined : error?.slice(0, 500),
+    };
+    const next = [...items];
+    next[index] = updated;
+    await writeJsonAtomic(ordersFile(), next);
+    return updated;
+  });
+}
+
+export async function updateSubmissionProcessing(
+  id: string,
+  processingStatus: ProcessingStatus,
+): Promise<StoredSubmission> {
+  return mutate(async (items) => {
+    const index = items.findIndex((item) => item.id === id);
+    if (index === -1) throw new Error("not_found");
+    const updated: StoredSubmission = {
+      ...items[index],
+      processingStatus,
+      updatedAt: new Date().toISOString(),
     };
     const next = [...items];
     next[index] = updated;

@@ -99,6 +99,9 @@ export interface SubmissionContact {
 
 export type SubmissionStatus = "pending" | "delivered" | "failed";
 
+/** Бизнес-статус обработки заявки менеджером (не путать с доставкой в Telegram). */
+export type ProcessingStatus = "new" | "in_progress" | "done" | "cancelled";
+
 export interface SubmissionFile {
   key: "frontImage" | "backImage" | "frontPreview" | "backPreview" | "previewImage";
   originalName: string;
@@ -112,6 +115,8 @@ export interface StoredSubmission {
   reference: string;
   kind: "lead" | "order";
   status: SubmissionStatus;
+  /** Статус обработки менеджером. У старых записей отсутствует — трактуем как "new". */
+  processingStatus?: ProcessingStatus;
   name: string;
   contact: SubmissionContact;
   comment?: string;
