@@ -58,7 +58,8 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
     createDefaultTransforms,
   );
   const [orderOpen, setOrderOpen] = useState(false);
-  const [previewSizes, setPreviewSizes] = useState<Record<PrintSide, number>>({ front: 520, back: 520 });
+  // Ref вместо state — нет смысла ре-рендерить Configurator при каждом resize
+  const previewSizesRef = useRef<Record<PrintSide, number>>({ front: 520, back: 520 });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const objectUrlsRef = useRef<Set<string>>(new Set());
   const uploadId = useId();
@@ -70,9 +71,7 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
   const activePrint = prints[side];
 
   const handlePreviewSize = useCallback((value: number) => {
-    setPreviewSizes((current) => Math.abs(current[side] - value) < 0.5
-      ? current
-      : { ...current, [side]: value });
+    previewSizesRef.current = { ...previewSizesRef.current, [side]: value };
   }, [side]);
 
   const setActiveTransform = (next: Transform) => {
@@ -414,7 +413,7 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
             back: prints.back.imageUrl,
           }}
           transforms={transforms}
-          previewSizes={previewSizes}
+          previewSizes={previewSizesRef.current}
           colorId={color.id}
           onClose={() => setOrderOpen(false)}
         />

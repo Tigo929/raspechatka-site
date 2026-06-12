@@ -47,23 +47,15 @@ export function TshirtPreview({
   useEffect(() => {
     const node = containerRef.current;
     if (!node || !onSizeChange) return;
-    let mounted = true;
-    let frameId = 0;
-    const update = () => {
-      if (!mounted) return;
-      const width = node.getBoundingClientRect().width;
-      frameId = window.requestAnimationFrame(() => {
-        if (mounted) onSizeChange(width);
-      });
-    };
-    update();
-    const observer = new ResizeObserver(update);
+    // Синхронный вызов внутри useEffect — React 18 batching обработает корректно
+    onSizeChange(node.getBoundingClientRect().width);
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        onSizeChange(entry.contentRect.width);
+      }
+    });
     observer.observe(node);
-    return () => {
-      mounted = false;
-      observer.disconnect();
-      window.cancelAnimationFrame(frameId);
-    };
+    return () => observer.disconnect();
   }, [onSizeChange]);
 
   const onPointerDown = useCallback(
