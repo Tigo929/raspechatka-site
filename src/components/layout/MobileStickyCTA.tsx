@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Send, Sparkles } from "lucide-react";
-import { siteConfig } from "@/data/site";
 import { MaxIconButton } from "@/components/ui/MaxButton";
+import type { ManagedSettings } from "@/types";
 
 /**
  * Закреплённый внизу экрана блок CTA для мобильных — постоянный путь к заказу
  * и быстрый контакт. Появляется после небольшого скролла, чтобы не мешать hero.
  */
-export function MobileStickyCTA() {
+export function MobileStickyCTA({ settings }: { settings: ManagedSettings }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -34,9 +34,9 @@ export function MobileStickyCTA() {
           >
             <Sparkles width={17} height={17} /> Собрать футболку
           </Link>
-          <MaxIconButton href={siteConfig.social.max} />
+          <MaxIconButton href={settings.max} />
           <a
-            href={siteConfig.social.telegram}
+            href={settings.telegram}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Написать в Telegram"

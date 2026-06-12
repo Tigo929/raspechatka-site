@@ -28,7 +28,7 @@ export async function Pricing() {
                 }`}
               >
                 {t.badge && (
-                  <span className="bg-accent mb-4 inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold tracking-wide text-white uppercase">
+                  <span className="bg-accent mb-4 inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold text-white uppercase">
                     {t.badge}
                   </span>
                 )}

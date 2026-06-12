@@ -15,7 +15,7 @@ export async function PopularProducts() {
           align="left"
           eyebrow="Хиты продаж"
           title="Популярные модели"
-          subtitle="Выбор тысяч клиентов — проверенные ткани и кройка."
+          subtitle="Популярные модели с проверенными тканями и понятной посадкой."
           className="max-w-2xl"
         />
         <Reveal className="hidden sm:block">

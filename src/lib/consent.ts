@@ -16,15 +16,25 @@ export interface ConsentData {
   categories: ConsentCategories;
 }
 
+export const CONSENT_EVENT = "printlab:consent";
+let cachedRaw: string | null | undefined;
+let cachedConsent: ConsentData | null = null;
+
 export function readConsent(): ConsentData | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(CONSENT_STORAGE_KEY);
-    if (!raw) return null;
+    if (raw === cachedRaw) return cachedConsent;
+    cachedRaw = raw;
+    if (!raw) {
+      cachedConsent = null;
+      return null;
+    }
     const parsed = JSON.parse(raw) as ConsentData;
-    if (parsed.version !== CONSENT_VERSION) return null;
-    return parsed;
+    cachedConsent = parsed.version === CONSENT_VERSION ? parsed : null;
+    return cachedConsent;
   } catch {
+    cachedConsent = null;
     return null;
   }
 }
@@ -36,9 +46,28 @@ export function writeConsent(categories: Omit<ConsentCategories, "necessary">): 
     categories: { necessary: true, ...categories },
   };
   if (typeof window !== "undefined") {
-    localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(data));
+    const raw = JSON.stringify(data);
+    localStorage.setItem(CONSENT_STORAGE_KEY, raw);
+    cachedRaw = raw;
+    cachedConsent = data;
+    window.dispatchEvent(new Event(CONSENT_EVENT));
   }
   return data;
+}
+
+export function subscribeToConsent(onChange: () => void) {
+  if (typeof window === "undefined") return () => undefined;
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key && event.key !== CONSENT_STORAGE_KEY) return;
+    cachedRaw = undefined;
+    onChange();
+  };
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(CONSENT_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(CONSENT_EVENT, onChange);
+  };
 }
 
 export function hasConsent(category: keyof ConsentCategories): boolean {

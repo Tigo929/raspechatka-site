@@ -11,8 +11,8 @@ import { FinalCta } from "@/components/sections/FinalCta";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/jsonld";
 import { buildMetadata } from "@/lib/seo";
-import { categories } from "@/data/categories";
 import { getAllProducts } from "@/lib/product-repository";
+import { getCategories } from "@/lib/content-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -55,7 +55,7 @@ export default async function CatalogPage({
 }) {
   const params = await searchParams;
   const query = params?.q?.trim().slice(0, 100) ?? "";
-  const products = await getAllProducts();
+  const [products, categories] = await Promise.all([getAllProducts(), getCategories()]);
   const normalizedQuery = query.toLowerCase();
   const searchResults = normalizedQuery
     ? products.filter((product) => {

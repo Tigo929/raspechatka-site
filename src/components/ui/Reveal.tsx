@@ -21,7 +21,7 @@ export function Reveal({
   as?: "div" | "li" | "span";
 }) {
   const reduce = useReducedMotion();
-  const MotionTag = motion[as];
+  const MotionTag = { div: motion.div, li: motion.li, span: motion.span }[as];
 
   return (
     <MotionTag

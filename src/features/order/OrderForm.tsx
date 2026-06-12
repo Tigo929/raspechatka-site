@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ConsentCheckbox } from "@/components/legal/ConsentCheckbox";
+import { renderDesignPreview, type DesignPreviewInput } from "@/features/configurator/renderDesignPreview";
 
 type ContactMethod = "telegram" | "max" | "phone";
 type Status = "idle" | "sending" | "done" | "error";
@@ -16,6 +17,8 @@ export interface OrderDetails {
   prints?: Record<string, string | null>;
   /** Blob URL изображений из конфигуратора (только браузер) */
   imageUrls?: Record<string, string | null>;
+  transforms?: Record<string, { x: number; y: number; scale: number }>;
+  previewDesigns?: Record<string, DesignPreviewInput | null>;
 }
 
 interface OrderFormProps {
@@ -47,6 +50,7 @@ export function OrderForm({
   const [imageConsent, setImageConsent] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [reference, setReference] = useState<string | null>(null);
 
   const hasImages = Boolean(
     orderDetails?.imageUrls?.front || orderDetails?.imageUrls?.back,
@@ -100,6 +104,7 @@ export function OrderForm({
             color: orderDetails?.color,
             size: orderDetails?.size,
             prints: orderDetails?.prints,
+            transforms: orderDetails?.transforms,
           },
           website,
           ...consentMeta,
@@ -115,6 +120,16 @@ export function OrderForm({
           const blob = await fetch(backUrl).then((r) => r.blob());
           const ext = getExtFromBlob(blob);
           fd.append("backImage", blob, `back.${ext}`);
+        }
+        for (const side of ["front", "back"] as const) {
+          const design = orderDetails?.previewDesigns?.[side];
+          if (!design) continue;
+          try {
+            const preview = await renderDesignPreview(design);
+            fd.append(`${side}Preview`, preview, `${side}-preview.png`);
+          } catch {
+            // Оригинал и координаты всё равно сохраняются — заказ не блокируем.
+          }
         }
 
         res = await fetch("/api/order", { method: "POST", body: fd });
@@ -135,13 +150,19 @@ export function OrderForm({
         });
       }
 
-      if (!res.ok) {
-        const d = (await res.json()) as { error?: string };
+      const d = (await res.json()) as {
+        ok?: boolean;
+        stored?: boolean;
+        reference?: string;
+        error?: string;
+      };
+      if (!res.ok || !d.ok || !d.stored) {
         setError(d.error ?? "Ошибка отправки. Попробуйте ещё раз.");
         setStatus("error");
         return;
       }
 
+      setReference(d.reference ?? null);
       setStatus("done");
       onSuccess?.();
     } catch {
@@ -160,6 +181,7 @@ export function OrderForm({
         <p className="text-muted mx-auto mt-2 max-w-sm text-sm">
           Свяжемся с вами в ближайшее рабочее время.
         </p>
+        {reference && <p className="text-muted mt-2 text-xs">Номер заказа: {reference}</p>}
       </div>
     );
   }

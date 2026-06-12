@@ -19,6 +19,7 @@ export function LeadForm() {
   const [pdConsent, setPdConsent] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [reference, setReference] = useState<string | null>(null);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,21 +44,35 @@ export function LeadForm() {
     setStatus("sending");
 
     try {
-      await fetch("/api/lead", {
+      const response = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
-          phone: method === "phone" ? phone.trim() : telegram.trim(),
+          contact: {
+            method,
+            value: method === "phone" ? phone.trim() : telegram.trim(),
+          },
           comment,
           website,
           personalDataConsent: pdConsent,
           consentAcceptedAt: new Date().toISOString(),
         }),
       });
+      const result = (await response.json()) as {
+        ok?: boolean;
+        stored?: boolean;
+        reference?: string;
+        error?: string;
+      };
+      if (!response.ok || !result.ok || !result.stored) {
+        throw new Error(result.error ?? "Не удалось сохранить заявку.");
+      }
+      setReference(result.reference ?? null);
       setStatus("done");
-    } catch {
-      setStatus("done");
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Нет соединения. Попробуйте ещё раз.");
+      setStatus("error");
     }
   };
 
@@ -71,6 +86,7 @@ export function LeadForm() {
         <p className="text-muted mx-auto mt-2 max-w-sm text-sm">
           Свяжемся с вами в ближайшее рабочее время.
         </p>
+        {reference && <p className="text-muted mt-2 text-xs">Номер заявки: {reference}</p>}
       </div>
     );
   }

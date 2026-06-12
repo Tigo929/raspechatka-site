@@ -33,3 +33,10 @@ next-env.d.ts
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# runtime data (use PRINTLAB_DATA_DIR on production)
+/data/analytics.json
+/data/analytics.ndjson
+/data/orders.json
+/data/order-files/
+/data/*.tmp

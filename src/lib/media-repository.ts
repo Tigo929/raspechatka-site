@@ -1,16 +1,11 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { unstable_cache, revalidateTag } from "next/cache";
+import { getDataDirectory, writeJsonAtomic } from "@/lib/data-storage";
 
-const dataDir = path.join(process.cwd(), "data");
+const dataDir = getDataDirectory();
 const versionsFile = path.join(dataDir, "media-versions.json");
-
-async function safeWrite(file: string, data: unknown) {
-  await mkdir(dataDir, { recursive: true });
-  const tmp = `${file}.${process.pid}.tmp`;
-  await writeFile(tmp, `${JSON.stringify(data, null, 2)}\n`, "utf8");
-  await rename(tmp, file);
-}
+let mutationQueue: Promise<void> = Promise.resolve();
 
 async function readMediaVersions(): Promise<Record<string, number>> {
   try {
@@ -28,12 +23,17 @@ export const getMediaVersions = unstable_cache(readMediaVersions, ["media-versio
 });
 
 export async function bumpMediaVersion(relativePath: string): Promise<number> {
-  const versions = await readMediaVersions();
-  const ts = Date.now();
-  versions[relativePath] = ts;
-  await safeWrite(versionsFile, versions);
-  revalidateTag("public-content", "max");
-  return ts;
+  let result = 0;
+  const operation = mutationQueue.then(async () => {
+    const versions = await readMediaVersions();
+    result = Date.now();
+    versions[relativePath] = result;
+    await writeJsonAtomic(versionsFile, versions);
+    revalidateTag("public-content", "max");
+  });
+  mutationQueue = operation.then(() => undefined, () => undefined);
+  await operation;
+  return result;
 }
 
 /** Returns the public URL with a cache-busting version query param if available. */

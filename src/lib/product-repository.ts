@@ -3,8 +3,9 @@ import path from "node:path";
 import { unstable_cache, revalidateTag } from "next/cache";
 import { baseProducts } from "@/data/products";
 import type { ManagedProduct, Product, ProductColor } from "@/types";
+import { getDataDirectory } from "@/lib/data-storage";
 
-const dataDir = path.join(process.cwd(), "data");
+const dataDir = getDataDirectory();
 const catalogFile = path.join(dataDir, "catalog-products.json");
 const baseProductsFile = path.join(dataDir, "base-products.json");
 const uploadDir = path.join(process.cwd(), "public", "uploads", "products");

@@ -3,15 +3,21 @@ import Link from "next/link";
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { siteConfig } from "@/data/site";
+import { getPublicSettings } from "@/lib/content-repository";
 
-export const metadata: Metadata = {
-  title: "Контакты",
-  description: `Контакты студии печати Распечатка: ${siteConfig.phone}, ${siteConfig.email}. ${siteConfig.address}.`,
-  alternates: { canonical: `${siteConfig.url}/contacts` },
-  robots: { index: true, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getPublicSettings();
+  return {
+    title: "Контакты",
+    description: `Контакты студии печати Распечатка: ${settings.phone}, ${settings.email}. ${settings.address}.`,
+    alternates: { canonical: `${siteConfig.url}/contacts` },
+    robots: { index: true, follow: true },
+  };
+}
 
-export default function ContactsPage() {
+export default async function ContactsPage() {
+  const settings = await getPublicSettings();
+  const phoneHref = `tel:${settings.phone.replace(/[^+\d]/g, "")}`;
   return (
     <div className="bg-paper min-h-screen">
       <div className="bg-midnight py-12 sm:py-16">
@@ -42,27 +48,27 @@ export default function ContactsPage() {
             <ContactCard
               icon={<Phone width={22} height={22} />}
               title="Телефон"
-              value={siteConfig.phone}
-              href={siteConfig.phoneHref}
+              value={settings.phone}
+              href={phoneHref}
             />
             <ContactCard
               icon={<Mail width={22} height={22} />}
               title="Email"
-              value={siteConfig.email}
-              href={`mailto:${siteConfig.email}`}
+              value={settings.email}
+              href={`mailto:${settings.email}`}
             />
             <ContactCard
               icon={<MessageCircle width={22} height={22} />}
               title="Telegram"
               value="Написать в Telegram"
-              href={siteConfig.social.telegram}
+              href={settings.telegram}
               external
             />
             <ContactCard
               icon={<MessageCircle width={22} height={22} />}
               title="MAX"
               value="Написать в MAX"
-              href={siteConfig.social.max}
+              href={settings.max}
               external
             />
           </div>
@@ -76,8 +82,8 @@ export default function ContactsPage() {
               />
               <div>
                 <p className="text-ink font-semibold">Адрес</p>
-                <p className="text-muted mt-1 text-sm">{siteConfig.address}</p>
-                <p className="text-muted mt-0.5 text-sm">{siteConfig.hours}</p>
+                <p className="text-muted mt-1 text-sm">{settings.address}</p>
+                <p className="text-muted mt-0.5 text-sm">{settings.hours}</p>
                 <a
                   href={`https://yandex.ru/maps/org/raspechatka/169229058790/`}
                   target="_blank"
@@ -114,10 +120,10 @@ export default function ContactsPage() {
               Обращения по вопросам обработки персональных данных направляйте
               на:{" "}
               <a
-                href={`mailto:${siteConfig.email}`}
+                href={`mailto:${settings.email}`}
                 className="text-accent underline underline-offset-2"
               >
-                {siteConfig.email}
+                {settings.email}
               </a>
             </p>
           </div>

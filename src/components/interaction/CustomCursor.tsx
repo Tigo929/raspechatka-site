@@ -141,7 +141,7 @@ export function CustomCursor() {
       >
         <span
           ref={labelRef}
-          className="text-[10px] font-semibold tracking-wide text-white uppercase opacity-0 transition-opacity"
+          className="text-[10px] font-semibold text-white uppercase opacity-0 transition-opacity"
         />
       </div>
     </div>

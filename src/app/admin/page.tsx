@@ -3,6 +3,7 @@ import { AdminDashboard } from "@/features/admin/AdminDashboard";
 import { isAdminAuthenticated, isAdminConfigured } from "@/lib/admin-auth";
 import { getManagedProducts, getBaseProducts } from "@/lib/product-repository";
 import { getReviews, getFaq, getSettings, getContent, getCategories } from "@/lib/content-repository";
+import { listSubmissions } from "@/lib/submission-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export default async function AdminPage() {
     redirect("/admin/login");
   }
 
-  const [products, baseProducts, categories, reviews, faqItems, settings, content] = await Promise.all([
+  const [products, baseProducts, categories, reviews, faqItems, settings, content, submissions] = await Promise.all([
     getManagedProducts(),
     getBaseProducts(),
     getCategories(),
@@ -19,6 +20,7 @@ export default async function AdminPage() {
     getFaq(),
     getSettings(),
     getContent(),
+    listSubmissions(),
   ]);
 
   return (
@@ -30,6 +32,7 @@ export default async function AdminPage() {
       initialFaq={faqItems}
       initialSettings={settings}
       initialContent={content}
+      initialSubmissions={submissions}
     />
   );
 }

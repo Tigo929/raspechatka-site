@@ -1,8 +1,7 @@
 "use client";
 
 import Script from "next/script";
-import { useEffect, useState } from "react";
-import { hasConsent } from "@/lib/consent";
+import { useConsent } from "@/hooks/useConsent";
 
 const YM_ID = process.env.NEXT_PUBLIC_YANDEX_METRIKA_ID;
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
@@ -16,23 +15,7 @@ const VK_ID = process.env.NEXT_PUBLIC_VK_PIXEL_ID;
  * Перезагружается при изменении localStorage (событие storage).
  */
 export function AnalyticsScripts() {
-  const [analytics, setAnalytics] = useState(false);
-  const [marketing, setMarketing] = useState(false);
-
-  useEffect(() => {
-    const update = () => {
-      setAnalytics(hasConsent("analytics"));
-      setMarketing(hasConsent("marketing"));
-    };
-    update();
-    window.addEventListener("storage", update);
-    // Кастомное событие — CookieBanner вызывает его после сохранения
-    window.addEventListener("printlab:consent", update);
-    return () => {
-      window.removeEventListener("storage", update);
-      window.removeEventListener("printlab:consent", update);
-    };
-  }, []);
+  const { hasAnalytics: analytics, hasMarketing: marketing } = useConsent();
 
   return (
     <>
@@ -48,6 +31,7 @@ export function AnalyticsScripts() {
           />
           <noscript>
             <div>
+              {/* eslint-disable-next-line @next/next/no-img-element -- официальный noscript-пиксель Метрики */}
               <img
                 src={`https://mc.yandex.ru/watch/${YM_ID}`}
                 style={{ position: "absolute", left: "-9999px" }}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import type {
   PrintSide,
@@ -22,6 +22,7 @@ export function TshirtPreview({
   imageUrl,
   transform,
   onTransformChange,
+  onSizeChange,
 }: {
   colorId: ShirtColorId;
   side: PrintSide;
@@ -29,7 +30,9 @@ export function TshirtPreview({
   imageUrl: string | null;
   transform: Transform;
   onTransformChange: (t: Transform) => void;
+  onSizeChange?: (size: number) => void;
 }) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{
     px: number;
     py: number;
@@ -40,6 +43,16 @@ export function TshirtPreview({
   const darkShirt = colorId === "black";
   const printAreaLabel =
     side === "front" ? "зона печати спереди" : "зона печати на спине";
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node || !onSizeChange) return;
+    const update = () => onSizeChange(node.getBoundingClientRect().width);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [onSizeChange]);
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -79,7 +92,7 @@ export function TshirtPreview({
   }, []);
 
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-lg select-none">
+    <div ref={containerRef} className="relative mx-auto aspect-square w-full max-w-lg select-none">
       <Image
         src={mockup.image}
         alt={mockup.alt}

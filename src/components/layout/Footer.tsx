@@ -2,11 +2,13 @@ import Link from "next/link";
 import { Mail, MapPin, Phone, Send } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { siteConfig } from "@/data/site";
-import { categories } from "@/data/categories";
 import { seoLandings } from "@/data/seoLandings";
+import { getCategories, getPublicSettings } from "@/lib/content-repository";
 
-export function Footer() {
+export async function Footer() {
   const year = new Date().getFullYear();
+  const [categories, settings] = await Promise.all([getCategories(), getPublicSettings()]);
+  const phoneHref = `tel:${settings.phone.replace(/[^+\d]/g, "")}`;
   // Перелинковка на ключевые посадочные усиливает внутренний вес.
   const popularLandings = seoLandings.slice(0, 6);
 
@@ -26,7 +28,7 @@ export function Footer() {
             </p>
             <div className="mt-6 flex gap-3">
               <a
-                href={siteConfig.social.telegram}
+                href={settings.telegram}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Telegram"
@@ -35,7 +37,7 @@ export function Footer() {
                 <Send width={18} height={18} />
               </a>
               <a
-                href={siteConfig.phoneHref}
+                href={phoneHref}
                 aria-label="Позвонить"
                 className="hover:bg-accent flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors"
               >
@@ -45,7 +47,7 @@ export function Footer() {
           </div>
 
           <div className="lg:col-span-2">
-            <h3 className="text-sm font-semibold tracking-wide text-white uppercase">
+            <h3 className="text-sm font-semibold text-white uppercase">
               Каталог
             </h3>
             <ul className="mt-4 space-y-2.5 text-sm">
@@ -62,8 +64,8 @@ export function Footer() {
             </ul>
           </div>
 
-          <div className="lg:col-span-3">
-            <h3 className="text-sm font-semibold tracking-wide text-white uppercase">
+          <div className="lg:col-span-2">
+            <h3 className="text-sm font-semibold text-white uppercase">
               Популярное
             </h3>
             <ul className="mt-4 space-y-2.5 text-sm">
@@ -81,7 +83,7 @@ export function Footer() {
           </div>
 
           <div className="lg:col-span-2">
-            <h3 className="text-sm font-semibold tracking-wide text-white uppercase">
+            <h3 className="text-sm font-semibold text-white uppercase">
               Информация
             </h3>
             <ul className="mt-4 space-y-2.5 text-sm">
@@ -101,32 +103,32 @@ export function Footer() {
             </ul>
           </div>
 
-          <div className="lg:col-span-3">
-            <h3 className="text-sm font-semibold tracking-wide text-white uppercase">
+          <div className="lg:col-span-2">
+            <h3 className="text-sm font-semibold text-white uppercase">
               Контакты
             </h3>
             <ul className="mt-4 space-y-3 text-sm">
               <li className="flex items-start gap-2.5">
                 <Phone width={16} height={16} className="mt-0.5 shrink-0" />
-                <a href={siteConfig.phoneHref} className="hover:text-accent">
-                  {siteConfig.phone}
+                <a href={phoneHref} className="hover:text-accent">
+                  {settings.phone}
                 </a>
               </li>
               <li className="flex items-start gap-2.5">
                 <Mail width={16} height={16} className="mt-0.5 shrink-0" />
                 <a
-                  href={`mailto:${siteConfig.email}`}
+                  href={`mailto:${settings.email}`}
                   className="hover:text-accent"
                 >
-                  {siteConfig.email}
+                  {settings.email}
                 </a>
               </li>
               <li className="flex items-start gap-2.5">
                 <MapPin width={16} height={16} className="mt-0.5 shrink-0" />
                 <span>
-                  {siteConfig.address}
+                  {settings.address}
                   <br />
-                  {siteConfig.hours}
+                  {settings.hours}
                 </span>
               </li>
             </ul>

@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { Settings2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useConsent } from "@/hooks/useConsent";
-import type { ConsentCategories } from "@/lib/consent";
 
 export function CookieBanner() {
   const { consent, loading, acceptAll, acceptNecessaryOnly, saveCustom } =
@@ -14,26 +13,18 @@ export function CookieBanner() {
   const [showSettings, setShowSettings] = useState(false);
   const [analytics, setAnalytics] = useState(false);
   const [marketing, setMarketing] = useState(false);
-  const [visible, setVisible] = useState(false);
-
-  // Показываем баннер только если не было выбора
-  useEffect(() => {
-    if (!loading && !consent) setVisible(true);
-  }, [loading, consent]);
+  const visible = !loading && !consent;
 
   const handleAcceptAll = () => {
     acceptAll();
-    setVisible(false);
   };
 
   const handleDecline = () => {
     acceptNecessaryOnly();
-    setVisible(false);
   };
 
   const handleSaveCustom = () => {
     saveCustom({ analytics, marketing });
-    setVisible(false);
   };
 
   return (
@@ -54,9 +45,8 @@ export function CookieBanner() {
               <>
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-paper/80 text-sm leading-relaxed">
-                    Мы используем cookie и сервисы аналитики для улучшения
-                    работы сайта. Продолжая пользоваться сайтом, вы
-                    соглашаетесь с{" "}
+                    Необходимые cookie обеспечивают работу сайта. Аналитику и
+                    маркетинговые сервисы подключаем только с вашего согласия. Подробности в{" "}
                     <Link
                       href="/cookie-policy"
                       className="text-accent underline underline-offset-2"
@@ -106,13 +96,13 @@ export function CookieBanner() {
                   />
                   <CookieCategory
                     label="Аналитика"
-                    description="Яндекс.Метрика и Google Analytics — улучшение сайта."
+                    description="Помогает понять, какие страницы удобны и полезны."
                     checked={analytics}
                     onChange={setAnalytics}
                   />
                   <CookieCategory
                     label="Маркетинг"
-                    description="VK Pixel и Telegram Widget — таргетированная реклама."
+                    description="Помогает показывать релевантные предложения."
                     checked={marketing}
                     onChange={setMarketing}
                   />

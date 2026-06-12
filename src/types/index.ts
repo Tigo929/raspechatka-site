@@ -1,4 +1,4 @@
-/** Общие типы домена PRINTLAB. */
+/** Общие типы домена сайта «Распечатка». */
 
 export interface ProductColor {
   name: string;
@@ -88,6 +88,43 @@ export interface AnalyticsEvent {
   device: "mobile" | "desktop" | "tablet";
   referrer?: string;
   timestamp: string;
+}
+
+export type ContactMethod = "telegram" | "max" | "phone";
+
+export interface SubmissionContact {
+  method: ContactMethod;
+  value: string;
+}
+
+export type SubmissionStatus = "pending" | "delivered" | "failed";
+
+export interface SubmissionFile {
+  key: "frontImage" | "backImage" | "frontPreview" | "backPreview";
+  originalName: string;
+  storedPath: string;
+  mimeType: string;
+  size: number;
+}
+
+export interface StoredSubmission {
+  id: string;
+  reference: string;
+  kind: "lead" | "order";
+  status: SubmissionStatus;
+  name: string;
+  contact: SubmissionContact;
+  comment?: string;
+  orderDetails?: Record<string, unknown>;
+  files: SubmissionFile[];
+  personalDataConsent: true;
+  imageRightsConsent?: boolean;
+  consentAcceptedAt: string;
+  attempts: number;
+  lastError?: string;
+  createdAt: string;
+  updatedAt: string;
+  deliveredAt?: string;
 }
 
 export interface Benefit {

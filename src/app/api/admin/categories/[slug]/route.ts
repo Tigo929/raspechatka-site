@@ -6,8 +6,9 @@ import { getCategories, updateCategory } from "@/lib/content-repository";
 import { validateDto } from "@/lib/validate";
 import { CategoryDto } from "@/lib/dto/category.dto";
 import { stripHtml, isValidSlug } from "@/lib/sanitize";
-import { writeFile, mkdir } from "node:fs/promises";
+import { writeFile, mkdir, rename } from "node:fs/promises";
 import path from "node:path";
+import sharp from "sharp";
 
 export const runtime = "nodejs";
 
@@ -54,7 +55,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ slug
       const destDir = path.join(process.cwd(), "public", "categories");
       await mkdir(destDir, { recursive: true });
       const filename = `${slug}.webp`;
-      await writeFile(path.join(destDir, filename), bytes);
+      const destination = path.join(destDir, filename);
+      const temporary = `${destination}.${process.pid}.tmp`;
+      const optimized = await sharp(bytes)
+        .rotate()
+        .resize(1800, 1800, { fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 88 })
+        .toBuffer();
+      await writeFile(temporary, optimized);
+      await rename(temporary, destination);
       imageUrl = `/categories/${filename}?v=${Date.now()}`;
     }
 

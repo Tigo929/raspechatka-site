@@ -10,6 +10,7 @@ import {
   ValidateNested,
   Matches,
   IsObject,
+  Equals,
 } from "class-validator";
 import { Type } from "class-transformer";
 
@@ -44,6 +45,10 @@ export class OrderDetailsDto {
   @IsOptional()
   @IsObject()
   prints?: Record<string, string | null>;
+
+  @IsOptional()
+  @IsObject()
+  transforms?: Record<string, { x?: number; y?: number; scale?: number }>;
 }
 
 export class OrderDto {
@@ -69,9 +74,9 @@ export class OrderDto {
   website?: string;
 
   /** Факт согласия на обработку персональных данных */
-  @IsOptional()
   @IsBoolean()
-  personalDataConsent?: boolean;
+  @Equals(true, { message: "Необходимо согласие на обработку персональных данных" })
+  personalDataConsent!: true;
 
   /** Факт подтверждения прав на загружаемое изображение */
   @IsOptional()

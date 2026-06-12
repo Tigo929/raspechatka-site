@@ -26,6 +26,7 @@ import {
   TrendingUp,
   Upload,
   X,
+  ShoppingBag,
 } from "lucide-react";
 import type {
   Benefit,
@@ -39,9 +40,11 @@ import type {
   Product,
   ProductColor,
   Step,
+  StoredSubmission,
   UseCase,
 } from "@/types";
 import { formatPrice } from "@/lib/utils";
+import { OrdersPanel } from "@/features/admin/OrdersPanel";
 
 // ─── Shared ──────────────────────────────────────────────────────────────────
 
@@ -112,9 +115,10 @@ function StatCard({ label, value, icon: Icon }: { label: string; value: number |
 
 // ─── Tab navigation ───────────────────────────────────────────────────────────
 
-type Tab = "products" | "reviews" | "faq" | "settings" | "analytics" | "media" | "content";
+type Tab = "orders" | "products" | "reviews" | "faq" | "settings" | "analytics" | "media" | "content";
 
 const tabs: { id: Tab; label: string; icon: typeof Archive }[] = [
+  { id: "orders", label: "Заявки", icon: ShoppingBag },
   { id: "products", label: "Товары", icon: Archive },
   { id: "content", label: "Контент", icon: Layers },
   { id: "reviews", label: "Отзывы", icon: Star },
@@ -134,6 +138,7 @@ export function AdminDashboard({
   initialFaq,
   initialSettings,
   initialContent,
+  initialSubmissions,
 }: {
   initialProducts: ManagedProduct[];
   baseProducts: Product[];
@@ -142,9 +147,10 @@ export function AdminDashboard({
   initialFaq: ManagedFaqItem[];
   initialSettings: ManagedSettings;
   initialContent: ManagedContent;
+  initialSubmissions: StoredSubmission[];
 }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<Tab>("products");
+  const [activeTab, setActiveTab] = useState<Tab>("orders");
   const [notice, setNotice] = useState("");
 
   const notify = useCallback((msg: string) => setNotice(msg), []);
@@ -214,6 +220,8 @@ export function AdminDashboard({
 
       <div className="mx-auto max-w-[1440px] px-5 py-8 lg:px-8">
         <Notice text={notice} onClose={() => setNotice("")} />
+
+        {activeTab === "orders" && <OrdersPanel initialItems={initialSubmissions} />}
 
         {activeTab === "products" && (
           <ProductsPanel

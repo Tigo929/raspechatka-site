@@ -1,11 +1,11 @@
 import { siteConfig } from "@/data/site";
-import type { FaqItem, Product, Review } from "@/types";
+import type { FaqItem, ManagedSettings, Product, Review } from "@/types";
 
 const abs = (path: string) =>
   path.startsWith("http") ? path : `${siteConfig.url}${path}`;
 
 /** Organization + LocalBusiness (рендерится в layout, один раз на сайт). */
-export function organizationJsonLd() {
+export function organizationJsonLd(settings?: ManagedSettings) {
   return {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
@@ -14,12 +14,12 @@ export function organizationJsonLd() {
     legalName: siteConfig.legalName,
     description: siteConfig.description,
     url: siteConfig.url,
-    telephone: siteConfig.phone,
-    email: siteConfig.email,
+    telephone: settings?.phone ?? siteConfig.phone,
+    email: settings?.email ?? siteConfig.email,
     priceRange: "₽₽",
     address: {
       "@type": "PostalAddress",
-      streetAddress: siteConfig.address,
+      streetAddress: settings?.address ?? siteConfig.address,
       addressLocality: siteConfig.city,
       addressCountry: "RU",
     },
@@ -29,7 +29,7 @@ export function organizationJsonLd() {
       longitude: siteConfig.geo.lon,
     },
     openingHours: "Mo-Su 09:00-21:00",
-    sameAs: Object.values(siteConfig.social).filter(Boolean),
+    sameAs: settings ? [settings.telegram, settings.max].filter(Boolean) : Object.values(siteConfig.social).filter(Boolean),
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: siteConfig.aggregateRating.value,

@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { unstable_cache, revalidateTag } from "next/cache";
 import { randomUUID } from "node:crypto";
@@ -10,8 +10,9 @@ import { useCases as staticUseCases } from "@/data/useCases";
 import { categories as staticCategories } from "@/data/categories";
 import { siteConfig } from "@/data/site";
 import { getMediaVersions, applyVersion } from "@/lib/media-repository";
+import { getDataDirectory, writeJsonAtomic } from "@/lib/data-storage";
 
-const dataDir = path.join(process.cwd(), "data");
+const dataDir = getDataDirectory();
 const reviewsFile = path.join(dataDir, "managed-reviews.json");
 const faqFile = path.join(dataDir, "managed-faq.json");
 const settingsFile = path.join(dataDir, "managed-settings.json");
@@ -20,10 +21,12 @@ const contentFile = path.join(dataDir, "managed-content.json");
 
 let reviewsMutationQueue: Promise<void> = Promise.resolve();
 let faqMutationQueue: Promise<void> = Promise.resolve();
+let settingsMutationQueue: Promise<void> = Promise.resolve();
+let categoriesMutationQueue: Promise<void> = Promise.resolve();
+let contentMutationQueue: Promise<void> = Promise.resolve();
 
 async function safeWrite(file: string, data: unknown) {
-  await mkdir(dataDir, { recursive: true });
-  await writeFile(file, `${JSON.stringify(data, null, 2)}\n`, "utf8");
+  await writeJsonAtomic(file, data);
 }
 
 // ─── REVIEWS ────────────────────────────────────────────────────────────────
@@ -54,7 +57,7 @@ export async function getReviews(): Promise<ManagedReview[]> {
 export const getPublicReviews = unstable_cache(
   async (): Promise<Review[]> => {
     const all = await getReviews();
-    return all.filter((r) => r.published && r.rating >= 4);
+    return all.filter((r) => r.published && r.rating >= 4 && r.source !== "manual");
   },
   ["public-reviews"],
   { tags: ["public-content"], revalidate: false },
@@ -208,9 +211,21 @@ export async function getSettings(): Promise<ManagedSettings> {
 }
 
 export async function updateSettings(data: ManagedSettings): Promise<ManagedSettings> {
-  await safeWrite(settingsFile, data);
-  return data;
+  let result = data;
+  const operation = settingsMutationQueue.then(async () => {
+    await safeWrite(settingsFile, data);
+    revalidateTag("public-content", "max");
+    result = data;
+  });
+  settingsMutationQueue = operation.then(() => undefined, () => undefined);
+  await operation;
+  return result;
 }
+
+export const getPublicSettings = unstable_cache(getSettings, ["public-settings"], {
+  tags: ["public-content"],
+  revalidate: false,
+});
 
 // ─── CATEGORIES ───────────────────────────────────────────────────────────────
 
@@ -237,14 +252,20 @@ export const getCategories = unstable_cache(readCategories, ["categories"], {
 });
 
 export async function updateCategory(slug: string, data: Omit<Category, "slug">): Promise<Category> {
-  const all = await readCategories();
-  const idx = all.findIndex((c) => c.slug === slug);
-  if (idx === -1) throw new Error("not_found");
-  const updated = [...all];
-  updated[idx] = { ...data, slug };
-  await safeWrite(categoriesFile, updated);
-  revalidateTag("public-content", "max");
-  return updated[idx];
+  let result!: Category;
+  const operation = categoriesMutationQueue.then(async () => {
+    const all = await readCategories();
+    const idx = all.findIndex((c) => c.slug === slug);
+    if (idx === -1) throw new Error("not_found");
+    const updated = [...all];
+    updated[idx] = { ...data, slug };
+    await safeWrite(categoriesFile, updated);
+    revalidateTag("public-content", "max");
+    result = updated[idx];
+  });
+  categoriesMutationQueue = operation.then(() => undefined, () => undefined);
+  await operation;
+  return result;
 }
 
 // ─── MANAGED CONTENT (pricing / benefits / steps / trustbar / useCases) ───────
@@ -331,9 +352,13 @@ export async function getContent(): Promise<ManagedContent> {
 }
 
 export async function updateContent(section: keyof ManagedContent, data: ManagedContent[keyof ManagedContent]): Promise<void> {
-  const current = await readContent();
-  await safeWrite(contentFile, { ...current, [section]: data });
-  revalidateTag("public-content", "max");
+  const operation = contentMutationQueue.then(async () => {
+    const current = await readContent();
+    await safeWrite(contentFile, { ...current, [section]: data });
+    revalidateTag("public-content", "max");
+  });
+  contentMutationQueue = operation.then(() => undefined, () => undefined);
+  await operation;
 }
 
 export async function getPricing(): Promise<PricingTier[]> {

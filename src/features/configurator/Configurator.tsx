@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import {
@@ -58,6 +58,7 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
     createDefaultTransforms,
   );
   const [orderOpen, setOrderOpen] = useState(false);
+  const [previewSizes, setPreviewSizes] = useState<Record<PrintSide, number>>({ front: 520, back: 520 });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const objectUrlsRef = useRef<Set<string>>(new Set());
   const uploadId = useId();
@@ -67,6 +68,12 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
   const transform = transforms[side];
   const sideLabel = sideLabels[side];
   const activePrint = prints[side];
+
+  const handlePreviewSize = useCallback((value: number) => {
+    setPreviewSizes((current) => Math.abs(current[side] - value) < 0.5
+      ? current
+      : { ...current, [side]: value });
+  }, [side]);
 
   const setActiveTransform = (next: Transform) => {
     setTransforms((current) => ({ ...current, [side]: next }));
@@ -95,8 +102,8 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
       );
       return;
     }
-    if (file.size > 15 * 1024 * 1024) {
-      alert("Файл слишком большой. Максимум 15 МБ.");
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Файл слишком большой. Максимум 10 МБ.");
       return;
     }
     if (activePrint.imageUrl) {
@@ -132,13 +139,6 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Имя файла приходит от пользователя — кодируем, чтобы не сломать/не подменить ссылку.
-  const formatPrintForMessage = (print: PrintDesign) =>
-    print.fileName ? `файл «${print.fileName}»` : "без принта";
-  const orderText = encodeURIComponent(
-    `Здравствуйте! Хочу заказать футболку:\n• Цвет: ${color.name}\n• Размер: ${size}\n• Перед: ${formatPrintForMessage(prints.front)}\n• Спина: ${formatPrintForMessage(prints.back)}`,
-  );
-
   return (
     <div
       className={`grid gap-8 ${compact ? "lg:grid-cols-2" : "lg:grid-cols-[1.1fr_1fr]"}`}
@@ -152,6 +152,7 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
           imageUrl={activePrint.imageUrl}
           transform={transform}
           onTransformChange={setActiveTransform}
+          onSizeChange={handlePreviewSize}
         />
       </div>
 
@@ -281,7 +282,7 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
                 Загрузить принт для стороны «{sideLabel}»
               </span>
               <span className="text-muted text-xs font-normal">
-                PNG, JPG или WebP до 15 МБ
+                PNG, JPG или WebP до 10 МБ
               </span>
             </label>
           ) : (
@@ -360,7 +361,7 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
         <div className="border-line mt-auto rounded-2xl border bg-white p-5">
           <div className="flex items-end justify-between gap-3">
             <div>
-              <span className="bg-accent inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-wide text-white uppercase">
+              <span className="bg-accent inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold text-white uppercase">
                 🎉 Цена в честь открытия
               </span>
               <p className="mt-1.5 flex items-baseline gap-2">
@@ -412,6 +413,9 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
             front: prints.front.imageUrl,
             back: prints.back.imageUrl,
           }}
+          transforms={transforms}
+          previewSizes={previewSizes}
+          colorId={color.id}
           onClose={() => setOrderOpen(false)}
         />
       )}
@@ -447,12 +451,18 @@ function OrderDialog({
   size,
   prints,
   imageUrls,
+  transforms,
+  previewSizes,
+  colorId,
   onClose,
 }: {
   color: string;
   size: string;
   prints: Record<PrintSide, string | null>;
   imageUrls: Record<PrintSide, string | null>;
+  transforms: Record<PrintSide, Transform>;
+  previewSizes: Record<PrintSide, number>;
+  colorId: ShirtColorId;
   onClose: () => void;
 }) {
   const reduce = useReducedMotion();
@@ -526,13 +536,30 @@ function OrderDialog({
               size,
               prints: { front: prints.front, back: prints.back },
               imageUrls: { front: imageUrls.front, back: imageUrls.back },
+              transforms,
+              previewDesigns: {
+                front: imageUrls.front ? {
+                  mockupUrl: shirtColors.find((item) => item.id === colorId)!.views.front.image,
+                  imageUrl: imageUrls.front,
+                  zone: shirtColors.find((item) => item.id === colorId)!.views.front.zone,
+                  transform: transforms.front,
+                  previewSize: previewSizes.front,
+                } : null,
+                back: imageUrls.back ? {
+                  mockupUrl: shirtColors.find((item) => item.id === colorId)!.views.back.image,
+                  imageUrl: imageUrls.back,
+                  zone: shirtColors.find((item) => item.id === colorId)!.views.back.zone,
+                  transform: transforms.back,
+                  previewSize: previewSizes.back,
+                } : null,
+              },
             }}
             onSuccess={() => setTimeout(onClose, 2000)}
           />
         </div>
 
         <p className="text-muted mt-2 text-center text-xs">
-          Изображения передаются менеджеру и нигде не хранятся.
+          До оформления макет обрабатывается локально. После отправки оригиналы и превью сохраняются вместе с заказом.
         </p>
       </motion.div>
     </div>

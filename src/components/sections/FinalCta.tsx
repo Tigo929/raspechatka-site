@@ -3,9 +3,10 @@ import { Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { Button } from "@/components/ui/Button";
 import { MaxButton } from "@/components/ui/MaxButton";
-import { siteConfig } from "@/data/site";
+import { getPublicSettings } from "@/lib/content-repository";
 
-export function FinalCta() {
+export async function FinalCta() {
+  const settings = await getPublicSettings();
   return (
     <Section>
       <Reveal>
@@ -24,14 +25,14 @@ export function FinalCta() {
                 <Sparkles width={18} height={18} /> Собрать футболку
               </Button>
               <Button
-                href={siteConfig.social.telegram}
+                href={settings.telegram}
                 external
                 variant="dark"
                 size="lg"
               >
                 <Send width={18} height={18} /> Telegram
               </Button>
-              <MaxButton href={siteConfig.social.max} size="lg">
+              <MaxButton href={settings.max} size="lg">
                 MAX
               </MaxButton>
             </div>

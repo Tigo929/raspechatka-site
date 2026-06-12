@@ -23,9 +23,6 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   const reduce = useReducedMotion();
   const drag = useRef<{ x: number; y: number } | null>(null);
 
-  // Все кадры рендерятся в DOM сразу (скрытые) — Next.js Image загружает
-  // оптимизированные версии всех слайдов при монтировании, переход мгновенный.
-
   const goTo = useCallback(
     (next: number, dir = next > index ? 1 : -1) => {
       setDirection(dir);
@@ -79,23 +76,6 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        {/* Все слайды в DOM сразу — Next.js Image грузит оптимизированные
-            версии всех фото при монтировании, переключение без задержки.
-            aria-hidden + pointer-events-none: не мешают a11y и кликам. */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden opacity-0">
-          {slides.map((slide, i) => (
-            <Image
-              key={slide.src}
-              src={slide.src}
-              alt=""
-              fill
-              priority={i === 0}
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
-            />
-          ))}
-        </div>
-
         <AnimatePresence initial={false} custom={direction}>
           <motion.div
             key={active.src}

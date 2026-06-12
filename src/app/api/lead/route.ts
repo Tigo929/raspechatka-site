@@ -3,58 +3,62 @@ import { NextResponse } from "next/server";
 import { allowRequest, getRequestIp } from "@/lib/rate-limit";
 import { validateDto } from "@/lib/validate";
 import { LeadDto } from "@/lib/dto/lead.dto";
+import { createSubmission } from "@/lib/submission-repository";
+import { deliverSubmission } from "@/lib/submission-delivery";
 
 export const runtime = "nodejs";
 
-export async function POST(req: Request) {
-  const contentLength = Number(req.headers.get("content-length") ?? 0);
-  if (contentLength > 16_384)
-    return NextResponse.json({ ok: false, error: "Слишком большой запрос" }, { status: 413 });
+function normalizeContact(data: LeadDto) {
+  if (data.contact.method === "telegram") {
+    const username = data.contact.value.trim().replace(/^@/, "");
+    if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) return "Некорректный Telegram-юзернейм";
+    data.contact.value = username;
+    return null;
+  }
+  const phone = data.contact.value.trim();
+  if (phone.length < 6 || !/^[\d\s+()-]+$/.test(phone)) return "Некорректный номер телефона";
+  data.contact.value = phone;
+  return null;
+}
 
-  if (!allowRequest(`lead:${getRequestIp(req)}`, { limit: 5, windowMs: 10 * 60 * 1000 }))
-    return NextResponse.json(
-      { ok: false, error: "Слишком много запросов. Попробуйте позже." },
-      { status: 429 },
-    );
+export async function POST(request: Request) {
+  if (Number(request.headers.get("content-length") ?? 0) > 16_384) {
+    return NextResponse.json({ ok: false, error: "Слишком большой запрос" }, { status: 413 });
+  }
+  if (!allowRequest(`lead:${getRequestIp(request)}`, { limit: 5, windowMs: 10 * 60 * 1000 })) {
+    return NextResponse.json({ ok: false, error: "Слишком много запросов. Попробуйте позже." }, { status: 429 });
+  }
 
   let plain: unknown;
   try {
-    plain = await req.json();
+    plain = await request.json();
   } catch {
     return NextResponse.json({ ok: false, error: "Некорректный формат данных" }, { status: 400 });
   }
+  const validated = await validateDto(LeadDto, plain);
+  if (validated.errors) return NextResponse.json({ ok: false, error: validated.errors[0] }, { status: 422 });
+  const data = validated.data;
+  if (data.website) return NextResponse.json({ ok: true, stored: true, delivered: false });
+  const contactError = normalizeContact(data);
+  if (contactError) return NextResponse.json({ ok: false, error: contactError }, { status: 422 });
 
-  const { data, errors } = await validateDto(LeadDto, plain);
-
-  if (errors) {
-    return NextResponse.json({ ok: false, error: errors[0] }, { status: 422 });
+  try {
+    const submission = await createSubmission({
+      kind: "lead",
+      name: data.name.trim(),
+      contact: data.contact,
+      comment: data.comment?.trim(),
+      personalDataConsent: true,
+      consentAcceptedAt: data.consentAcceptedAt ?? new Date().toISOString(),
+    });
+    const delivered = await deliverSubmission(submission.id);
+    return NextResponse.json({
+      ok: true,
+      stored: true,
+      delivered: delivered.status === "delivered",
+      reference: submission.reference,
+    }, { status: 202 });
+  } catch {
+    return NextResponse.json({ ok: false, error: "Не удалось сохранить заявку. Позвоните нам или попробуйте ещё раз." }, { status: 500 });
   }
-
-  // Honeypot
-  if (data.website) return NextResponse.json({ ok: true, delivered: false });
-
-  const text =
-    `🟠 Новая заявка с сайта\n` +
-    `Имя: ${data.name}\n` +
-    `Телефон: ${data.phone}` +
-    (data.comment ? `\nКомментарий: ${data.comment}` : "");
-
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
-
-  if (token && chatId) {
-    try {
-      const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId, text }),
-        signal: AbortSignal.timeout(8000),
-      });
-      return NextResponse.json({ ok: true, delivered: res.ok });
-    } catch {
-      return NextResponse.json({ ok: true, delivered: false });
-    }
-  }
-
-  return NextResponse.json({ ok: true, delivered: false });
 }

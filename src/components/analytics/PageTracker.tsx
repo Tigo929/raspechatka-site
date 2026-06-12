@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { useConsent } from "@/hooks/useConsent";
 
 function getDevice(): "mobile" | "tablet" | "desktop" {
   const w = window.innerWidth;
@@ -31,9 +32,10 @@ function send(body: Record<string, unknown>) {
 
 export function PageTracker() {
   const pathname = usePathname();
+  const { hasAnalytics } = useConsent();
 
   useEffect(() => {
-    if (pathname.startsWith("/admin")) return;
+    if (!hasAnalytics || pathname.startsWith("/admin")) return;
 
     const sessionId = getSessionId();
     const enterAt = Date.now();
@@ -50,8 +52,9 @@ export function PageTracker() {
     window.addEventListener("beforeunload", handleUnload);
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
+      handleUnload();
     };
-  }, [pathname]);
+  }, [hasAnalytics, pathname]);
 
   return null;
 }

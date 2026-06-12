@@ -1,44 +1,43 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { AnalyticsEvent } from "@/types";
-
-const dataDir = path.join(process.cwd(), "data");
-const analyticsFile = path.join(dataDir, "analytics.json");
+import { getDataDirectory } from "@/lib/data-storage";
 
 const MAX_EVENTS = 50_000;
-
 let appendQueue: Promise<void> = Promise.resolve();
 
-async function safeWrite(file: string, data: unknown) {
-  await mkdir(dataDir, { recursive: true });
-  const tmp = `${file}.${process.pid}.tmp`;
-  await writeFile(tmp, `${JSON.stringify(data, null, 2)}\n`, "utf8");
-  await rename(tmp, file);
-}
+function legacyFile() { return path.join(getDataDirectory(), "analytics.json"); }
+function eventFile() { return path.join(getDataDirectory(), "analytics.ndjson"); }
 
-async function readEvents(): Promise<AnalyticsEvent[]> {
+async function readLegacyEvents() {
   try {
-    const raw = JSON.parse(await readFile(analyticsFile, "utf8")) as unknown;
-    return Array.isArray(raw) ? (raw as AnalyticsEvent[]) : [];
-  } catch (e) {
-    if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
-    return [];
+    const raw = JSON.parse(await readFile(legacyFile(), "utf8")) as unknown;
+    return Array.isArray(raw) ? raw as AnalyticsEvent[] : [];
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw error;
   }
 }
 
-export async function appendEvent(
-  input: Omit<AnalyticsEvent, "id" | "timestamp">,
-): Promise<void> {
+async function readEvents(): Promise<AnalyticsEvent[]> {
+  let current: AnalyticsEvent[] = [];
+  try {
+    const lines = (await readFile(eventFile(), "utf8")).split("\n").filter(Boolean);
+    current = lines.flatMap((line) => {
+      try { return [JSON.parse(line) as AnalyticsEvent]; } catch { return []; }
+    });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+  return [...await readLegacyEvents(), ...current].slice(-MAX_EVENTS);
+}
+
+export async function appendEvent(input: Omit<AnalyticsEvent, "id" | "timestamp">) {
+  const event: AnalyticsEvent = { ...input, id: randomUUID(), timestamp: new Date().toISOString() };
   appendQueue = appendQueue.then(async () => {
-    const events = await readEvents();
-    const event: AnalyticsEvent = {
-      ...input,
-      id: randomUUID(),
-      timestamp: new Date().toISOString(),
-    };
-    const updated = [...events, event].slice(-MAX_EVENTS);
-    await safeWrite(analyticsFile, updated);
+    await mkdir(getDataDirectory(), { recursive: true });
+    await appendFile(eventFile(), `${JSON.stringify(event)}\n`, "utf8");
   });
   return appendQueue;
 }
@@ -56,83 +55,39 @@ export interface AnalyticsSummary {
 
 export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
   const events = await readEvents();
-  const pageviews = events.filter((e) => e.type === "pageview");
-  const sessionEnds = events.filter((e) => e.type === "session_end");
+  const pageviews = events.filter((event) => event.type === "pageview");
+  const sessionEnds = events.filter((event) => event.type === "session_end");
+  const uniqueSessions = new Set(pageviews.map((event) => event.sessionId)).size;
+  const durations = sessionEnds.map((event) => event.duration ?? 0).filter((duration) => duration > 0 && duration < 3600);
+  const avgDuration = durations.length ? Math.round(durations.reduce((sum, duration) => sum + duration, 0) / durations.length) : 0;
 
-  const uniqueSessions = new Set(pageviews.map((e) => e.sessionId)).size;
-
-  // Avg duration from session_end events that have duration
-  const durations = sessionEnds
-    .map((e) => e.duration ?? 0)
-    .filter((d) => d > 0 && d < 3600);
-  const avgDuration =
-    durations.length > 0
-      ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
-      : 0;
-
-  // Top pages
   const pageCount: Record<string, number> = {};
-  for (const e of pageviews) {
-    pageCount[e.page] = (pageCount[e.page] ?? 0) + 1;
-  }
-  const topPages = Object.entries(pageCount)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 10)
-    .map(([page, views]) => ({ page, views }));
-
-  // Device breakdown
   const devices = { mobile: 0, desktop: 0, tablet: 0 };
-  for (const e of pageviews) {
-    devices[e.device] = (devices[e.device] ?? 0) + 1;
-  }
-
-  // Daily (last 30 days)
-  const now = new Date();
-  const daily: { date: string; views: number; sessions: number }[] = [];
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().slice(0, 10);
-    const dayViews = pageviews.filter(
-      (e) => e.timestamp.slice(0, 10) === dateStr,
-    );
-    const daySessions = new Set(dayViews.map((e) => e.sessionId)).size;
-    daily.push({ date: dateStr, views: dayViews.length, sessions: daySessions });
-  }
-
-  // Top referrers
   const refCount: Record<string, number> = {};
-  for (const e of pageviews) {
-    if (e.referrer && e.referrer !== window?.location?.origin) {
-      const key = e.referrer.replace(/^https?:\/\//, "").split("/")[0];
-      refCount[key] = (refCount[key] ?? 0) + 1;
+  const sessionPageCount: Record<string, number> = {};
+  const ownHost = process.env.NEXT_PUBLIC_SITE_URL ? new URL(process.env.NEXT_PUBLIC_SITE_URL).hostname : "";
+  for (const event of pageviews) {
+    pageCount[event.page] = (pageCount[event.page] ?? 0) + 1;
+    devices[event.device] += 1;
+    sessionPageCount[event.sessionId] = (sessionPageCount[event.sessionId] ?? 0) + 1;
+    if (event.referrer) {
+      try {
+        const host = new URL(event.referrer).hostname;
+        if (host && host !== ownHost && host !== "localhost" && host !== "127.0.0.1") refCount[host] = (refCount[host] ?? 0) + 1;
+      } catch { /* Игнорируем повреждённый referrer. */ }
     }
   }
-  const topReferrers = Object.entries(refCount)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 8)
-    .map(([referrer, count]) => ({ referrer, count }));
 
-  // Bounce rate: sessions with only 1 pageview
-  const sessionPageCount: Record<string, number> = {};
-  for (const e of pageviews) {
-    sessionPageCount[e.sessionId] = (sessionPageCount[e.sessionId] ?? 0) + 1;
-  }
-  const sessionList = Object.values(sessionPageCount);
-  const bouncedSessions = sessionList.filter((c) => c === 1).length;
-  const bounceRate =
-    sessionList.length > 0
-      ? Math.round((bouncedSessions / sessionList.length) * 100)
-      : 0;
-
-  return {
-    totalPageviews: pageviews.length,
-    uniqueSessions,
-    avgDuration,
-    topPages,
-    devices,
-    daily,
-    topReferrers,
-    bounceRate,
-  };
+  const topPages = Object.entries(pageCount).sort(([, a], [, b]) => b - a).slice(0, 10).map(([page, views]) => ({ page, views }));
+  const topReferrers = Object.entries(refCount).sort(([, a], [, b]) => b - a).slice(0, 8).map(([referrer, count]) => ({ referrer, count }));
+  const daily = Array.from({ length: 30 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (29 - index));
+    const dateString = date.toISOString().slice(0, 10);
+    const dayViews = pageviews.filter((event) => event.timestamp.slice(0, 10) === dateString);
+    return { date: dateString, views: dayViews.length, sessions: new Set(dayViews.map((event) => event.sessionId)).size };
+  });
+  const sessionCounts = Object.values(sessionPageCount);
+  const bounceRate = sessionCounts.length ? Math.round(sessionCounts.filter((count) => count === 1).length / sessionCounts.length * 100) : 0;
+  return { totalPageviews: pageviews.length, uniqueSessions, avgDuration, topPages, devices, daily, topReferrers, bounceRate };
 }

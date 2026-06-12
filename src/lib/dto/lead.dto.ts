@@ -4,10 +4,14 @@ import {
   IsNotEmpty,
   IsOptional,
   IsBoolean,
+  Equals,
   MaxLength,
   MinLength,
   Matches,
+  ValidateNested,
 } from "class-validator";
+import { Type } from "class-transformer";
+import { ContactDto } from "@/lib/dto/order.dto";
 
 export class LeadDto {
   @IsString({ message: "Имя должно быть строкой" })
@@ -17,12 +21,9 @@ export class LeadDto {
   @Matches(/^[\p{L}\s'\-]+$/u, { message: "Имя содержит недопустимые символы" })
   name!: string;
 
-  @IsString({ message: "Телефон должен быть строкой" })
-  @IsNotEmpty({ message: "Укажите номер телефона" })
-  @MinLength(6, { message: "Телефон слишком короткий" })
-  @MaxLength(40, { message: "Телефон слишком длинный" })
-  @Matches(/^[\d\s\+\(\)\-]+$/, { message: "Некорректный формат телефона" })
-  phone!: string;
+  @ValidateNested()
+  @Type(() => ContactDto)
+  contact!: ContactDto;
 
   @IsOptional()
   @IsString()
@@ -34,9 +35,9 @@ export class LeadDto {
   @IsString()
   website?: string;
 
-  @IsOptional()
   @IsBoolean()
-  personalDataConsent?: boolean;
+  @Equals(true, { message: "Необходимо согласие на обработку персональных данных" })
+  personalDataConsent!: true;
 
   @IsOptional()
   @IsString()

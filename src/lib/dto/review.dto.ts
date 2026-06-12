@@ -32,8 +32,8 @@ export class ReviewDto {
   date!: string;
 
   @IsOptional()
-  @IsIn(["manual", "yandex", "google", "2gis"], {
-    message: "Источник: manual, yandex, google или 2gis",
+  @IsIn(["manual", "yandex", "avito"], {
+    message: "Источник: manual, yandex или avito",
   })
   source?: string;
 

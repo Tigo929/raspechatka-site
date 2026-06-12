@@ -11,6 +11,7 @@ import { CookieBanner } from "@/components/legal/CookieBanner";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationJsonLd, websiteJsonLd } from "@/lib/jsonld";
 import { siteConfig } from "@/data/site";
+import { getPublicSettings } from "@/lib/content-repository";
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
@@ -55,11 +56,12 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const settings = await getPublicSettings();
   return (
     <html
       lang="ru"
@@ -67,7 +69,7 @@ export default function RootLayout({
       className={`${inter.variable} ${manrope.variable}`}
     >
       <body className="min-h-dvh antialiased">
-        <JsonLd data={organizationJsonLd()} />
+        <JsonLd data={organizationJsonLd(settings)} />
         <JsonLd data={websiteJsonLd()} />
         <a
           href="#main"
@@ -75,10 +77,10 @@ export default function RootLayout({
         >
           К основному содержимому
         </a>
-        <Header />
+        <Header settings={settings} />
         <main id="main">{children}</main>
         <Footer />
-        <MobileStickyCTA />
+        <MobileStickyCTA settings={settings} />
         <CustomCursor />
         <PageTracker />
         {/* Аналитика подключается ТОЛЬКО после согласия пользователя */}

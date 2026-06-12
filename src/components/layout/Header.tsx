@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { siteConfig } from "@/data/site";
 import { cn } from "@/lib/utils";
+import type { ManagedSettings } from "@/types";
 
 const navLinks = [
   { label: "Каталог", href: "/catalog" },
@@ -17,7 +18,7 @@ const navLinks = [
   { label: "Контакты", href: "/contacts" },
 ];
 
-export function Header() {
+export function Header({ settings }: { settings: ManagedSettings }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -86,10 +87,10 @@ export function Header() {
 
           <div className="hidden items-center gap-3 lg:flex">
             <a
-              href={siteConfig.phoneHref}
+              href={`tel:${settings.phone.replace(/[^+\d]/g, "")}`}
               className="text-ink hover:text-accent text-sm font-semibold transition-colors"
             >
-              {siteConfig.phone}
+              {settings.phone}
             </a>
             <Button href="/configurator" size="sm">
               Собрать футболку
@@ -133,10 +134,10 @@ export function Header() {
             </nav>
             <div className="mt-auto flex flex-col gap-3 pt-6">
               <a
-                href={siteConfig.phoneHref}
+                href={`tel:${settings.phone.replace(/[^+\d]/g, "")}`}
                 className="text-ink flex items-center justify-center gap-2 text-base font-semibold"
               >
-                <Phone width={18} height={18} /> {siteConfig.phone}
+                <Phone width={18} height={18} /> {settings.phone}
               </a>
               <Button href="/configurator" size="lg" className="w-full">
                 Собрать футболку

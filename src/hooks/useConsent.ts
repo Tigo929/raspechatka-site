@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import {
   type ConsentCategories,
   type ConsentData,
   acceptAll,
   acceptNecessaryOnly,
   readConsent,
+  subscribeToConsent,
   writeConsent,
 } from "@/lib/consent";
 
@@ -21,33 +22,30 @@ export interface UseConsentReturn {
   saveCustom: (categories: Omit<ConsentCategories, "necessary">) => void;
 }
 
-export function useConsent(): UseConsentReturn {
-  const [consent, setConsent] = useState<ConsentData | null>(null);
-  const [loading, setLoading] = useState(true);
+const subscribeHydration = () => () => undefined;
 
-  useEffect(() => {
-    setConsent(readConsent());
-    setLoading(false);
-  }, []);
+export function useConsent(): UseConsentReturn {
+  const consent = useSyncExternalStore(subscribeToConsent, readConsent, () => null);
+  const hydrated = useSyncExternalStore(subscribeHydration, () => true, () => false);
 
   const handleAcceptAll = useCallback(() => {
-    setConsent(acceptAll());
+    acceptAll();
   }, []);
 
   const handleAcceptNecessaryOnly = useCallback(() => {
-    setConsent(acceptNecessaryOnly());
+    acceptNecessaryOnly();
   }, []);
 
   const handleSaveCustom = useCallback(
     (categories: Omit<ConsentCategories, "necessary">) => {
-      setConsent(writeConsent(categories));
+      writeConsent(categories);
     },
     [],
   );
 
   return {
     consent,
-    loading,
+    loading: !hydrated,
     hasAnalytics: consent?.categories.analytics === true,
     hasMarketing: consent?.categories.marketing === true,
     acceptAll: handleAcceptAll,

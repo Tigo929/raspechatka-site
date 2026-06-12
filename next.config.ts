@@ -6,10 +6,9 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
   images: {
     formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 0,
+    minimumCacheTTL: 604800,
     localPatterns: [
       { pathname: "/**" },
-      { pathname: "/**", search: "*" },
     ],
   },
   async headers() {

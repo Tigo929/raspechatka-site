@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "node:fs/promises";
+import { writeFile, mkdir, rename } from "node:fs/promises";
 import path from "node:path";
 import { isAdminAuthenticated, isSameOriginRequest } from "@/lib/admin-auth";
 import { bumpMediaVersion } from "@/lib/media-repository";
 import { revalidatePath } from "next/cache";
+import sharp from "sharp";
 
 export const runtime = "nodejs";
 
@@ -52,7 +53,19 @@ export async function POST(request: Request) {
 
   const destAbs = path.join(process.cwd(), "public", normalized);
   await mkdir(path.dirname(destAbs), { recursive: true });
-  await writeFile(destAbs, bytes);
+  const targetExtension = path.extname(normalized).toLowerCase();
+  if (![".webp", ".jpg", ".jpeg", ".png"].includes(targetExtension)) {
+    return NextResponse.json({ error: "Недопустимый формат целевого файла." }, { status: 400 });
+  }
+  const pipeline = sharp(bytes).rotate().resize(2200, 2200, { fit: "inside", withoutEnlargement: true });
+  const optimized = targetExtension === ".webp"
+    ? await pipeline.webp({ quality: 88 }).toBuffer()
+    : targetExtension === ".png"
+      ? await pipeline.png({ compressionLevel: 9 }).toBuffer()
+      : await pipeline.jpeg({ quality: 90, mozjpeg: true }).toBuffer();
+  const temporary = `${destAbs}.${process.pid}.tmp`;
+  await writeFile(temporary, optimized);
+  await rename(temporary, destAbs);
 
   const v = await bumpMediaVersion(normalized);
   revalidatePath("/");
