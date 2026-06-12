@@ -14,7 +14,16 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Magnetic } from "@/components/interaction/Magnetic";
 import { formatPrice } from "@/lib/utils";
-import { ConfiguratorOrderForm, type ConfiguratorOrderDetails } from "@/features/order/ConfiguratorOrderForm";
+import dynamic from "next/dynamic";
+import type { ConfiguratorOrderDetails } from "@/features/order/ConfiguratorOrderForm";
+
+const ConfiguratorOrderForm = dynamic(
+  () =>
+    import("@/features/order/ConfiguratorOrderForm").then((m) => ({
+      default: m.ConfiguratorOrderForm,
+    })),
+  { ssr: false, loading: () => null },
+);
 import {
   defaultTransforms,
   shirtColors,

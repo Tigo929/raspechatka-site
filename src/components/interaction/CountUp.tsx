@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { animate, useInView, useReducedMotion } from "motion/react";
+import { animate, useInView } from "motion/react";
 
 /**
  * Анимированный счётчик: при попадании в вьюпорт число «набегает» от 0.
@@ -22,7 +22,7 @@ export function CountUp({
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
-  const reduce = useReducedMotion();
+  const reduce = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   useEffect(() => {
     const el = ref.current;

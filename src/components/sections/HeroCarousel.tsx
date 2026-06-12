@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Spotlight } from "@/components/interaction/Spotlight";
 import type { HeroSlide } from "@/data/images";
@@ -20,7 +20,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [paused, setPaused] = useState(false);
-  const reduce = useReducedMotion();
+  const reduce = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const drag = useRef<{ x: number; y: number } | null>(null);
 
   const goTo = useCallback(

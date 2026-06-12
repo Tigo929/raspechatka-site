@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import { Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { OrderForm } from "@/features/order/OrderForm";
@@ -105,7 +105,7 @@ function ProductOrderDialog({
   size: string;
   onClose: () => void;
 }) {
-  const reduce = useReducedMotion();
+  const reduce = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
