@@ -75,7 +75,7 @@ export interface ManagedSettings {
   address: string;
   hours: string;
   telegram: string;
-  whatsapp: string;
+  max: string;
   yandexMetrikaId: string;
 }
 

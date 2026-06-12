@@ -14,7 +14,7 @@ const MAX_SIZE_FORM = 25 * 1024 * 1024; // 25 MB для FormData с изобра
 
 const contactLabels: Record<string, string> = {
   telegram: "Telegram",
-  whatsapp: "WhatsApp",
+  max: "MAX",
   phone: "Звонок",
 };
 

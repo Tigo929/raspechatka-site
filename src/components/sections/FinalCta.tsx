@@ -1,7 +1,8 @@
-import { Sparkles, Send, MessageCircle } from "lucide-react";
+import { Sparkles, Send } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { Button } from "@/components/ui/Button";
+import { MaxButton } from "@/components/ui/MaxButton";
 import { siteConfig } from "@/data/site";
 
 export function FinalCta() {
@@ -30,14 +31,9 @@ export function FinalCta() {
               >
                 <Send width={18} height={18} /> Telegram
               </Button>
-              <Button
-                href={siteConfig.social.whatsapp}
-                external
-                variant="dark"
-                size="lg"
-              >
-                <MessageCircle width={18} height={18} /> WhatsApp
-              </Button>
+              <MaxButton href={siteConfig.social.max} size="lg">
+                MAX
+              </MaxButton>
             </div>
             <p className="text-paper/50 mt-6 text-sm">
               Без минимального тиража · бесплатный макет · печать от 1 дня

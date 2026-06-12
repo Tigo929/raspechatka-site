@@ -109,11 +109,11 @@ export default function DeliveryAndReturnPage() {
           </a>
           {" "}&nbsp;|&nbsp;{" "}
           <a
-            href={siteConfig.social.whatsapp}
+            href={siteConfig.social.max}
             target="_blank"
             rel="noopener noreferrer"
           >
-            WhatsApp
+            MAX
           </a>
         </p>
       </div>

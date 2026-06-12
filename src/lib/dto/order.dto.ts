@@ -14,10 +14,10 @@ import {
 import { Type } from "class-transformer";
 
 export class ContactDto {
-  @IsIn(["telegram", "whatsapp", "phone"], {
-    message: "Способ связи: telegram, whatsapp или phone",
+  @IsIn(["telegram", "max", "phone"], {
+    message: "Способ связи: telegram, max или phone",
   })
-  method!: "telegram" | "whatsapp" | "phone";
+  method!: "telegram" | "max" | "phone";
 
   @IsString()
   @IsNotEmpty({ message: "Укажите контактные данные" })

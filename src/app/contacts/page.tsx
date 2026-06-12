@@ -60,9 +60,9 @@ export default function ContactsPage() {
             />
             <ContactCard
               icon={<MessageCircle width={22} height={22} />}
-              title="WhatsApp"
-              value="Написать в WhatsApp"
-              href={siteConfig.social.whatsapp}
+              title="MAX"
+              value="Написать в MAX"
+              href={siteConfig.social.max}
               external
             />
           </div>

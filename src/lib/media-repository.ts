@@ -1,5 +1,6 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { unstable_cache, revalidateTag } from "next/cache";
 
 const dataDir = path.join(process.cwd(), "data");
 const versionsFile = path.join(dataDir, "media-versions.json");
@@ -11,7 +12,7 @@ async function safeWrite(file: string, data: unknown) {
   await rename(tmp, file);
 }
 
-export async function getMediaVersions(): Promise<Record<string, number>> {
+async function readMediaVersions(): Promise<Record<string, number>> {
   try {
     const raw = JSON.parse(await readFile(versionsFile, "utf8")) as unknown;
     if (raw && typeof raw === "object") return raw as Record<string, number>;
@@ -21,11 +22,17 @@ export async function getMediaVersions(): Promise<Record<string, number>> {
   return {};
 }
 
+export const getMediaVersions = unstable_cache(readMediaVersions, ["media-versions"], {
+  tags: ["public-content"],
+  revalidate: false,
+});
+
 export async function bumpMediaVersion(relativePath: string): Promise<number> {
-  const versions = await getMediaVersions();
+  const versions = await readMediaVersions();
   const ts = Date.now();
   versions[relativePath] = ts;
   await safeWrite(versionsFile, versions);
+  revalidateTag("public-content", "max");
   return ts;
 }
 

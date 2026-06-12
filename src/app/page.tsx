@@ -20,8 +20,6 @@ import { faqJsonLd, reviewsJsonLd } from "@/lib/jsonld";
 import { getPublicFaq, getPublicReviews } from "@/lib/content-repository";
 import { buildMetadata } from "@/lib/seo";
 
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = buildMetadata({
   title: "Печать на футболках на заказ — с принтом, фото и логотипом",
   description:

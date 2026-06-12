@@ -27,7 +27,7 @@ export async function PUT(request: Request) {
     address: body.address?.trim() ?? "",
     hours: body.hours?.trim() ?? "",
     telegram: body.telegram?.trim() ?? "",
-    whatsapp: body.whatsapp?.trim() ?? "",
+    max: body.max?.trim() ?? "",
     yandexMetrikaId: body.yandexMetrikaId?.trim() ?? "",
   });
   return NextResponse.json({ settings });

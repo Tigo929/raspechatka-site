@@ -1657,7 +1657,7 @@ function SettingsPanel({
           <h2 className="font-semibold mb-4">Мессенджеры</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Telegram (t.me/...)"><input value={s.telegram} onChange={update("telegram")} placeholder="https://t.me/username" className={inputClass} /></Field>
-            <Field label="WhatsApp (wa.me/...)"><input value={s.whatsapp} onChange={update("whatsapp")} placeholder="https://wa.me/79001234567" className={inputClass} /></Field>
+            <Field label="MAX (vk.me/...)"><input value={s.max} onChange={update("max")} placeholder="https://vk.me/79001234567" className={inputClass} /></Field>
           </div>
         </section>
 

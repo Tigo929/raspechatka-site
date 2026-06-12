@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MessageCircle, Send, Sparkles } from "lucide-react";
+import { Send, Sparkles } from "lucide-react";
 import { siteConfig } from "@/data/site";
+import { MaxIconButton } from "@/components/ui/MaxButton";
 
 /**
  * Закреплённый внизу экрана блок CTA для мобильных — постоянный путь к заказу
@@ -33,15 +34,7 @@ export function MobileStickyCTA() {
           >
             <Sparkles width={17} height={17} /> Собрать футболку
           </Link>
-          <a
-            href={siteConfig.social.whatsapp}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Написать в WhatsApp"
-            className="bg-ink text-paper flex h-12 w-12 shrink-0 items-center justify-center rounded-full active:scale-[0.97]"
-          >
-            <MessageCircle width={20} height={20} />
-          </a>
+          <MaxIconButton href={siteConfig.social.max} />
           <a
             href={siteConfig.social.telegram}
             target="_blank"

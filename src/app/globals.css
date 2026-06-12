@@ -72,6 +72,30 @@
   }
 }
 
+@keyframes maxShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.max-btn-gradient {
+  background: linear-gradient(135deg, #38b2ff 0%, #7b4fff 50%, #c84eff 100%);
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+  transition: background-position 0.4s ease, box-shadow 0.3s ease;
+}
+
+.max-btn-gradient:hover {
+  animation: maxShimmer 2.2s ease infinite;
+  box-shadow: 0 0 20px rgba(123, 79, 255, 0.45);
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;

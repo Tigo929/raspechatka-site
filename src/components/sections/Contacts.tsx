@@ -1,8 +1,9 @@
-import { MapPin, Clock, Phone, Send, MessageCircle } from "lucide-react";
+import { MapPin, Clock, Phone, Send } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 import { Button } from "@/components/ui/Button";
+import { MaxButton } from "@/components/ui/MaxButton";
 import { PlatformRatings } from "@/components/sections/PlatformRatings";
 import { siteConfig } from "@/data/site";
 
@@ -74,9 +75,7 @@ export function Contacts() {
             <Button href={siteConfig.social.telegram} external className="w-fit">
               <Send width={18} height={18} /> Telegram
             </Button>
-            <Button href={siteConfig.social.whatsapp} external variant="secondary" className="w-fit">
-              <MessageCircle width={18} height={18} /> WhatsApp
-            </Button>
+            <MaxButton href={siteConfig.social.max} className="w-fit" />
           </div>
         </Reveal>
 

@@ -1,5 +1,6 @@
 import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { unstable_cache, revalidateTag } from "next/cache";
 import { baseProducts } from "@/data/products";
 import type { ManagedProduct, Product, ProductColor } from "@/types";
 
@@ -79,6 +80,7 @@ async function persistManagedProducts(products: ManagedProduct[]) {
     "utf8",
   );
   await rename(temporaryFile, catalogFile);
+  revalidateTag("products", "max");
 }
 
 async function mutateManagedProducts<T>(
@@ -118,17 +120,28 @@ export async function updateBaseProduct(slug: string, update: Partial<Omit<Produ
   const tmp = `${baseProductsFile}.${process.pid}.tmp`;
   await writeFile(tmp, `${JSON.stringify(updated, null, 2)}\n`, "utf8");
   await rename(tmp, baseProductsFile);
+  revalidateTag("products", "max");
   return updated[idx];
 }
+
+async function _getAllPublicProducts(): Promise<Product[]> {
+  const [base, managed] = await Promise.all([getBaseProducts(), getManagedProducts()]);
+  return [...base, ...managed.filter((p) => p.published)];
+}
+
+const getCachedPublicProducts = unstable_cache(_getAllPublicProducts, ["all-public-products"], {
+  tags: ["products"],
+  revalidate: false,
+});
 
 export async function getAllProducts(options?: {
   includeUnpublished?: boolean;
 }): Promise<Product[]> {
-  const [base, managed] = await Promise.all([getBaseProducts(), getManagedProducts()]);
-  const visible = options?.includeUnpublished
-    ? managed
-    : managed.filter((product) => product.published);
-  return [...base, ...visible];
+  if (options?.includeUnpublished) {
+    const [base, managed] = await Promise.all([getBaseProducts(), getManagedProducts()]);
+    return [...base, ...managed];
+  }
+  return getCachedPublicProducts();
 }
 
 export async function getProduct(
@@ -141,12 +154,14 @@ export async function getProduct(
   return products.find((product) => product.slug === slug);
 }
 
-export async function getPopularProducts(limit = 4) {
-  const products = await getAllProducts();
-  return [...products]
-    .sort((a, b) => b.reviewsCount - a.reviewsCount)
-    .slice(0, limit);
-}
+export const getPopularProducts = unstable_cache(
+  async (limit = 4) => {
+    const products = await _getAllPublicProducts();
+    return [...products].sort((a, b) => b.reviewsCount - a.reviewsCount).slice(0, limit);
+  },
+  ["popular-products"],
+  { tags: ["products"], revalidate: false },
+);
 
 export async function createManagedProduct(product: ManagedProduct) {
   return mutateManagedProducts(async (managed) => {

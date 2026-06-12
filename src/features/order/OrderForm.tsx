@@ -5,7 +5,7 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ConsentCheckbox } from "@/components/legal/ConsentCheckbox";
 
-type ContactMethod = "telegram" | "whatsapp" | "phone";
+type ContactMethod = "telegram" | "max" | "phone";
 type Status = "idle" | "sending" | "done" | "error";
 
 export interface OrderDetails {
@@ -166,7 +166,7 @@ export function OrderForm({
 
   const options: { id: ContactMethod; label: string }[] = [
     { id: "telegram", label: "Telegram" },
-    { id: "whatsapp", label: "WhatsApp" },
+    { id: "max", label: "MAX" },
     { id: "phone", label: "Позвонить" },
   ];
 
@@ -238,12 +238,12 @@ export function OrderForm({
       )}
 
       {/* Телефон */}
-      {(method === "whatsapp" || method === "phone") && (
+      {(method === "max" || method === "phone") && (
         <div className="flex flex-col gap-1.5">
           <label className="text-ink text-sm font-semibold">
             Номер телефона
-            {method === "whatsapp" && (
-              <span className="text-muted font-normal"> (WhatsApp)</span>
+            {method === "max" && (
+              <span className="text-muted font-normal"> (MAX)</span>
             )}
           </label>
           <input

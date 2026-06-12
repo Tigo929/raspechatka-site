@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { unstable_cache, revalidateTag } from "next/cache";
 import { randomUUID } from "node:crypto";
 import type { Benefit, Category, FaqItem, ManagedContent, ManagedFaqItem, ManagedReview, ManagedSettings, PricingTier, Review, Step, UseCase } from "@/types";
 import { reviews as staticReviews } from "@/data/reviews";
@@ -50,10 +51,14 @@ export async function getReviews(): Promise<ManagedReview[]> {
   return [];
 }
 
-export async function getPublicReviews(): Promise<Review[]> {
-  const all = await getReviews();
-  return all.filter((r) => r.published && r.rating >= 4);
-}
+export const getPublicReviews = unstable_cache(
+  async (): Promise<Review[]> => {
+    const all = await getReviews();
+    return all.filter((r) => r.published && r.rating >= 4);
+  },
+  ["public-reviews"],
+  { tags: ["public-content"], revalidate: false },
+);
 
 async function mutateReviews<T>(fn: (items: ManagedReview[]) => Promise<T> | T) {
   const op = reviewsMutationQueue.then(() => getReviews().then(fn));
@@ -66,6 +71,7 @@ export async function createReview(data: Omit<ManagedReview, "id">): Promise<Man
     const review: ManagedReview = { ...data, id: randomUUID() };
     const updated = [review, ...items];
     await safeWrite(reviewsFile, updated);
+    revalidateTag("public-content", "max");
     return review;
   });
 }
@@ -77,6 +83,7 @@ export async function updateReview(id: string, data: Omit<ManagedReview, "id">):
     const updated = [...items];
     updated[idx] = { ...data, id };
     await safeWrite(reviewsFile, updated);
+    revalidateTag("public-content", "max");
     return updated[idx];
   });
 }
@@ -86,6 +93,7 @@ export async function deleteReview(id: string): Promise<void> {
     const filtered = items.filter((r) => r.id !== id);
     if (filtered.length === items.length) throw new Error("not_found");
     await safeWrite(reviewsFile, filtered);
+    revalidateTag("public-content", "max");
   });
 }
 
@@ -113,10 +121,14 @@ export async function getFaq(): Promise<ManagedFaqItem[]> {
   return [];
 }
 
-export async function getPublicFaq(): Promise<FaqItem[]> {
-  const all = await getFaq();
-  return all.filter((f) => f.published).map(({ question, answer }) => ({ question, answer }));
-}
+export const getPublicFaq = unstable_cache(
+  async (): Promise<FaqItem[]> => {
+    const all = await getFaq();
+    return all.filter((f) => f.published).map(({ question, answer }) => ({ question, answer }));
+  },
+  ["public-faq"],
+  { tags: ["public-content"], revalidate: false },
+);
 
 async function mutateFaq<T>(fn: (items: ManagedFaqItem[]) => Promise<T> | T) {
   const op = faqMutationQueue.then(() => getFaq().then(fn));
@@ -131,6 +143,7 @@ export async function createFaqItem(data: Omit<ManagedFaqItem, "id">): Promise<M
     item.order = maxOrder + 1;
     const updated = [...items, item];
     await safeWrite(faqFile, updated);
+    revalidateTag("public-content", "max");
     return item;
   });
 }
@@ -142,6 +155,7 @@ export async function updateFaqItem(id: string, data: Omit<ManagedFaqItem, "id">
     const updated = [...items];
     updated[idx] = { ...data, id };
     await safeWrite(faqFile, updated);
+    revalidateTag("public-content", "max");
     return updated[idx];
   });
 }
@@ -151,6 +165,7 @@ export async function deleteFaqItem(id: string): Promise<void> {
     const filtered = items.filter((f) => f.id !== id);
     if (filtered.length === items.length) throw new Error("not_found");
     await safeWrite(faqFile, filtered);
+    revalidateTag("public-content", "max");
   });
 }
 
@@ -161,6 +176,7 @@ export async function reorderFaq(ids: string[]): Promise<void> {
       return { ...item, order: idx === -1 ? item.order : idx };
     });
     await safeWrite(faqFile, updated);
+    revalidateTag("public-content", "max");
   });
 }
 
@@ -173,7 +189,7 @@ function defaultSettings(): ManagedSettings {
     address: siteConfig.address,
     hours: siteConfig.hours,
     telegram: siteConfig.social.telegram,
-    whatsapp: siteConfig.social.whatsapp,
+    max: siteConfig.social.max,
     yandexMetrikaId: process.env.NEXT_PUBLIC_YANDEX_METRIKA_ID ?? "",
   };
 }
@@ -198,7 +214,7 @@ export async function updateSettings(data: ManagedSettings): Promise<ManagedSett
 
 // ─── CATEGORIES ───────────────────────────────────────────────────────────────
 
-export async function getCategories(): Promise<Category[]> {
+async function readCategories(): Promise<Category[]> {
   let cats: Category[];
   try {
     const raw = JSON.parse(await readFile(categoriesFile, "utf8")) as unknown;
@@ -215,13 +231,19 @@ export async function getCategories(): Promise<Category[]> {
   return cats.map((c) => ({ ...c, image: applyVersion(c.image, versions) }));
 }
 
+export const getCategories = unstable_cache(readCategories, ["categories"], {
+  tags: ["public-content"],
+  revalidate: false,
+});
+
 export async function updateCategory(slug: string, data: Omit<Category, "slug">): Promise<Category> {
-  const all = await getCategories();
+  const all = await readCategories();
   const idx = all.findIndex((c) => c.slug === slug);
   if (idx === -1) throw new Error("not_found");
   const updated = [...all];
   updated[idx] = { ...data, slug };
   await safeWrite(categoriesFile, updated);
+  revalidateTag("public-content", "max");
   return updated[idx];
 }
 
@@ -281,7 +303,7 @@ function defaultContent(): ManagedContent {
   };
 }
 
-export async function getContent(): Promise<ManagedContent> {
+async function readContent(): Promise<ManagedContent> {
   try {
     const raw = JSON.parse(await readFile(contentFile, "utf8")) as unknown;
     if (raw && typeof raw === "object") {
@@ -297,9 +319,21 @@ export async function getContent(): Promise<ManagedContent> {
   return defaultContent();
 }
 
+// Публичные страницы используют кешированную версию.
+// Мутации (updateContent) вызывают readContent() напрямую — без кеша.
+const getCachedContent = unstable_cache(readContent, ["managed-content"], {
+  tags: ["public-content"],
+  revalidate: false,
+});
+
+export async function getContent(): Promise<ManagedContent> {
+  return getCachedContent();
+}
+
 export async function updateContent(section: keyof ManagedContent, data: ManagedContent[keyof ManagedContent]): Promise<void> {
-  const current = await getContent();
+  const current = await readContent();
   await safeWrite(contentFile, { ...current, [section]: data });
+  revalidateTag("public-content", "max");
 }
 
 export async function getPricing(): Promise<PricingTier[]> {
