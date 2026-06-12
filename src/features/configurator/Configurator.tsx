@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
 import {
   Upload,
   Trash2,
@@ -15,7 +14,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Magnetic } from "@/components/interaction/Magnetic";
 import { formatPrice } from "@/lib/utils";
-import { OrderForm } from "@/features/order/OrderForm";
+import { ConfiguratorOrderForm, type ConfiguratorOrderDetails } from "@/features/order/ConfiguratorOrderForm";
 import {
   defaultTransforms,
   shirtColors,
@@ -464,8 +463,6 @@ function OrderDialog({
   colorId: ShirtColorId;
   onClose: () => void;
 }) {
-  const reduce = useReducedMotion();
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
@@ -484,28 +481,17 @@ function OrderDialog({
       aria-label="Оформление заказа"
       onClick={onClose}
     >
-      <motion.div
-        initial={reduce ? false : { opacity: 0, y: 40, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: "spring", stiffness: 260, damping: 24 }}
-        className="bg-paper shadow-lift w-full max-w-md rounded-t-3xl p-6 sm:rounded-3xl"
+      <div
+        className="bg-paper shadow-lift animate-in fade-in slide-in-from-bottom-4 duration-300 w-full max-w-md rounded-t-3xl p-6 sm:rounded-3xl sm:slide-in-from-bottom-0 sm:zoom-in-95"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <motion.span
-              initial={reduce ? false : { scale: 0, rotate: -30 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{
-                type: "spring",
-                stiffness: 360,
-                damping: 14,
-                delay: 0.1,
-              }}
+            <span
               className="bg-accent flex h-10 w-10 items-center justify-center rounded-full text-white"
             >
               <Check width={22} height={22} strokeWidth={3} />
-            </motion.span>
+            </span>
             <h3 className="font-display text-ink text-xl font-bold">
               Ваш заказ собран
             </h3>
@@ -529,13 +515,12 @@ function OrderDialog({
         </dl>
 
         <div className="mt-5">
-          <OrderForm
+          <ConfiguratorOrderForm
             orderDetails={{
+              product: "Футболка с принтом",
               color,
               size,
-              prints: { front: prints.front, back: prints.back },
               imageUrls: { front: imageUrls.front, back: imageUrls.back },
-              transforms,
               previewDesigns: {
                 front: imageUrls.front ? {
                   mockupUrl: shirtColors.find((item) => item.id === colorId)!.views.front.image,
@@ -560,9 +545,9 @@ function OrderDialog({
         </div>
 
         <p className="text-muted mt-2 text-center text-xs">
-          До оформления макет обрабатывается локально. После отправки оригиналы и превью сохраняются вместе с заказом.
+          Фотографии обрабатываются локально. После отправки менеджер получит оригиналы и превью в Telegram.
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 }

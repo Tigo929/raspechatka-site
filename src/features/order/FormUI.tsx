@@ -16,7 +16,7 @@ export function SubmissionSuccess({
 }: {
   title: string;
   description: string;
-  referenceLabel: string;
+  referenceLabel?: string;
   reference: string | null;
 }) {
   return (
@@ -26,7 +26,7 @@ export function SubmissionSuccess({
       </span>
       <h3 className="font-display text-ink mt-4 text-xl font-bold">{title}</h3>
       <p className="text-muted mx-auto mt-2 max-w-sm text-sm">{description}</p>
-      {reference && (
+      {reference && referenceLabel && (
         <p className="text-muted mt-2 text-xs">
           {referenceLabel}: {reference}
         </p>
