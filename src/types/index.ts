@@ -100,7 +100,7 @@ export interface SubmissionContact {
 export type SubmissionStatus = "pending" | "delivered" | "failed";
 
 export interface SubmissionFile {
-  key: "frontImage" | "backImage" | "frontPreview" | "backPreview";
+  key: "frontImage" | "backImage" | "frontPreview" | "backPreview" | "previewImage";
   originalName: string;
   storedPath: string;
   mimeType: string;

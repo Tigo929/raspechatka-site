@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/Button";
 import { Magnetic } from "@/components/interaction/Magnetic";
 import { formatPrice } from "@/lib/utils";
 import dynamic from "next/dynamic";
-import type { ConfiguratorOrderDetails } from "@/features/order/ConfiguratorOrderForm";
 
 const ConfiguratorOrderForm = dynamic(
   () =>
@@ -65,8 +64,9 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
   const [transforms, setTransforms] = useState<Record<PrintSide, Transform>>(
     createDefaultTransforms,
   );
-  const [orderOpen, setOrderOpen] = useState(false);
-  // Ref вместо state — нет смысла ре-рендерить Configurator при каждом resize
+  // Снапшот размеров превью на момент открытия диалога. null = диалог закрыт.
+  // Ref не ре-рендерит Configurator при resize; снимаем значение в обработчике клика.
+  const [orderSnapshot, setOrderSnapshot] = useState<Record<PrintSide, number> | null>(null);
   const previewSizesRef = useRef<Record<PrintSide, number>>({ front: 520, back: 520 });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const objectUrlsRef = useRef<Set<string>>(new Set());
@@ -392,7 +392,7 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
               size="lg"
               data-cursor="cta"
               data-cursor-label="Заказать"
-              onClick={() => setOrderOpen(true)}
+              onClick={() => setOrderSnapshot(previewSizesRef.current)}
             >
               Оформить заказ
             </Button>
@@ -408,7 +408,7 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
         </div>
       </div>
 
-      {orderOpen && (
+      {orderSnapshot && (
         <OrderDialog
           color={color.name}
           size={size}
@@ -421,9 +421,9 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
             back: prints.back.imageUrl,
           }}
           transforms={transforms}
-          previewSizes={previewSizesRef.current}
+          previewSizes={orderSnapshot}
           colorId={color.id}
-          onClose={() => setOrderOpen(false)}
+          onClose={() => setOrderSnapshot(null)}
         />
       )}
     </div>

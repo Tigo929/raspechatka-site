@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { allowRequest, getRequestIp } from "@/lib/rate-limit";
 import { validateDto } from "@/lib/validate";
 import { OrderDto } from "@/lib/dto/order.dto";
+import { normalizeContact } from "@/lib/contact";
+import { readImageField } from "@/lib/image-validation";
 import { createSubmission, type SubmissionFileInput } from "@/lib/submission-repository";
 import { deliverSubmission } from "@/lib/submission-delivery";
 
@@ -10,37 +12,10 @@ export const runtime = "nodejs";
 
 const MAX_SIZE_JSON = 16_384;
 const MAX_SIZE_FORM = 45 * 1024 * 1024;
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
-const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
-
-function isValidImageSignature(buffer: Buffer, mimeType: string) {
-  if (mimeType === "image/jpeg") return buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
-  if (mimeType === "image/png") return buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
-  if (mimeType === "image/webp") return buffer.subarray(0, 4).toString() === "RIFF" && buffer.subarray(8, 12).toString() === "WEBP";
-  return false;
-}
-
-function normalizeContact(data: OrderDto) {
-  if (data.contact.method === "telegram") {
-    const username = data.contact.value.trim().replace(/^@/, "");
-    if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) return "Некорректный Telegram-юзернейм";
-    data.contact.value = username;
-    return null;
-  }
-  const phone = data.contact.value.trim();
-  if (phone.length < 6 || !/^[\d\s+()-]+$/.test(phone)) return "Некорректный номер телефона";
-  data.contact.value = phone;
-  return null;
-}
 
 async function readImage(form: FormData, key: SubmissionFileInput["key"]) {
-  const value = form.get(key);
-  if (!(value instanceof File) || value.size === 0) return null;
-  if (!allowedTypes.has(value.type)) throw new Error("Недопустимый тип изображения");
-  if (value.size > MAX_IMAGE_SIZE) throw new Error("Изображение слишком большое (макс. 10 МБ)");
-  const buffer = Buffer.from(await value.arrayBuffer());
-  if (!isValidImageSignature(buffer, value.type)) throw new Error("Файл изображения повреждён или имеет неверный формат");
-  return { key, originalName: value.name, mimeType: value.type, buffer } satisfies SubmissionFileInput;
+  const image = await readImageField(form, key);
+  return image ? ({ key, ...image } satisfies SubmissionFileInput) : null;
 }
 
 export async function POST(request: Request) {
@@ -78,7 +53,7 @@ export async function POST(request: Request) {
   if (validated.errors) return NextResponse.json({ ok: false, error: validated.errors[0] }, { status: 422 });
   const data = validated.data;
   if (data.website) return NextResponse.json({ ok: true, stored: true, delivered: false });
-  const contactError = normalizeContact(data);
+  const contactError = normalizeContact(data.contact);
   if (contactError) return NextResponse.json({ ok: false, error: contactError }, { status: 422 });
   if (files.some((file) => file.key === "frontImage" || file.key === "backImage") && data.imageRightsConsent !== true) {
     return NextResponse.json({ ok: false, error: "Подтвердите права на загружаемое изображение" }, { status: 422 });

@@ -3,23 +3,11 @@ import { NextResponse } from "next/server";
 import { allowRequest, getRequestIp } from "@/lib/rate-limit";
 import { validateDto } from "@/lib/validate";
 import { LeadDto } from "@/lib/dto/lead.dto";
+import { normalizeContact } from "@/lib/contact";
 import { createSubmission } from "@/lib/submission-repository";
 import { deliverSubmission } from "@/lib/submission-delivery";
 
 export const runtime = "nodejs";
-
-function normalizeContact(data: LeadDto) {
-  if (data.contact.method === "telegram") {
-    const username = data.contact.value.trim().replace(/^@/, "");
-    if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) return "Некорректный Telegram-юзернейм";
-    data.contact.value = username;
-    return null;
-  }
-  const phone = data.contact.value.trim();
-  if (phone.length < 6 || !/^[\d\s+()-]+$/.test(phone)) return "Некорректный номер телефона";
-  data.contact.value = phone;
-  return null;
-}
 
 export async function POST(request: Request) {
   if (Number(request.headers.get("content-length") ?? 0) > 16_384) {
@@ -39,7 +27,7 @@ export async function POST(request: Request) {
   if (validated.errors) return NextResponse.json({ ok: false, error: validated.errors[0] }, { status: 422 });
   const data = validated.data;
   if (data.website) return NextResponse.json({ ok: true, stored: true, delivered: false });
-  const contactError = normalizeContact(data);
+  const contactError = normalizeContact(data.contact);
   if (contactError) return NextResponse.json({ ok: false, error: contactError }, { status: 422 });
 
   try {

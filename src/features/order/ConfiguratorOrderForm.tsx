@@ -27,24 +27,28 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
   const [phone, setPhone] = useState("");
   const [telegram, setTelegram] = useState("");
   const [comment, setComment] = useState("");
+  const [website, setWebsite] = useState("");
   const [pdConsent, setPdConsent] = useState(false);
   const [imageConsent, setImageConsent] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [reference, setReference] = useState<string | null>(null);
+  const [deliveryNote, setDeliveryNote] = useState<string | null>(null);
 
   const hasImages = Boolean(orderDetails?.imageUrls?.front || orderDetails?.imageUrls?.back);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim()) { setError("Укажите ваше имя."); return; }
-    if (!phone.trim() && !telegram.trim()) {
-      setError("Укажите телефон или Telegram-юзернейм."); return;
+    if (name.trim().length < 2) { setError("Укажите ваше имя."); return; }
+    if (!telegram.trim() && phone.trim().length < 6) {
+      setError("Укажите корректный телефон или Telegram-юзернейм."); return;
     }
     if (!pdConsent) { setError("Необходимо согласие на обработку персональных данных."); return; }
     if (hasImages && !imageConsent) { setError("Подтвердите права на загружаемое изображение."); return; }
 
     setError(null);
+    setDeliveryNote(null);
     setStatus("sending");
 
     try {
@@ -56,6 +60,10 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
       fd.append("product", orderDetails?.product ?? "");
       fd.append("size", orderDetails?.size ?? "");
       fd.append("color", orderDetails?.color ?? "");
+      fd.append("website", website);
+      fd.append("personalDataConsent", String(pdConsent));
+      fd.append("imageRightsConsent", String(imageConsent));
+      fd.append("consentAcceptedAt", new Date().toISOString());
 
       // Оригинальные файлы изображений
       const frontUrl = orderDetails?.imageUrls?.front;
@@ -90,14 +98,26 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
       }
 
       const res = await fetch("/api/orders/constructor", { method: "POST", body: fd });
-      const data = (await res.json()) as { ok?: boolean; error?: string };
+      const data = (await res.json()) as {
+        ok?: boolean;
+        stored?: boolean;
+        delivered?: boolean;
+        reference?: string;
+        error?: string;
+      };
 
-      if (!res.ok || !data.ok) {
+      if (!res.ok || !data.ok || !data.stored) {
         setError(data.error ?? "Ошибка отправки. Попробуйте ещё раз.");
         setStatus("error");
         return;
       }
 
+      if (data.delivered === false) {
+        setDeliveryNote(
+          "Заказ сохранён, менеджер увидит его в системе. Telegram-уведомление подтвердится чуть позже.",
+        );
+      }
+      setReference(data.reference ?? null);
       setStatus("done");
       onSuccess?.();
     } catch {
@@ -110,9 +130,12 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
     return (
       <SubmissionSuccess
         title="Заявка отправлена!"
-        description="Менеджер уже видит ваш заказ и фотографии. Мы свяжемся с вами и подтвердим детали."
-        referenceLabel={undefined}
-        reference={null}
+        description={
+          deliveryNote ??
+          "Менеджер уже видит ваш заказ и фотографии. Мы свяжемся с вами и подтвердим детали."
+        }
+        referenceLabel="Номер заказа"
+        reference={reference}
       />
     );
   }
@@ -121,6 +144,17 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      {/* Honeypot — скрытое поле для отсева ботов */}
+      <div className="sr-only" aria-hidden>
+        <input
+          name="website"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
+
       {/* Имя */}
       <div className="flex flex-col gap-1.5">
         <label className={fieldLabelClass}>Имя</label>
