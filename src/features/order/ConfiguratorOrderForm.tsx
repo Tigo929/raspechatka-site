@@ -65,37 +65,26 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
       fd.append("imageRightsConsent", String(imageConsent));
       fd.append("consentAcceptedAt", new Date().toISOString());
 
-      // Оригинальные файлы изображений
-      const frontUrl = orderDetails?.imageUrls?.front;
-      const backUrl = orderDetails?.imageUrls?.back;
-
-      if (frontUrl) {
-        const blob = await fetch(frontUrl).then((r) => r.blob());
-        fd.append("frontImage", blob, `front.${blob.type.split("/")[1] || "png"}`);
-      }
-      if (backUrl) {
-        const blob = await fetch(backUrl).then((r) => r.blob());
-        fd.append("backImage", blob, `back.${blob.type.split("/")[1] || "png"}`);
-      }
-
-      // Превью — рендерим с mockup + принт + позиция
+      // Параллельно: оригиналы + рендер превью обеих сторон
+      const frontUrl = orderDetails?.imageUrls?.front ?? null;
+      const backUrl = orderDetails?.imageUrls?.back ?? null;
       const previewDesigns = orderDetails?.previewDesigns;
-      const previewSources = [
-        previewDesigns?.front,
-        previewDesigns?.back,
-      ].filter((d): d is DesignPreviewInput => Boolean(d));
 
-      if (previewSources.length > 0) {
-        try {
-          // Рендерим все превью параллельно, берём первое удачное
-          const [firstPreview] = await Promise.all(
-            previewSources.map((d) => renderDesignPreview(d)),
-          );
-          fd.append("previewImage", firstPreview, "preview.png");
-        } catch {
-          // Превью не критично — заказ всё равно отправляем
-        }
-      }
+      const [frontBlob, backBlob, frontPreview, backPreview] = await Promise.all([
+        frontUrl ? fetch(frontUrl).then((r) => r.blob()) : null,
+        backUrl ? fetch(backUrl).then((r) => r.blob()) : null,
+        previewDesigns?.front
+          ? renderDesignPreview(previewDesigns.front).catch(() => null)
+          : null,
+        previewDesigns?.back
+          ? renderDesignPreview(previewDesigns.back).catch(() => null)
+          : null,
+      ]);
+
+      if (frontBlob) fd.append("frontImage", frontBlob, `front.${frontBlob.type.split("/")[1] || "png"}`);
+      if (backBlob) fd.append("backImage", backBlob, `back.${backBlob.type.split("/")[1] || "png"}`);
+      if (frontPreview) fd.append("frontPreview", frontPreview, "front-preview.png");
+      if (backPreview) fd.append("backPreview", backPreview, "back-preview.png");
 
       const res = await fetch("/api/orders/constructor", { method: "POST", body: fd });
       const data = (await res.json()) as {

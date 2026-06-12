@@ -69,7 +69,7 @@ export async function POST(request: Request) {
 
   let files: SubmissionFileInput[];
   try {
-    const keys: SubmissionFileInput["key"][] = ["frontImage", "backImage", "previewImage"];
+    const keys: SubmissionFileInput["key"][] = ["frontImage", "backImage", "frontPreview", "backPreview"];
     const entries = await Promise.all(
       keys.map(async (key): Promise<SubmissionFileInput | null> => {
         const image = await readImageField(form, key);

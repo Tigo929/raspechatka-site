@@ -1,25 +1,23 @@
+import JSZip from "jszip";
 import { getSubmission, readSubmissionFile, updateSubmissionDelivery } from "@/lib/submission-repository";
 import type { StoredSubmission, SubmissionFile } from "@/types";
 
 const contactLabels = { telegram: "Telegram", max: "MAX", phone: "Телефон" } as const;
 
-/** Короткие подписи для каждого вложения в медиагруппе. */
-const fileLabels: Record<SubmissionFile["key"], string> = {
-  previewImage: "🖼 Превью заказа",
-  frontPreview: "🖼 Превью (перед)",
-  backPreview: "🖼 Превью (спина)",
-  frontImage: "📸 Оригинал (перед)",
-  backImage: "📸 Оригинал (спина)",
+/** Имя файла внутри ZIP-архива для каждого вложения. */
+const zipFileNames: Record<SubmissionFile["key"], string> = {
+  previewImage: "preview.png",
+  frontPreview: "preview-front.png",
+  backPreview:  "preview-back.png",
+  frontImage:   "original-front",
+  backImage:    "original-back",
 };
 
-/** Порядок вложений: сначала превью (нагляднее всего), затем оригиналы. */
-const fileOrder: SubmissionFile["key"][] = [
-  "previewImage",
-  "frontPreview",
-  "backPreview",
-  "frontImage",
-  "backImage",
-];
+const mimeExt: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png":  ".png",
+  "image/webp": ".webp",
+};
 
 function contactText(submission: StoredSubmission) {
   const value =
@@ -47,7 +45,7 @@ function buildText(submission: StoredSubmission) {
     if (prints?.front) lines.push(`Принт спереди: ${prints.front}`);
     if (prints?.back) lines.push(`Принт сзади: ${prints.back}`);
   }
-  if (submission.files.length) lines.push("", "📎 Макеты — следующими сообщениями");
+  if (submission.files.length) lines.push("", "📎 Макеты — в архиве (следующее сообщение)");
   return lines.join("\n");
 }
 
@@ -58,7 +56,7 @@ async function telegramRequest(endpoint: string, body: BodyInit) {
     method: "POST",
     body,
     headers: typeof body === "string" ? { "Content-Type": "application/json" } : undefined,
-    signal: AbortSignal.timeout(endpoint === "sendMessage" ? 8_000 : 30_000),
+    signal: AbortSignal.timeout(endpoint === "sendMessage" ? 8_000 : 60_000),
   });
   const data = (await response.json().catch(() => null)) as { ok?: boolean; description?: string } | null;
   if (!response.ok || (data && data.ok === false)) {
@@ -66,55 +64,52 @@ async function telegramRequest(endpoint: string, body: BodyInit) {
   }
 }
 
-/** Отправляет вложения заявки отдельными фото (медиагруппой или одиночным фото). */
-async function sendPhotos(chatId: string, submission: StoredSubmission) {
-  const ordered = [...submission.files].sort(
-    (a, b) => fileOrder.indexOf(a.key) - fileOrder.indexOf(b.key),
+/** Упаковывает все файлы заявки в ZIP и отправляет документом. */
+async function sendZipArchive(chatId: string, submission: StoredSubmission) {
+  const zip = new JSZip();
+
+  // Информация о заказе текстом
+  zip.file("order.txt", buildText(submission));
+
+  // Читаем все файлы параллельно и добавляем в архив
+  await Promise.all(
+    submission.files.map(async (file) => {
+      const buffer = await readSubmissionFile(file);
+      const baseName = zipFileNames[file.key] ?? file.key;
+      const ext = mimeExt[file.mimeType] ?? ".bin";
+      // preview-файлы уже имеют расширение в baseName, оригиналы — нет
+      const fileName = baseName.includes(".") ? baseName : `${baseName}${ext}`;
+      zip.file(fileName, buffer);
+    }),
   );
 
-  const photos = await Promise.all(
-    ordered.map(async (file) => ({
-      buffer: await readSubmissionFile(file),
-      mimeType: file.mimeType,
-      caption: fileLabels[file.key] ?? file.key,
-    })),
-  );
+  const zipBuffer = await zip.generateAsync({
+    type: "nodebuffer",
+    compression: "DEFLATE",
+    compressionOptions: { level: 6 },
+  });
 
-  if (photos.length === 1) {
-    const form = new FormData();
-    form.set("chat_id", chatId);
-    form.set("caption", photos[0].caption);
-    form.set(
-      "photo",
-      new Blob([new Uint8Array(photos[0].buffer)], { type: photos[0].mimeType }),
-      "photo",
-    );
-    await telegramRequest("sendPhoto", form);
-    return;
-  }
-
-  // Telegram ограничивает медиагруппу 10 элементами — у заявки их максимум 5.
   const form = new FormData();
   form.set("chat_id", chatId);
-  const media = photos.map((photo, index) => {
-    const field = `photo${index}`;
-    form.set(field, new Blob([new Uint8Array(photo.buffer)], { type: photo.mimeType }), field);
-    return { type: "photo", media: `attach://${field}`, caption: photo.caption };
-  });
-  form.set("media", JSON.stringify(media));
-  await telegramRequest("sendMediaGroup", form);
+  form.set("caption", `📦 ${submission.reference} — ${submission.name}`);
+  form.set(
+    "document",
+    new Blob([new Uint8Array(zipBuffer)], { type: "application/zip" }),
+    `${submission.reference}.zip`,
+  );
+  await telegramRequest("sendDocument", form);
 }
 
 async function send(submission: StoredSubmission) {
   const chatId = process.env.TELEGRAM_CHAT_ID?.trim();
   if (!chatId) throw new Error("TELEGRAM_CHAT_ID не настроен");
 
-  // 1. Текст с деталями уходит всегда — менеджер увидит заявку даже если фото не дойдут.
+  // 1. Текстовое сообщение — менеджер видит заявку даже если архив не дойдёт
   await telegramRequest("sendMessage", JSON.stringify({ chat_id: chatId, text: buildText(submission) }));
 
-  // 2. Макеты отдельными фото, чтобы менеджер сразу видел дизайн без скачивания архива.
+  // 2. ZIP-архив с превью и оригиналами
   if (submission.files.length > 0) {
-    await sendPhotos(chatId, submission);
+    await sendZipArchive(chatId, submission);
   }
 }
 
