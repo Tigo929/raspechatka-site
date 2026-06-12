@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   if (contentLength > (isMultipart ? MAX_SIZE_FORM : MAX_SIZE_JSON)) {
     return NextResponse.json({ ok: false, error: "Слишком большой запрос" }, { status: 413 });
   }
-  if (!allowRequest(`order:${getRequestIp(request)}`, { limit: 5, windowMs: 10 * 60 * 1000 })) {
+  if (!allowRequest(`order:${getRequestIp(request)}`, { limit: 20, windowMs: 10 * 60 * 1000 })) {
     return NextResponse.json({ ok: false, error: "Слишком много запросов. Попробуйте позже." }, { status: 429 });
   }
 

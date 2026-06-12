@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   if (Number(request.headers.get("content-length") ?? 0) > 16_384) {
     return NextResponse.json({ ok: false, error: "Слишком большой запрос" }, { status: 413 });
   }
-  if (!allowRequest(`lead:${getRequestIp(request)}`, { limit: 5, windowMs: 10 * 60 * 1000 })) {
+  if (!allowRequest(`lead:${getRequestIp(request)}`, { limit: 20, windowMs: 10 * 60 * 1000 })) {
     return NextResponse.json({ ok: false, error: "Слишком много запросов. Попробуйте позже." }, { status: 429 });
   }
 
