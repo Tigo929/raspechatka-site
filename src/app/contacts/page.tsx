@@ -4,6 +4,7 @@ import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { siteConfig } from "@/data/site";
 import { getPublicSettings } from "@/lib/content-repository";
+import { cn } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getPublicSettings();
@@ -63,6 +64,7 @@ export default async function ContactsPage() {
               value="Написать в Telegram"
               href={settings.telegram}
               external
+              variant="telegram"
             />
             <ContactCard
               icon={<MessageCircle width={22} height={22} />}
@@ -70,6 +72,7 @@ export default async function ContactsPage() {
               value="Написать в MAX"
               href={settings.max}
               external
+              variant="max"
             />
           </div>
 
@@ -139,21 +142,37 @@ function ContactCard({
   value,
   href,
   external,
+  variant = "default",
 }: {
   icon: React.ReactNode;
   title: string;
   value: string;
   href: string;
   external?: boolean;
+  variant?: "default" | "telegram" | "max";
 }) {
   return (
     <a
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className="border-line hover:border-accent flex items-start gap-4 rounded-2xl border bg-white p-5 transition-colors"
+      className={cn(
+        "border-line flex items-start gap-4 rounded-2xl border bg-white p-5 transition-all duration-300",
+        variant === "telegram" &&
+          "hover:border-[#2AABEE] hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-24px_rgba(42,171,238,0.6)]",
+        variant === "max" &&
+          "hover:border-[#7B4FFF] hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-24px_rgba(123,79,255,0.55)]",
+        (!variant || variant === "default") && "hover:border-accent",
+      )}
     >
-      <span className="bg-accent-soft text-accent flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
+      <span
+        className={cn(
+          "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+          variant === "telegram" && "bg-[#E8F7FF] text-[#229ED9]",
+          variant === "max" && "bg-[#F2EBFF] text-[#7B4FFF]",
+          (!variant || variant === "default") && "bg-accent-soft text-accent",
+        )}
+      >
         {icon}
       </span>
       <div>

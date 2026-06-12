@@ -1,6 +1,10 @@
 import Link from "next/link";
-import { Mail, MapPin, Phone, Send } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { Container } from "@/components/ui/Container";
+import {
+  MaxIconButton,
+  TelegramIconButton,
+} from "@/components/ui/MessengerButtons";
 import { siteConfig } from "@/data/site";
 import { seoLandings } from "@/data/seoLandings";
 import { getCategories, getPublicSettings } from "@/lib/content-repository";
@@ -27,15 +31,8 @@ export async function Footer() {
               {siteConfig.description}
             </p>
             <div className="mt-6 flex gap-3">
-              <a
-                href={settings.telegram}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Telegram"
-                className="hover:bg-accent flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors"
-              >
-                <Send width={18} height={18} />
-              </a>
+              <TelegramIconButton href={settings.telegram} className="h-11 w-11" />
+              <MaxIconButton href={settings.max} className="h-11 w-11" />
               <a
                 href={phoneHref}
                 aria-label="Позвонить"

@@ -47,11 +47,23 @@ export function TshirtPreview({
   useEffect(() => {
     const node = containerRef.current;
     if (!node || !onSizeChange) return;
-    const update = () => onSizeChange(node.getBoundingClientRect().width);
+    let mounted = true;
+    let frameId = 0;
+    const update = () => {
+      if (!mounted) return;
+      const width = node.getBoundingClientRect().width;
+      frameId = window.requestAnimationFrame(() => {
+        if (mounted) onSizeChange(width);
+      });
+    };
     update();
     const observer = new ResizeObserver(update);
     observer.observe(node);
-    return () => observer.disconnect();
+    return () => {
+      mounted = false;
+      observer.disconnect();
+      window.cancelAnimationFrame(frameId);
+    };
   }, [onSizeChange]);
 
   const onPointerDown = useCallback(

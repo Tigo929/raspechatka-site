@@ -1,10 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ConsentCheckbox } from "@/components/legal/ConsentCheckbox";
 import { renderDesignPreview, type DesignPreviewInput } from "@/features/configurator/renderDesignPreview";
+import {
+  ContactMethodTabs,
+  fieldLabelClass,
+  FormError,
+  inputClass,
+  SubmissionMeta,
+  SubmissionSuccess,
+} from "@/features/order/FormUI";
 
 type ContactMethod = "telegram" | "max" | "phone";
 type Status = "idle" | "sending" | "done" | "error";
@@ -51,6 +58,7 @@ export function OrderForm({
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [reference, setReference] = useState<string | null>(null);
+  const [deliveryNote, setDeliveryNote] = useState<string | null>(null);
 
   const hasImages = Boolean(
     orderDetails?.imageUrls?.front || orderDetails?.imageUrls?.back,
@@ -75,6 +83,7 @@ export function OrderForm({
     }
 
     setError(null);
+    setDeliveryNote(null);
     setStatus("sending");
 
     const contact =
@@ -153,6 +162,7 @@ export function OrderForm({
       const d = (await res.json()) as {
         ok?: boolean;
         stored?: boolean;
+        delivered?: boolean;
         reference?: string;
         error?: string;
       };
@@ -160,6 +170,11 @@ export function OrderForm({
         setError(d.error ?? "Ошибка отправки. Попробуйте ещё раз.");
         setStatus("error");
         return;
+      }
+      if (d.delivered === false) {
+        setDeliveryNote(
+          "Заказ сохранён, но Telegram-уведомление пока не подтверждено. Мы всё равно видим его в системе.",
+        );
       }
 
       setReference(d.reference ?? null);
@@ -173,16 +188,15 @@ export function OrderForm({
 
   if (status === "done") {
     return (
-      <div className="py-4 text-center">
-        <span className="bg-accent mx-auto flex h-14 w-14 items-center justify-center rounded-full text-white">
-          <Check width={28} height={28} strokeWidth={3} />
-        </span>
-        <h3 className="font-display text-ink mt-4 text-xl font-bold">Заявка принята!</h3>
-        <p className="text-muted mx-auto mt-2 max-w-sm text-sm">
-          Свяжемся с вами в ближайшее рабочее время.
-        </p>
-        {reference && <p className="text-muted mt-2 text-xs">Номер заказа: {reference}</p>}
-      </div>
+      <SubmissionSuccess
+        title="Заказ принят!"
+        description={
+          deliveryNote ??
+          "Уведомление уже отправлено менеджеру. Мы свяжемся с вами и подтвердим детали заказа."
+        }
+        referenceLabel="Номер заказа"
+        reference={reference}
+      />
     );
   }
 
@@ -207,7 +221,7 @@ export function OrderForm({
 
       {/* Имя */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-ink text-sm font-semibold">Имя</label>
+        <label className={fieldLabelClass}>Имя</label>
         <input
           type="text"
           value={name}
@@ -215,33 +229,22 @@ export function OrderForm({
           placeholder="Как к вам обращаться"
           autoComplete="given-name"
           maxLength={80}
-          className="border-line focus:border-accent bg-paper text-ink h-12 rounded-2xl border px-4 outline-none transition-colors"
+          className={inputClass}
         />
       </div>
 
-      {/* Способ связи */}
-      <div className="flex flex-col gap-1.5">
-        <span className="text-ink text-sm font-semibold">Способ связи</span>
-        <div className="border-line grid grid-cols-3 gap-1 rounded-2xl border bg-white p-1">
-          {options.map((opt) => (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => setMethod(opt.id)}
-              className={`rounded-xl py-2 text-sm font-semibold transition-colors ${
-                method === opt.id ? "bg-ink text-paper" : "text-muted hover:text-ink"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ContactMethodTabs
+        label="Способ связи"
+        options={options}
+        value={method}
+        onChange={setMethod}
+        columnsClass="grid-cols-3"
+      />
 
       {/* Telegram username */}
       {method === "telegram" && (
         <div className="flex flex-col gap-1.5">
-          <label className="text-ink text-sm font-semibold">Ваш юзернейм</label>
+          <label className={fieldLabelClass}>Telegram-юзернейм</label>
           <div className="relative">
             <span className="text-muted pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm">
               @
@@ -253,7 +256,7 @@ export function OrderForm({
               placeholder="username"
               autoComplete="off"
               maxLength={80}
-              className="border-line focus:border-accent bg-paper text-ink h-12 w-full rounded-2xl border pl-8 pr-4 outline-none transition-colors"
+              className={`${inputClass} w-full pl-8 pr-4`}
             />
           </div>
         </div>
@@ -262,7 +265,7 @@ export function OrderForm({
       {/* Телефон */}
       {(method === "max" || method === "phone") && (
         <div className="flex flex-col gap-1.5">
-          <label className="text-ink text-sm font-semibold">
+          <label className={fieldLabelClass}>
             Номер телефона
             {method === "max" && (
               <span className="text-muted font-normal"> (MAX)</span>
@@ -275,7 +278,7 @@ export function OrderForm({
             placeholder="+7 (___) ___-__-__"
             autoComplete="tel"
             maxLength={40}
-            className="border-line focus:border-accent bg-paper text-ink h-12 rounded-2xl border px-4 outline-none transition-colors"
+            className={inputClass}
           />
         </div>
       )}
@@ -298,11 +301,7 @@ export function OrderForm({
         />
       )}
 
-      {error && (
-        <p className="text-accent text-sm" role="alert">
-          {error}
-        </p>
-      )}
+      <FormError error={error} />
 
       <Button
         type="submit"
@@ -312,7 +311,13 @@ export function OrderForm({
       >
         {status === "sending" ? "Отправляем…" : submitLabel}
       </Button>
-
+      <SubmissionMeta
+        text={
+          hasImages
+            ? "После отправки сохраняем заказ, оригиналы и превью обеих сторон, затем уведомляем менеджера в Telegram."
+            : "После отправки сохраняем заказ и сразу уведомляем менеджера в Telegram."
+        }
+      />
     </form>
   );
 }

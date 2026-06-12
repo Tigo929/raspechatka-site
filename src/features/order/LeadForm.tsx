@@ -1,10 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Magnetic } from "@/components/interaction/Magnetic";
 import { ConsentCheckbox } from "@/components/legal/ConsentCheckbox";
+import {
+  ContactMethodTabs,
+  fieldLabelClass,
+  FormError,
+  formCardClass,
+  inputClass,
+  SubmissionMeta,
+  SubmissionSuccess,
+  textareaClass,
+} from "@/features/order/FormUI";
 
 type ContactMethod = "phone" | "telegram";
 type Status = "idle" | "sending" | "done" | "error";
@@ -20,6 +29,7 @@ export function LeadForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [reference, setReference] = useState<string | null>(null);
+  const [deliveryNote, setDeliveryNote] = useState<string | null>(null);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +51,7 @@ export function LeadForm() {
     }
 
     setError(null);
+    setDeliveryNote(null);
     setStatus("sending");
 
     try {
@@ -62,11 +73,17 @@ export function LeadForm() {
       const result = (await response.json()) as {
         ok?: boolean;
         stored?: boolean;
+        delivered?: boolean;
         reference?: string;
         error?: string;
       };
       if (!response.ok || !result.ok || !result.stored) {
         throw new Error(result.error ?? "Не удалось сохранить заявку.");
+      }
+      if (result.delivered === false) {
+        setDeliveryNote(
+          "Заявка сохранена, но Telegram-уведомление пока не подтверждено. Мы всё равно видим её в системе.",
+        );
       }
       setReference(result.reference ?? null);
       setStatus("done");
@@ -78,23 +95,22 @@ export function LeadForm() {
 
   if (status === "done") {
     return (
-      <div className="border-line shadow-soft rounded-3xl border bg-white p-8 text-center">
-        <span className="bg-accent mx-auto flex h-14 w-14 items-center justify-center rounded-full text-white">
-          <Check width={28} height={28} strokeWidth={3} />
-        </span>
-        <h3 className="font-display text-ink mt-4 text-xl font-bold">Заявка принята!</h3>
-        <p className="text-muted mx-auto mt-2 max-w-sm text-sm">
-          Свяжемся с вами в ближайшее рабочее время.
-        </p>
-        {reference && <p className="text-muted mt-2 text-xs">Номер заявки: {reference}</p>}
-      </div>
+      <SubmissionSuccess
+        title="Заявка принята!"
+        description={
+          deliveryNote ??
+          "Уведомление уже отправлено менеджеру. Свяжемся с вами в ближайшее рабочее время."
+        }
+        referenceLabel="Номер заявки"
+        reference={reference}
+      />
     );
   }
 
   return (
     <form
       onSubmit={onSubmit}
-      className="border-line shadow-soft flex flex-col gap-4 rounded-3xl border bg-white p-6 sm:p-8"
+      className={`${formCardClass} flex flex-col gap-4`}
     >
       {/* Honeypot */}
       <div className="sr-only" aria-hidden>
@@ -111,7 +127,7 @@ export function LeadForm() {
 
       {/* Имя */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="lead-name" className="text-ink text-sm font-semibold">Имя</label>
+        <label htmlFor="lead-name" className={fieldLabelClass}>Имя</label>
         <input
           id="lead-name"
           type="text"
@@ -121,33 +137,25 @@ export function LeadForm() {
           autoComplete="name"
           required
           maxLength={80}
-          className="border-line focus:border-accent bg-paper text-ink h-12 rounded-2xl border px-4 outline-none transition-colors"
+          className={inputClass}
         />
       </div>
 
-      {/* Способ связи */}
-      <div className="flex flex-col gap-1.5">
-        <span className="text-ink text-sm font-semibold">Как с вами связаться?</span>
-        <div className="border-line grid grid-cols-2 gap-1 rounded-2xl border bg-white p-1">
-          {(["phone", "telegram"] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setMethod(m)}
-              className={`rounded-xl py-2 text-sm font-semibold transition-colors ${
-                method === m ? "bg-ink text-paper" : "text-muted hover:text-ink"
-              }`}
-            >
-              {m === "phone" ? "Телефон" : "Telegram"}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ContactMethodTabs
+        label="Как с вами связаться?"
+        options={[
+          { id: "phone", label: "Телефон" },
+          { id: "telegram", label: "Telegram" },
+        ]}
+        value={method}
+        onChange={setMethod}
+        columnsClass="grid-cols-2"
+      />
 
       {/* Поле контакта */}
       {method === "phone" ? (
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="lead-phone" className="text-ink text-sm font-semibold">Телефон</label>
+          <label htmlFor="lead-phone" className={fieldLabelClass}>Телефон</label>
           <input
             id="lead-phone"
             type="tel"
@@ -157,12 +165,12 @@ export function LeadForm() {
             autoComplete="tel"
             required
             maxLength={40}
-            className="border-line focus:border-accent bg-paper text-ink h-12 rounded-2xl border px-4 outline-none transition-colors"
+            className={inputClass}
           />
         </div>
       ) : (
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="lead-tg" className="text-ink text-sm font-semibold">Telegram-юзернейм</label>
+          <label htmlFor="lead-tg" className={fieldLabelClass}>Telegram-юзернейм</label>
           <div className="relative">
             <span className="text-muted pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm">@</span>
             <input
@@ -173,7 +181,7 @@ export function LeadForm() {
               placeholder="username"
               autoComplete="off"
               maxLength={80}
-              className="border-line focus:border-accent bg-paper text-ink h-12 w-full rounded-2xl border pl-8 pr-4 outline-none transition-colors"
+              className={`${inputClass} w-full pl-8 pr-4`}
             />
           </div>
         </div>
@@ -181,7 +189,7 @@ export function LeadForm() {
 
       {/* Комментарий */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="lead-comment" className="text-ink text-sm font-semibold">
+        <label htmlFor="lead-comment" className={fieldLabelClass}>
           Что хотите напечатать?{" "}
           <span className="text-muted font-normal">(необязательно)</span>
         </label>
@@ -192,7 +200,7 @@ export function LeadForm() {
           rows={3}
           maxLength={1000}
           placeholder="Идея, надпись, фото или ссылка"
-          className="border-line focus:border-accent bg-paper text-ink resize-none rounded-2xl border px-4 py-3 outline-none transition-colors"
+          className={textareaClass}
         />
       </div>
 
@@ -204,9 +212,7 @@ export function LeadForm() {
         type="personal-data"
       />
 
-      {error && (
-        <p className="text-accent text-sm" role="alert">{error}</p>
-      )}
+      <FormError error={error} />
 
       <Magnetic className="block w-full" strength={0.2}>
         <Button
@@ -215,10 +221,12 @@ export function LeadForm() {
           className="w-full"
           data-cursor="cta"
           disabled={status === "sending" || !pdConsent}
-        >
-          {status === "sending" ? "Отправляем…" : "Оставить заявку"}
-        </Button>
+      >
+        {status === "sending" ? "Отправляем…" : "Оставить заявку"}
+      </Button>
       </Magnetic>
+
+      <SubmissionMeta text="После отправки форма сразу создаёт обращение и отправляет уведомление менеджеру в Telegram." />
     </form>
   );
 }

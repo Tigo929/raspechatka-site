@@ -84,6 +84,19 @@
   }
 }
 
+.telegram-btn-gradient {
+  background:
+    linear-gradient(135deg, #1d9bf0 0%, #2aabee 40%, #6dd5ff 100%);
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+  transition: background-position 0.4s ease, box-shadow 0.3s ease;
+}
+
+.telegram-btn-gradient:hover {
+  animation: maxShimmer 2.2s ease infinite;
+  box-shadow: 0 0 20px rgba(29, 155, 240, 0.38);
+}
+
 .max-btn-gradient {
   background: linear-gradient(135deg, #38b2ff 0%, #7b4fff 50%, #c84eff 100%);
   background-size: 200% 200%;

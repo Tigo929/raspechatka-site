@@ -1,9 +1,8 @@
-import { MapPin, Clock, Phone, Send } from "lucide-react";
+import { MapPin, Clock, Phone } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
-import { Button } from "@/components/ui/Button";
-import { MaxButton } from "@/components/ui/MaxButton";
+import { MaxButton, TelegramButton } from "@/components/ui/MessengerButtons";
 import { PlatformRatings } from "@/components/sections/PlatformRatings";
 import { siteConfig } from "@/data/site";
 import { getPublicSettings } from "@/lib/content-repository";
@@ -75,9 +74,7 @@ export async function Contacts() {
           <PlatformRatings />
 
           <div className="flex flex-wrap gap-3">
-            <Button href={settings.telegram} external className="w-fit">
-              <Send width={18} height={18} /> Telegram
-            </Button>
+            <TelegramButton href={settings.telegram} className="w-fit" />
             <MaxButton href={settings.max} className="w-fit" />
           </div>
         </Reveal>

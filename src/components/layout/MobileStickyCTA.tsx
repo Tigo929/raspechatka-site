@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Send, Sparkles } from "lucide-react";
-import { MaxIconButton } from "@/components/ui/MaxButton";
+import { Sparkles } from "lucide-react";
+import {
+  MaxIconButton,
+  TelegramIconButton,
+} from "@/components/ui/MessengerButtons";
 import type { ManagedSettings } from "@/types";
 
 /**
@@ -34,16 +37,8 @@ export function MobileStickyCTA({ settings }: { settings: ManagedSettings }) {
           >
             <Sparkles width={17} height={17} /> Собрать футболку
           </Link>
+          <TelegramIconButton href={settings.telegram} />
           <MaxIconButton href={settings.max} />
-          <a
-            href={settings.telegram}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Написать в Telegram"
-            className="bg-ink text-paper flex h-12 w-12 shrink-0 items-center justify-center rounded-full active:scale-[0.97]"
-          >
-            <Send width={20} height={20} />
-          </a>
         </div>
       </div>
     </div>

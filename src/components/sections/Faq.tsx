@@ -2,7 +2,7 @@ import { Plus } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
-import { Button } from "@/components/ui/Button";
+import { TelegramButton } from "@/components/ui/MessengerButtons";
 import { getPublicFaq } from "@/lib/content-repository";
 import { siteConfig } from "@/data/site";
 import type { FaqItem } from "@/types";
@@ -28,9 +28,9 @@ export async function Faq({
             subtitle="Не нашли ответ? Напишите нам — поможем с любым вопросом по заказу."
           />
           <Reveal className="mt-6">
-            <Button href={siteConfig.social.telegram} external variant="ghost">
+            <TelegramButton href={siteConfig.social.telegram}>
               Задать вопрос
-            </Button>
+            </TelegramButton>
           </Reveal>
         </div>
 

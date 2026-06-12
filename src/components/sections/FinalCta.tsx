@@ -1,8 +1,8 @@
-import { Sparkles, Send } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { Button } from "@/components/ui/Button";
-import { MaxButton } from "@/components/ui/MaxButton";
+import { MaxButton, TelegramButton } from "@/components/ui/MessengerButtons";
 import { getPublicSettings } from "@/lib/content-repository";
 
 export async function FinalCta() {
@@ -24,17 +24,8 @@ export async function FinalCta() {
               <Button href="/configurator" size="lg">
                 <Sparkles width={18} height={18} /> Собрать футболку
               </Button>
-              <Button
-                href={settings.telegram}
-                external
-                variant="dark"
-                size="lg"
-              >
-                <Send width={18} height={18} /> Telegram
-              </Button>
-              <MaxButton href={settings.max} size="lg">
-                MAX
-              </MaxButton>
+              <TelegramButton href={settings.telegram} size="lg" />
+              <MaxButton href={settings.max} size="lg" />
             </div>
             <p className="text-paper/50 mt-6 text-sm">
               Без минимального тиража · бесплатный макет · печать от 1 дня

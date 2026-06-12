@@ -33,6 +33,21 @@ function buildText(submission: StoredSubmission) {
   return lines.join("\n");
 }
 
+function buildAlertText(submission: StoredSubmission) {
+  const lines = [
+    submission.kind === "order" ? "🚨 Новый заказ" : "🚨 Новая заявка",
+    `Номер: ${submission.reference}`,
+    `Имя: ${submission.name}`,
+    `Контакт: ${contactText(submission)}`,
+    "Нужно обработать заявку.",
+  ];
+  if (submission.comment) lines.push(`Комментарий: ${submission.comment}`);
+  if (submission.orderDetails?.productName) {
+    lines.push(`Товар: ${String(submission.orderDetails.productName)}`);
+  }
+  return lines.join("\n");
+}
+
 async function telegramRequest(endpoint: string, body: BodyInit) {
   const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
   if (!token) throw new Error("TELEGRAM_BOT_TOKEN не настроен");
@@ -48,10 +63,13 @@ async function telegramRequest(endpoint: string, body: BodyInit) {
 async function send(submission: StoredSubmission) {
   const chatId = process.env.TELEGRAM_CHAT_ID?.trim();
   if (!chatId) throw new Error("TELEGRAM_CHAT_ID не настроен");
+  const alertText = buildAlertText(submission);
   const text = buildText(submission);
 
+  // Сначала отправляем короткое уведомление, чтобы менеджер в любом случае увидел новую заявку.
+  await telegramRequest("sendMessage", JSON.stringify({ chat_id: chatId, text: alertText }));
+
   if (submission.files.length === 0) {
-    await telegramRequest("sendMessage", JSON.stringify({ chat_id: chatId, text }));
     return;
   }
 
@@ -75,7 +93,18 @@ async function send(submission: StoredSubmission) {
   form.set("chat_id", chatId);
   form.set("caption", text);
   form.set("document", new Blob([archiveBuffer], { type: "application/zip" }), `${submission.reference}.zip`);
-  await telegramRequest("sendDocument", form);
+  try {
+    await telegramRequest("sendDocument", form);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "неизвестная ошибка";
+    await telegramRequest(
+      "sendMessage",
+      JSON.stringify({
+        chat_id: chatId,
+        text: `${text}\n\n⚠️ Архив с макетами не приложился автоматически: ${reason}`,
+      }),
+    );
+  }
 }
 
 export async function deliverSubmission(id: string) {

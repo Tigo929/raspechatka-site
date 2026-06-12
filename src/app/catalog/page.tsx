@@ -13,6 +13,7 @@ import { breadcrumbJsonLd } from "@/lib/jsonld";
 import { buildMetadata } from "@/lib/seo";
 import { getAllProducts } from "@/lib/product-repository";
 import { getCategories } from "@/lib/content-repository";
+import { formCardClass, inputClass } from "@/features/order/FormUI";
 
 export const dynamic = "force-dynamic";
 
@@ -110,12 +111,12 @@ export default async function CatalogPage({
           </p>
           <form
             action="/catalog"
-            className="border-line shadow-soft mt-7 flex max-w-xl flex-col gap-2 rounded-2xl border bg-white p-2 sm:flex-row"
+            className={`${formCardClass} mt-7 flex max-w-xl flex-col gap-3 sm:flex-row sm:items-center sm:p-3`}
           >
             <label className="sr-only" htmlFor="catalog-search">
               Найти футболку
             </label>
-            <div className="flex min-h-12 flex-1 items-center gap-2 px-3">
+            <div className="flex min-h-12 flex-1 items-center gap-2">
               <Search width={18} height={18} className="text-muted shrink-0" />
               <input
                 id="catalog-search"
@@ -123,12 +124,12 @@ export default async function CatalogPage({
                 type="search"
                 defaultValue={query}
                 placeholder="Например: фото, логотип, oversize"
-                className="text-ink placeholder:text-muted w-full bg-transparent text-sm outline-none"
+                className={`${inputClass} h-12 w-full border-0 bg-transparent px-0 shadow-none focus:ring-0`}
               />
             </div>
             <button
               type="submit"
-              className="bg-ink text-paper hover:bg-ink-soft inline-flex h-12 items-center justify-center rounded-xl px-5 text-sm font-semibold transition-colors"
+              className="bg-ink text-paper hover:bg-ink-soft inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-semibold transition-colors sm:min-w-32"
             >
               Найти
             </button>
