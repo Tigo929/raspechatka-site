@@ -200,7 +200,16 @@ function defaultSettings(): ManagedSettings {
 export async function getSettings(): Promise<ManagedSettings> {
   try {
     const raw = JSON.parse(await readFile(settingsFile, "utf8")) as unknown;
-    if (raw && typeof raw === "object") return raw as ManagedSettings;
+    if (raw && typeof raw === "object") {
+      const settings = raw as Record<string, unknown>;
+      // Миграция: whatsapp → max
+      if (!settings.max && settings.whatsapp) {
+        settings.max = settings.whatsapp;
+        delete settings.whatsapp;
+        await safeWrite(settingsFile, settings);
+      }
+      return settings as unknown as ManagedSettings;
+    }
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
     const defaults = defaultSettings();
