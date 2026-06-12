@@ -6,6 +6,8 @@ export interface DesignPreviewInput {
   zone: PrintZone;
   transform: Transform;
   previewSize: number;
+  /** Подпись для исполнителя, напр. «Лицевая сторона · M» */
+  label?: string;
 }
 
 function loadImage(src: string) {
@@ -52,6 +54,39 @@ export async function renderDesignPreview(input: DesignPreviewInput): Promise<Bl
     printHeight,
   );
   context.restore();
+
+  // Плашка с подписью для исполнителя
+  if (input.label) {
+    const barH = 72;
+    const fontSize = 36;
+    const radius = 18;
+    const py = size - barH - 24;
+
+    context.font = `bold ${fontSize}px Arial, sans-serif`;
+    context.textBaseline = "middle";
+    const textW = context.measureText(input.label).width;
+    const boxW = textW + 48;
+    const boxX = (size - boxW) / 2;
+
+    // Скруглённый прямоугольник с полупрозрачным фоном
+    context.beginPath();
+    context.moveTo(boxX + radius, py);
+    context.lineTo(boxX + boxW - radius, py);
+    context.quadraticCurveTo(boxX + boxW, py, boxX + boxW, py + radius);
+    context.lineTo(boxX + boxW, py + barH - radius);
+    context.quadraticCurveTo(boxX + boxW, py + barH, boxX + boxW - radius, py + barH);
+    context.lineTo(boxX + radius, py + barH);
+    context.quadraticCurveTo(boxX, py + barH, boxX, py + barH - radius);
+    context.lineTo(boxX, py + radius);
+    context.quadraticCurveTo(boxX, py, boxX + radius, py);
+    context.closePath();
+    context.fillStyle = "rgba(0, 0, 0, 0.72)";
+    context.fill();
+
+    // Белый текст по центру плашки
+    context.fillStyle = "#ffffff";
+    context.fillText(input.label, boxX + 24, py + barH / 2);
+  }
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Не удалось создать превью")), "image/png", 0.92);

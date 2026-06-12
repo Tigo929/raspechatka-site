@@ -544,6 +544,7 @@ function OrderDialog({
                   zone: shirtColors.find((item) => item.id === colorId)!.views.front.zone,
                   transform: transforms.front,
                   previewSize: previewSizes.front,
+                  label: `Лицевая сторона · ${size}`,
                 } : null,
                 back: imageUrls.back ? {
                   mockupUrl: shirtColors.find((item) => item.id === colorId)!.views.back.image,
@@ -551,6 +552,7 @@ function OrderDialog({
                   zone: shirtColors.find((item) => item.id === colorId)!.views.back.zone,
                   transform: transforms.back,
                   previewSize: previewSizes.back,
+                  label: `Оборотная сторона · ${size}`,
                 } : null,
               },
             }}
