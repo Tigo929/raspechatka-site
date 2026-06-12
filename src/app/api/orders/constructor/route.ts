@@ -34,7 +34,10 @@ export async function POST(request: Request) {
   const field = (key: string) => ((form.get(key) as string | null) ?? "").trim();
 
   // Honeypot: скрытое поле должно остаться пустым.
-  if (field("website")) return NextResponse.json({ ok: true, stored: true, delivered: false });
+  if (field("website")) {
+    console.warn("[constructor] honeypot сработал — запрос отброшен как спам");
+    return NextResponse.json({ ok: true, stored: true, delivered: false });
+  }
 
   const name = field("name");
   const phone = field("phone");

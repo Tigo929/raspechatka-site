@@ -26,7 +26,10 @@ export async function POST(request: Request) {
   const validated = await validateDto(LeadDto, plain);
   if (validated.errors) return NextResponse.json({ ok: false, error: validated.errors[0] }, { status: 422 });
   const data = validated.data;
-  if (data.website) return NextResponse.json({ ok: true, stored: true, delivered: false });
+  if (data.website) {
+    console.warn("[lead] honeypot сработал — запрос отброшен как спам");
+    return NextResponse.json({ ok: true, stored: true, delivered: false });
+  }
   const contactError = normalizeContact(data.contact);
   if (contactError) return NextResponse.json({ ok: false, error: contactError }, { status: 422 });
 

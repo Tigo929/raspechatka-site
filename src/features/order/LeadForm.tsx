@@ -112,12 +112,12 @@ export function LeadForm() {
       onSubmit={onSubmit}
       className={`${formCardClass} flex flex-col gap-4`}
     >
-      {/* Honeypot */}
-      <div className="sr-only" aria-hidden>
-        <label htmlFor="lead-website">Сайт</label>
+      {/* Honeypot — display:none, чтобы автозаполнение Chrome не вписало
+          сюда сайт пользователя (поле "website" он заполняет охотно). */}
+      <div style={{ display: "none" }} aria-hidden>
         <input
-          id="lead-website"
-          name="website"
+          id="lead-hp"
+          name="hp_field"
           value={website}
           onChange={(e) => setWebsite(e.target.value)}
           tabIndex={-1}

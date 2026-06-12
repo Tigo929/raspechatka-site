@@ -144,10 +144,12 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      {/* Honeypot — скрытое поле для отсева ботов */}
-      <div className="sr-only" aria-hidden>
+      {/* Honeypot — скрытое поле для отсева ботов. display:none (не sr-only):
+          Chrome автозаполняет sr-only поля с именем "website" реальным сайтом
+          пользователя, и сервер молча отбрасывает живую заявку как спам. */}
+      <div style={{ display: "none" }} aria-hidden>
         <input
-          name="website"
+          name="hp_field"
           value={website}
           onChange={(e) => setWebsite(e.target.value)}
           tabIndex={-1}
