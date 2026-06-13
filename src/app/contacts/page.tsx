@@ -66,14 +66,16 @@ export default async function ContactsPage() {
               external
               variant="telegram"
             />
-            <ContactCard
-              icon={<MessageCircle width={22} height={22} />}
-              title="MAX"
-              value="Написать в MAX"
-              href={settings.max}
-              external
-              variant="max"
-            />
+            {settings.max && (
+              <ContactCard
+                icon={<MessageCircle width={22} height={22} />}
+                title="MAX"
+                value="Написать в MAX"
+                href={settings.max}
+                external
+                variant="max"
+              />
+            )}
           </div>
 
           <div className="border-line mt-8 rounded-2xl border bg-white p-6">
@@ -104,14 +106,11 @@ export default async function ContactsPage() {
               Реквизиты
             </h2>
             <p className="text-muted mt-2 text-sm">
-              <strong>[ЗАПОЛНИТЬ: ФИО владельца]</strong>
+              <strong>Гулян Тигран Саакович</strong>
               <br />
-              Деятельность осуществляется как физическое лицо.
+              Плательщик налога на профессиональный доход (самозанятый).
               <br />
-              <span className="text-amber-700">
-                После регистрации ИП/ООО здесь необходимо указать ИНН, ОГРН/ОГРНИП
-                и полные реквизиты.
-              </span>
+              При получении оплаты выдаётся чек через приложение «Мой налог».
             </p>
           </div>
 

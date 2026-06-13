@@ -29,9 +29,7 @@ export const siteConfig = {
   hours: "Пн–Вс, 9:00–21:00",
   social: {
     telegram: "https://t.me/photo_avito",
-    max: "https://vk.me/79199990282",
-    instagram: "",
-    vk: "",
+    // MAX (VK Messenger) — ссылка добавляется через /admin после подтверждения
   },
   // Рейтинги на внешних площадках (для бейджей и доверия).
   // Яндекс — подтверждено по карточке организации. Avito — заполнить

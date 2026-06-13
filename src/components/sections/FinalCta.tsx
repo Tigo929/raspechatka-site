@@ -25,7 +25,7 @@ export async function FinalCta() {
                 <Sparkles width={18} height={18} /> Собрать футболку
               </Button>
               <TelegramButton href={settings.telegram} size="lg" />
-              <MaxButton href={settings.max} size="lg" />
+              {settings.max && <MaxButton href={settings.max} size="lg" />}
             </div>
             <p className="text-paper/50 mt-6 text-sm">
               Без минимального тиража · бесплатный макет · печать от 1 дня

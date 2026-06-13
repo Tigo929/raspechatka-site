@@ -36,26 +36,34 @@ export default function DeliveryAndReturnPage() {
         </ul>
 
         <h2>Доставка</h2>
+        <p>
+          Доставка доступна по Москве и в регионы России.
+        </p>
         <ul>
           <li>
-            <strong>Условия и стоимость доставки</strong> согласуются
-            индивидуально с менеджером.
+            <strong>Яндекс Доставка</strong> — курьерская доставка по Москве
+            и Московской области.
           </li>
           <li>
-            Доступны варианты: самовывоз, доставка курьером, отправка почтой
-            или транспортной компанией.
+            <strong>СДЭК</strong> — доставка в регионы России.
           </li>
           <li>
-            Адрес самовывоза:{" "}
-            <strong>
-              {siteConfig.address}, {siteConfig.hours}
-            </strong>
-            .
-          </li>
-          <li>
-            <strong>[ЗАПОЛНИТЬ: стоимость доставки по Москве/регионам]</strong>
+            Иной способ доставки — по согласованию с менеджером.
           </li>
         </ul>
+        <p>
+          <strong>Стоимость и срок доставки рассчитываются индивидуально</strong>{" "}
+          в зависимости от выбранного способа, адреса и веса заказа.
+          Итоговая стоимость согласовывается с менеджером при подтверждении
+          заказа.
+        </p>
+
+        <h2>Самовывоз</h2>
+        <p>
+          Самовывоз доступен по адресу:{" "}
+          <strong>{siteConfig.address}</strong>.
+          Время визита необходимо предварительно согласовать с менеджером.
+        </p>
 
         <h2>Возврат и обмен</h2>
         <p>
@@ -101,19 +109,11 @@ export default function DeliveryAndReturnPage() {
           <a href={siteConfig.phoneHref}>{siteConfig.phone}</a>
           {" "}&nbsp;|&nbsp;{" "}
           <a
-            href={siteConfig.social.telegram}
+            href="https://t.me/photo_avito"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Telegram
-          </a>
-          {" "}&nbsp;|&nbsp;{" "}
-          <a
-            href={siteConfig.social.max}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            MAX
+            Telegram @photo_avito
           </a>
         </p>
       </div>

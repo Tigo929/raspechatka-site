@@ -32,7 +32,7 @@ export async function Footer() {
             </p>
             <div className="mt-6 flex gap-3">
               <TelegramIconButton href={settings.telegram} className="h-11 w-11" />
-              <MaxIconButton href={settings.max} className="h-11 w-11" />
+              {settings.max && <MaxIconButton href={settings.max} className="h-11 w-11" />}
               <a
                 href={phoneHref}
                 aria-label="Позвонить"

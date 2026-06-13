@@ -1634,6 +1634,10 @@ function SettingsPanel({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPending(true); setError("");
+    if (s.max && !/^https:\/\/max\.ru\//i.test(s.max)) {
+      setError("Ссылка MAX должна начинаться с https://max.ru/ (vk.me и другие домены не принимаются). Оставьте поле пустым, чтобы скрыть кнопку MAX.");
+      setPending(false); return;
+    }
     try {
       const res = await fetch("/api/admin/settings", {
         method: "PUT",
@@ -1674,7 +1678,7 @@ function SettingsPanel({
           <h2 className="font-semibold mb-4">Мессенджеры</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Telegram (t.me/...)"><input value={s.telegram} onChange={update("telegram")} placeholder="https://t.me/username" className={inputClass} /></Field>
-            <Field label="MAX (vk.me/...)"><input value={s.max} onChange={update("max")} placeholder="https://vk.me/79001234567" className={inputClass} /></Field>
+            <Field label="MAX" hint="Необязательно. Пустое значение скрывает кнопку."><input value={s.max} onChange={update("max")} placeholder="https://max.ru/..." className={inputClass} /></Field>
           </div>
         </section>
 

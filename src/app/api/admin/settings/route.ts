@@ -36,8 +36,10 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Некорректный номер телефона." }, { status: 422 });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     return NextResponse.json({ error: "Некорректный email." }, { status: 422 });
-  if ([telegram, max].some((url) => url && !/^https:\/\//i.test(url)))
-    return NextResponse.json({ error: "Ссылки на мессенджеры должны начинаться с https://" }, { status: 422 });
+  if (telegram && !/^https:\/\//i.test(telegram))
+    return NextResponse.json({ error: "Ссылка Telegram должна начинаться с https://" }, { status: 422 });
+  if (max && !/^https:\/\/max\.ru\//i.test(max))
+    return NextResponse.json({ error: "Ссылка MAX должна начинаться с https://max.ru/ (vk.me и другие домены не принимаются). Оставьте поле пустым, чтобы скрыть кнопку MAX." }, { status: 422 });
 
   const settings = await updateSettings({
     phone,

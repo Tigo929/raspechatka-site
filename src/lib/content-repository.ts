@@ -207,7 +207,7 @@ function defaultSettings(): ManagedSettings {
     address: siteConfig.address,
     hours: siteConfig.hours,
     telegram: siteConfig.social.telegram,
-    max: siteConfig.social.max,
+    max: "",
     yandexMetrikaId: process.env.NEXT_PUBLIC_YANDEX_METRIKA_ID ?? "",
   };
 }

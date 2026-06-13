@@ -38,7 +38,7 @@ export function MobileStickyCTA({ settings }: { settings: ManagedSettings }) {
             <Sparkles width={17} height={17} /> Собрать футболку
           </Link>
           <TelegramIconButton href={settings.telegram} />
-          <MaxIconButton href={settings.max} />
+          {settings.max && <MaxIconButton href={settings.max} />}
         </div>
       </div>
     </div>
