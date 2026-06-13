@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ymReachGoal } from "@/lib/analytics";
 import { Button } from "@/components/ui/Button";
 import { ConsentCheckbox } from "@/components/legal/ConsentCheckbox";
 import { renderDesignPreview, type DesignPreviewInput } from "@/features/configurator/renderDesignPreview";
@@ -51,6 +52,9 @@ export function OrderForm({
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [method, setMethod] = useState<ContactMethod>("telegram");
+  const startedRef = useRef(false);
+
+  useEffect(() => { ymReachGoal("order_form_open"); }, []);
   const [telegramUser, setTelegramUser] = useState("");
   const [phone, setPhone] = useState("");
   const [website, setWebsite] = useState("");
@@ -171,6 +175,7 @@ export function OrderForm({
       if (!res.ok || !d.ok || !d.stored) {
         setError(d.error ?? "Ошибка отправки. Попробуйте ещё раз.");
         setStatus("error");
+        ymReachGoal("order_submit_error");
         return;
       }
       if (d.delivered === false) {
@@ -181,9 +186,11 @@ export function OrderForm({
 
       setReference(d.reference ?? null);
       setStatus("done");
+      ymReachGoal("order_submit_success");
     } catch {
       setError("Нет соединения. Попробуйте позже.");
       setStatus("error");
+      ymReachGoal("order_submit_error");
     }
   };
 
@@ -228,7 +235,13 @@ export function OrderForm({
         <input
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            if (!startedRef.current && e.target.value) {
+              startedRef.current = true;
+              ymReachGoal("order_form_start");
+            }
+            setName(e.target.value);
+          }}
           placeholder="Как к вам обращаться"
           autoComplete="given-name"
           maxLength={80}

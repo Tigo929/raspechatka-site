@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ymReachGoal } from "@/lib/analytics";
 import { Button } from "@/components/ui/Button";
 import { ConsentCheckbox } from "@/components/legal/ConsentCheckbox";
 import { renderDesignPreview, type DesignPreviewInput } from "@/features/configurator/renderDesignPreview";
@@ -27,6 +28,9 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
   const [phone, setPhone] = useState("");
   const [telegram, setTelegram] = useState("");
   const [comment, setComment] = useState("");
+  const startedRef = useRef(false);
+
+  useEffect(() => { ymReachGoal("order_form_open"); }, []);
   const [quantity, setQuantity] = useState(1);
   const [website, setWebsite] = useState("");
   const [pdConsent, setPdConsent] = useState(false);
@@ -100,6 +104,7 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
       if (!res.ok || !data.ok || !data.stored) {
         setError(data.error ?? "Ошибка отправки. Попробуйте ещё раз.");
         setStatus("error");
+        ymReachGoal("order_submit_error");
         return;
       }
 
@@ -113,9 +118,11 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
       }
       setReference(data.reference ?? null);
       setStatus("done");
+      ymReachGoal("configurator_submit_success");
     } catch {
       setError("Нет соединения. Попробуйте позже.");
       setStatus("error");
+      ymReachGoal("order_submit_error");
     }
   };
 
@@ -157,7 +164,13 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
         <input
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            if (!startedRef.current && e.target.value) {
+              startedRef.current = true;
+              ymReachGoal("order_form_start");
+            }
+            setName(e.target.value);
+          }}
           placeholder="Как к вам обращаться"
           autoComplete="given-name"
           maxLength={80}
