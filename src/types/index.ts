@@ -112,9 +112,41 @@ export interface SubmissionFile {
   size: number;
 }
 
+export type DeliveryStepState = "pending" | "delivered" | "failed";
+
+export interface DeliveryOutboxJob {
+  id: string;
+  submissionId: string;
+  status: "pending" | "processing" | "delivered" | "failed";
+  attempts: number;
+  createdAt: string;
+  updatedAt: string;
+  nextAttemptAt: string;
+  leaseUntil?: string;
+  lastError?: string;
+  message: {
+    status: DeliveryStepState;
+    deliveredAt?: string;
+    lastError?: string;
+  };
+  archive: {
+    required: boolean;
+    status: DeliveryStepState;
+    deliveredAt?: string;
+    lastError?: string;
+  };
+}
+
+/** Submission with outbox job joined — used in admin API responses only. */
+export interface SubmissionWithOutbox extends StoredSubmission {
+  outboxJob?: DeliveryOutboxJob;
+}
+
 export interface StoredSubmission {
   id: string;
   reference: string;
+  /** Client-generated UUID for idempotent submission deduplication. */
+  idempotencyKey?: string;
   kind: "lead" | "order";
   status: SubmissionStatus;
   /** Статус обработки менеджером. У старых записей отсутствует — трактуем как "new". */

@@ -29,6 +29,7 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
   const [telegram, setTelegram] = useState("");
   const [comment, setComment] = useState("");
   const startedRef = useRef(false);
+  const [idempotencyKey] = useState<string>(() => crypto.randomUUID());
 
   useEffect(() => { ymReachGoal("order_form_open"); }, []);
   const [quantity, setQuantity] = useState(1);
@@ -38,7 +39,6 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [reference, setReference] = useState<string | null>(null);
-  const [deliveryNote, setDeliveryNote] = useState<string | null>(null);
 
   const hasImages = Boolean(orderDetails?.imageUrls?.front || orderDetails?.imageUrls?.back);
 
@@ -53,7 +53,6 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
     if (hasImages && !imageConsent) { setError("Подтвердите права на загружаемое изображение."); return; }
 
     setError(null);
-    setDeliveryNote(null);
     setStatus("sending");
 
     try {
@@ -70,6 +69,7 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
       fd.append("personalDataConsent", String(pdConsent));
       fd.append("imageRightsConsent", String(imageConsent));
       fd.append("consentAcceptedAt", new Date().toISOString());
+      fd.append("idempotencyKey", idempotencyKey);
 
       // Параллельно: оригиналы + рендер превью обеих сторон
       const frontUrl = orderDetails?.imageUrls?.front ?? null;
@@ -108,11 +108,7 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
         return;
       }
 
-      if (data.delivered === false) {
-        setDeliveryNote(
-          "Заказ сохранён, менеджер увидит его в системе. Telegram-уведомление подтвердится чуть позже.",
-        );
-      }
+      // delivery is always async now — no separate note needed
       if (data.reference) {
         try { localStorage.setItem("raspechatka_last_reference", data.reference); } catch {}
       }
@@ -130,10 +126,7 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
     return (
       <SubmissionSuccess
         title="Заявка отправлена!"
-        description={
-          deliveryNote ??
-          "Менеджер уже видит ваш заказ и фотографии. Мы свяжемся с вами и подтвердим детали."
-        }
+        description="Менеджер уже видит ваш заказ и фотографии. Мы свяжемся с вами и подтвердим детали."
         referenceLabel="Номер заказа"
         reference={reference}
         onDone={onSuccess}

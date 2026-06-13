@@ -9,56 +9,77 @@ import {
   MessageCircleWarning,
   RefreshCw,
 } from "lucide-react";
-import type { ProcessingStatus, StoredSubmission, SubmissionStatus } from "@/types";
+import type { DeliveryOutboxJob, ProcessingStatus, SubmissionWithOutbox } from "@/types";
 
-const deliveryMeta: Record<SubmissionStatus, { label: string; className: string }> = {
-  delivered: { label: "Доставлена в TG", className: "bg-emerald-50 text-emerald-700" },
-  pending: { label: "Ожидает отправки", className: "bg-amber-50 text-amber-700" },
-  failed: { label: "Ошибка отправки", className: "bg-red-50 text-red-700" },
+const deliveryMeta: Record<string, { label: string; className: string }> = {
+  delivered:  { label: "Доставлена в TG",    className: "bg-emerald-50 text-emerald-700" },
+  pending:    { label: "Ожидает отправки",   className: "bg-amber-50  text-amber-700"   },
+  failed:     { label: "Ошибка отправки",    className: "bg-red-50    text-red-700"     },
+  processing: { label: "Отправляется…",      className: "bg-sky-50    text-sky-700"     },
+  queued:     { label: "В очереди",          className: "bg-amber-50  text-amber-700"   },
+};
+
+const outboxStatusMeta: Record<string, { label: string; className: string }> = {
+  pending:    { label: "Очередь",            className: "bg-amber-50  text-amber-700"   },
+  processing: { label: "Обрабатывается",     className: "bg-sky-50    text-sky-700"     },
+  delivered:  { label: "Доставлено",         className: "bg-emerald-50 text-emerald-700" },
+  failed:     { label: "Ошибка (ретрай)",    className: "bg-red-50    text-red-700"     },
+};
+
+const stepMeta: Record<string, { label: string; className: string }> = {
+  pending:   { label: "Ожидает",   className: "text-amber-600"   },
+  delivered: { label: "Доставлено", className: "text-emerald-600" },
+  failed:    { label: "Ошибка",    className: "text-red-600"     },
 };
 
 const processingMeta: Record<ProcessingStatus, { label: string; className: string }> = {
-  new: { label: "Новая", className: "bg-sky-50 text-sky-700" },
-  in_progress: { label: "В работе", className: "bg-amber-50 text-amber-700" },
-  done: { label: "Выполнена", className: "bg-emerald-50 text-emerald-700" },
-  cancelled: { label: "Отменена", className: "bg-neutral-100 text-neutral-500" },
+  new:         { label: "Новая",    className: "bg-sky-50    text-sky-700"     },
+  in_progress: { label: "В работе", className: "bg-amber-50  text-amber-700"   },
+  done:        { label: "Выполнена", className: "bg-emerald-50 text-emerald-700" },
+  cancelled:   { label: "Отменена", className: "bg-neutral-100 text-neutral-500" },
 };
 
 const processingOrder: ProcessingStatus[] = ["new", "in_progress", "done", "cancelled"];
 
 const fileLabels: Record<string, string> = {
-  previewImage: "Превью заказа",
-  frontPreview: "Превью (перед)",
-  backPreview: "Превью (спина)",
-  frontImage: "Оригинал (перед)",
-  backImage: "Оригинал (спина)",
+  previewImage:  "Превью заказа",
+  frontPreview:  "Превью (перед)",
+  backPreview:   "Превью (спина)",
+  frontImage:    "Оригинал (перед)",
+  backImage:     "Оригинал (спина)",
 };
 
 const contactLabels: Record<string, string> = {
   telegram: "Telegram",
-  max: "MAX",
-  phone: "Телефон",
+  max:      "MAX",
+  phone:    "Телефон",
 };
 
 type Filter = "all" | ProcessingStatus;
 
-const getProcessing = (item: StoredSubmission): ProcessingStatus =>
+const getProcessing = (item: SubmissionWithOutbox): ProcessingStatus =>
   item.processingStatus ?? "new";
 
-export function OrdersPanel({ initialItems }: { initialItems: StoredSubmission[] }) {
-  const [items, setItems] = useState<StoredSubmission[]>(initialItems);
-  const [loading, setLoading] = useState(false);
-  const [retrying, setRetrying] = useState<string | null>(null);
+function resolveDeliveryLabel(item: SubmissionWithOutbox) {
+  const job = item.outboxJob;
+  if (!job) return deliveryMeta[item.status] ?? deliveryMeta.pending;
+  return deliveryMeta[job.status] ?? deliveryMeta.pending;
+}
+
+export function OrdersPanel({ initialItems }: { initialItems: SubmissionWithOutbox[] }) {
+  const [items, setItems]           = useState<SubmissionWithOutbox[]>(initialItems);
+  const [loading, setLoading]       = useState(false);
+  const [retrying, setRetrying]     = useState<string | null>(null);
   const [savingStatus, setSavingStatus] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [filter, setFilter] = useState<Filter>("all");
-  const [error, setError] = useState("");
+  const [expanded, setExpanded]     = useState<string | null>(null);
+  const [filter, setFilter]         = useState<Filter>("all");
+  const [error, setError]           = useState("");
 
   const load = async () => {
     setLoading(true);
     try {
       const response = await fetch("/api/admin/orders", { cache: "no-store" });
-      const result = (await response.json()) as { submissions?: StoredSubmission[]; error?: string };
+      const result = (await response.json()) as { submissions?: SubmissionWithOutbox[]; error?: string };
       if (!response.ok) throw new Error(result.error ?? "Не удалось загрузить заявки.");
       setItems(result.submissions ?? []);
       setError("");
@@ -71,10 +92,13 @@ export function OrdersPanel({ initialItems }: { initialItems: StoredSubmission[]
 
   const stats = useMemo(
     () => ({
-      total: items.length,
-      fresh: items.filter((item) => getProcessing(item) === "new").length,
+      total:      items.length,
+      fresh:      items.filter((item) => getProcessing(item) === "new").length,
       inProgress: items.filter((item) => getProcessing(item) === "in_progress").length,
-      attention: items.filter((item) => item.status !== "delivered").length,
+      attention:  items.filter((item) => {
+        const job = item.outboxJob;
+        return job ? job.status !== "delivered" : item.status !== "delivered";
+      }).length,
     }),
     [items],
   );
@@ -89,13 +113,20 @@ export function OrdersPanel({ initialItems }: { initialItems: StoredSubmission[]
     setError("");
     try {
       const response = await fetch(`/api/admin/orders/${id}/retry`, { method: "POST" });
-      const result = (await response.json()) as { submission?: StoredSubmission; error?: string };
+      const result = (await response.json()) as {
+        ok?: boolean;
+        queued?: boolean;
+        submission?: SubmissionWithOutbox;
+        error?: string;
+      };
+      if (!response.ok) throw new Error(result.error ?? "Не удалось поставить в очередь.");
       if (result.submission) {
-        setItems((current) => current.map((item) => (item.id === id ? result.submission! : item)));
+        setItems((current) =>
+          current.map((item) => (item.id === id ? { ...result.submission! } : item)),
+        );
       }
-      if (!response.ok) throw new Error(result.error ?? "Telegram пока недоступен. Заявка сохранена.");
     } catch (retryError) {
-      setError(retryError instanceof Error ? retryError.message : "Не удалось повторить отправку.");
+      setError(retryError instanceof Error ? retryError.message : "Не удалось поставить в очередь.");
     } finally {
       setRetrying(null);
     }
@@ -110,7 +141,7 @@ export function OrdersPanel({ initialItems }: { initialItems: StoredSubmission[]
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ processingStatus }),
       });
-      const result = (await response.json()) as { submission?: StoredSubmission; error?: string };
+      const result = (await response.json()) as { submission?: SubmissionWithOutbox; error?: string };
       if (!response.ok || !result.submission) {
         throw new Error(result.error ?? "Не удалось обновить статус.");
       }
@@ -123,11 +154,11 @@ export function OrdersPanel({ initialItems }: { initialItems: StoredSubmission[]
   };
 
   const filters: { id: Filter; label: string }[] = [
-    { id: "all", label: `Все (${items.length})` },
-    { id: "new", label: `Новые (${stats.fresh})` },
+    { id: "all",         label: `Все (${items.length})` },
+    { id: "new",         label: `Новые (${stats.fresh})` },
     { id: "in_progress", label: `В работе (${stats.inProgress})` },
-    { id: "done", label: "Выполнены" },
-    { id: "cancelled", label: "Отменены" },
+    { id: "done",        label: "Выполнены" },
+    { id: "cancelled",   label: "Отменены" },
   ];
 
   return (
@@ -149,10 +180,10 @@ export function OrdersPanel({ initialItems }: { initialItems: StoredSubmission[]
       </div>
 
       <div className="mb-6 grid gap-3 sm:grid-cols-4">
-        <Summary label="Всего" value={stats.total} icon={Clock3} />
-        <Summary label="Новые" value={stats.fresh} icon={MessageCircleWarning} />
-        <Summary label="В работе" value={stats.inProgress} icon={RefreshCw} />
-        <Summary label="Проблемы доставки" value={stats.attention} icon={CheckCircle2} />
+        <Summary label="Всего"             value={stats.total}      icon={Clock3} />
+        <Summary label="Новые"             value={stats.fresh}      icon={MessageCircleWarning} />
+        <Summary label="В работе"          value={stats.inProgress} icon={RefreshCw} />
+        <Summary label="Проблемы доставки" value={stats.attention}  icon={CheckCircle2} />
       </div>
 
       <div className="mb-4 flex flex-wrap gap-2">
@@ -186,9 +217,9 @@ export function OrdersPanel({ initialItems }: { initialItems: StoredSubmission[]
       ) : (
         <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
           {visible.map((item) => {
-            const delivery = deliveryMeta[item.status];
+            const delivery   = resolveDeliveryLabel(item);
             const processing = processingMeta[getProcessing(item)];
-            const isOpen = expanded === item.id;
+            const isOpen     = expanded === item.id;
             return (
               <article key={item.id} className="border-b border-neutral-100 last:border-b-0">
                 <button
@@ -282,18 +313,7 @@ export function OrdersPanel({ initialItems }: { initialItems: StoredSubmission[]
                           {item.personalDataConsent ? "Да" : "Нет"}
                           {item.imageRightsConsent ? " · права на изображение подтверждены" : ""}
                         </DetailRow>
-                        <DetailRow label="Доставка в Telegram">
-                          {delivery.label}
-                          {item.attempts > 0 ? ` · попыток: ${item.attempts}` : ""}
-                          {item.deliveredAt
-                            ? ` · ${new Intl.DateTimeFormat("ru-RU", { dateStyle: "short", timeStyle: "short" }).format(new Date(item.deliveredAt))}`
-                            : ""}
-                        </DetailRow>
-                        {item.lastError && (
-                          <DetailRow label="Ошибка доставки">
-                            <span className="text-red-600">{item.lastError}</span>
-                          </DetailRow>
-                        )}
+                        <OutboxJobDetail job={item.outboxJob} submission={item} />
                       </dl>
 
                       <div className="flex flex-col gap-2 lg:w-56">
@@ -313,7 +333,7 @@ export function OrdersPanel({ initialItems }: { initialItems: StoredSubmission[]
                             </option>
                           ))}
                         </select>
-                        {item.status !== "delivered" && (
+                        {(!item.outboxJob || item.outboxJob.status !== "delivered") && (
                           <button
                             type="button"
                             disabled={retrying === item.id}
@@ -321,7 +341,7 @@ export function OrdersPanel({ initialItems }: { initialItems: StoredSubmission[]
                             className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-neutral-900 px-3 text-sm font-semibold text-white disabled:opacity-50"
                           >
                             <RefreshCw className={`h-4 w-4 ${retrying === item.id ? "animate-spin" : ""}`} />
-                            Отправить в Telegram
+                            Повторить доставку
                           </button>
                         )}
                       </div>
@@ -363,6 +383,68 @@ export function OrdersPanel({ initialItems }: { initialItems: StoredSubmission[]
         </div>
       )}
     </section>
+  );
+}
+
+function OutboxJobDetail({
+  job,
+  submission,
+}: {
+  job: DeliveryOutboxJob | undefined;
+  submission: SubmissionWithOutbox;
+}) {
+  if (!job) {
+    return (
+      <DetailRow label="Доставка в Telegram">
+        {submission.status === "delivered"
+          ? `Доставлено (устаревший режим) · попыток: ${submission.attempts}`
+          : `${submission.status} · попыток: ${submission.attempts}`}
+        {submission.lastError && (
+          <span className="ml-1 text-red-600"> · {submission.lastError}</span>
+        )}
+      </DetailRow>
+    );
+  }
+
+  const status = outboxStatusMeta[job.status] ?? outboxStatusMeta.pending;
+  const fmt = (iso: string | undefined) =>
+    iso
+      ? new Intl.DateTimeFormat("ru-RU", { dateStyle: "short", timeStyle: "short" }).format(
+          new Date(iso),
+        )
+      : null;
+
+  return (
+    <>
+      <DetailRow label="Outbox-очередь">
+        <span className={`font-semibold ${status.className}`}>{status.label}</span>
+        {" · "}попыток: {job.attempts}
+        {job.nextAttemptAt && job.status === "failed" && (
+          <span className="ml-1 text-neutral-500">· след. попытка: {fmt(job.nextAttemptAt)}</span>
+        )}
+      </DetailRow>
+      <DetailRow label="Шаги доставки">
+        <span>
+          Сообщение:{" "}
+          <span className={stepMeta[job.message.status]?.className}>
+            {stepMeta[job.message.status]?.label ?? job.message.status}
+          </span>
+          {job.message.deliveredAt && <span className="text-neutral-400"> ({fmt(job.message.deliveredAt)})</span>}
+        </span>
+        {job.archive.required && (
+          <span className="ml-3">
+            Архив:{" "}
+            <span className={stepMeta[job.archive.status]?.className}>
+              {stepMeta[job.archive.status]?.label ?? job.archive.status}
+            </span>
+            {job.archive.deliveredAt && <span className="text-neutral-400"> ({fmt(job.archive.deliveredAt)})</span>}
+          </span>
+        )}
+        {job.lastError && (
+          <div className="mt-0.5 text-red-600">{job.lastError}</div>
+        )}
+      </DetailRow>
+    </>
   );
 }
 

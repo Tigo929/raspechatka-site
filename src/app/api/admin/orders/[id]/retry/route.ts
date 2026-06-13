@@ -1,6 +1,8 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { isAdminAuthenticated, isSameOriginRequest } from "@/lib/admin-auth";
-import { deliverSubmission } from "@/lib/submission-delivery";
+import { processDeliveryOutbox } from "@/lib/submission-delivery";
+import { requeueJob, getJobBySubmissionId, enqueueDeliveryJob } from "@/lib/delivery-outbox-repository";
+import { getSubmission } from "@/lib/submission-repository";
 import { isValidUuid } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
@@ -16,11 +18,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!isValidUuid(id)) {
     return NextResponse.json({ error: "Некорректный идентификатор." }, { status: 400 });
   }
-  try {
-    const submission = await deliverSubmission(id);
-    const ok = submission.status === "delivered";
-    return NextResponse.json({ submission, ok }, { status: ok ? 200 : 502 });
-  } catch {
+
+  const submission = await getSubmission(id);
+  if (!submission) {
     return NextResponse.json({ error: "Заявка не найдена." }, { status: 404 });
   }
+
+  // Find existing outbox job or create one if missing (backward compat with pre-outbox submissions)
+  let job = await getJobBySubmissionId(id);
+  if (job) {
+    job = await requeueJob(job.id);
+  } else {
+    job = await enqueueDeliveryJob(id, submission.files.length > 0);
+  }
+
+  after(() => { void processDeliveryOutbox({ limit: 1 }); });
+
+  return NextResponse.json({ ok: true, queued: true, submission }, { status: 202 });
 }

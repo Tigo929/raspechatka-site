@@ -53,6 +53,7 @@ export function OrderForm({
   const [quantity, setQuantity] = useState(1);
   const [method, setMethod] = useState<ContactMethod>("telegram");
   const startedRef = useRef(false);
+  const [idempotencyKey] = useState<string>(() => crypto.randomUUID());
 
   useEffect(() => { ymReachGoal("order_form_open"); }, []);
   const [telegramUser, setTelegramUser] = useState("");
@@ -63,7 +64,6 @@ export function OrderForm({
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [reference, setReference] = useState<string | null>(null);
-  const [deliveryNote, setDeliveryNote] = useState<string | null>(null);
 
   const hasImages = Boolean(
     orderDetails?.imageUrls?.front || orderDetails?.imageUrls?.back,
@@ -88,7 +88,6 @@ export function OrderForm({
     }
 
     setError(null);
-    setDeliveryNote(null);
     setStatus("sending");
 
     const contact =
@@ -124,7 +123,7 @@ export function OrderForm({
           hp_field: website,
           ...consentMeta,
         };
-        fd.append("data", JSON.stringify(orderPayload));
+        fd.append("data", JSON.stringify({ ...orderPayload, idempotencyKey }));
 
         if (frontUrl) {
           const blob = await fetch(frontUrl).then((r) => r.blob());
@@ -161,6 +160,7 @@ export function OrderForm({
             personalDataConsent: pdConsent,
             imageRightsConsent: imageConsent,
             consentAcceptedAt: new Date().toISOString(),
+            idempotencyKey,
           }),
         });
       }
@@ -178,12 +178,7 @@ export function OrderForm({
         ymReachGoal("order_submit_error");
         return;
       }
-      if (d.delivered === false) {
-        setDeliveryNote(
-          "Заказ сохранён, но Telegram-уведомление пока не подтверждено. Мы всё равно видим его в системе.",
-        );
-      }
-
+      // delivery is always async now — no separate note needed
       setReference(d.reference ?? null);
       setStatus("done");
       ymReachGoal("order_submit_success");
@@ -198,10 +193,7 @@ export function OrderForm({
     return (
       <SubmissionSuccess
         title="Заказ принят!"
-        description={
-          deliveryNote ??
-          "Уведомление уже отправлено менеджеру. Мы свяжемся с вами и подтвердим детали заказа."
-        }
+        description="Уведомление отправлено менеджеру. Мы свяжемся с вами и подтвердим детали заказа."
         referenceLabel="Номер заказа"
         reference={reference}
         onDone={onSuccess}

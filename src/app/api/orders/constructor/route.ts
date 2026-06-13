@@ -1,10 +1,15 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { allowRequest, getRequestIp } from "@/lib/rate-limit";
 import { normalizeContact } from "@/lib/contact";
 import { readImageField } from "@/lib/image-validation";
-import { createSubmission, type SubmissionFileInput } from "@/lib/submission-repository";
-import { deliverSubmission } from "@/lib/submission-delivery";
+import {
+  createOrGetSubmission,
+  type SubmissionFileInput,
+} from "@/lib/submission-repository";
+import { enqueueDeliveryJob } from "@/lib/delivery-outbox-repository";
+import { processDeliveryOutbox } from "@/lib/submission-delivery";
 import { parseOrderQuantity, OrderValidationError } from "@/lib/order-validation";
+import { isValidUuid } from "@/lib/sanitize";
 import type { SubmissionContact } from "@/types";
 
 export const runtime = "nodejs";
@@ -34,7 +39,6 @@ export async function POST(request: Request) {
 
   const field = (key: string) => ((form.get(key) as string | null) ?? "").trim();
 
-  // Honeypot: скрытое поле должно остаться пустым.
   if (field("hp_field")) {
     console.warn("[constructor] honeypot сработал — запрос отброшен как спам");
     return NextResponse.json({ ok: true, stored: true, delivered: false });
@@ -70,17 +74,19 @@ export async function POST(request: Request) {
     return fail("Укажите телефон или Telegram-юзернейм", 422);
   }
 
-  // Telegram приоритетнее: это самый быстрый канал связи для менеджера.
   const contact: SubmissionContact = telegram
     ? { method: "telegram", value: telegram }
     : { method: "phone", value: phone };
   const contactError = normalizeContact(contact);
   if (contactError) return fail(contactError, 422);
 
-  // Серверное подтверждение согласий — нельзя обойти, минуя клиентскую форму (152-ФЗ).
   if (!personalDataConsent) {
     return fail("Необходимо согласие на обработку персональных данных", 422);
   }
+
+  // Idempotency key (optional field in form)
+  const rawKey = field("idempotencyKey");
+  const idempotencyKey = rawKey && isValidUuid(rawKey) ? rawKey : undefined;
 
   let files: SubmissionFileInput[];
   try {
@@ -102,7 +108,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const submission = await createSubmission(
+    const { submission, created } = await createOrGetSubmission(
       {
         kind: "order",
         name,
@@ -117,15 +123,29 @@ export async function POST(request: Request) {
         personalDataConsent: true,
         imageRightsConsent,
         consentAcceptedAt,
+        idempotencyKey,
       },
       files,
     );
-    const delivered = await deliverSubmission(submission.id);
+    const archiveRequired = submission.files.length > 0;
+    await enqueueDeliveryJob(submission.id, archiveRequired);
+    after(() => { void processDeliveryOutbox({ limit: 1 }); });
+    if (!created) {
+      return NextResponse.json(
+        {
+          ok: true,
+          stored: true,
+          delivered: submission.status === "delivered",
+          reference: submission.reference,
+        },
+        { status: 200 },
+      );
+    }
     return NextResponse.json(
       {
         ok: true,
         stored: true,
-        delivered: delivered.status === "delivered",
+        delivered: false,
         reference: submission.reference,
       },
       { status: 202 },

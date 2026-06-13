@@ -1,11 +1,13 @@
 import "reflect-metadata";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { allowRequest, getRequestIp } from "@/lib/rate-limit";
 import { validateDto } from "@/lib/validate";
 import { LeadDto } from "@/lib/dto/lead.dto";
 import { normalizeContact } from "@/lib/contact";
-import { createSubmission } from "@/lib/submission-repository";
-import { deliverSubmission } from "@/lib/submission-delivery";
+import { createOrGetSubmission } from "@/lib/submission-repository";
+import { enqueueDeliveryJob } from "@/lib/delivery-outbox-repository";
+import { processDeliveryOutbox } from "@/lib/submission-delivery";
+import { isValidUuid } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
 
@@ -33,20 +35,35 @@ export async function POST(request: Request) {
   const contactError = normalizeContact(data.contact);
   if (contactError) return NextResponse.json({ ok: false, error: contactError }, { status: 422 });
 
+  const idempotencyKey = typeof (plain as Record<string, unknown>).idempotencyKey === "string"
+    && isValidUuid((plain as Record<string, unknown>).idempotencyKey as string)
+    ? ((plain as Record<string, unknown>).idempotencyKey as string)
+    : undefined;
+
   try {
-    const submission = await createSubmission({
+    const { submission, created } = await createOrGetSubmission({
       kind: "lead",
       name: data.name.trim(),
       contact: data.contact,
       comment: data.comment?.trim(),
       personalDataConsent: true,
       consentAcceptedAt: data.consentAcceptedAt ?? new Date().toISOString(),
+      idempotencyKey,
     });
-    const delivered = await deliverSubmission(submission.id);
+    await enqueueDeliveryJob(submission.id, false);
+    after(() => { void processDeliveryOutbox({ limit: 1 }); });
+    if (!created) {
+      return NextResponse.json({
+        ok: true,
+        stored: true,
+        delivered: submission.status === "delivered",
+        reference: submission.reference,
+      }, { status: 200 });
+    }
     return NextResponse.json({
       ok: true,
       stored: true,
-      delivered: delivered.status === "delivered",
+      delivered: false,
       reference: submission.reference,
     }, { status: 202 });
   } catch {

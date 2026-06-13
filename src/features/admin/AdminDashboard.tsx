@@ -40,7 +40,7 @@ import type {
   Product,
   ProductColor,
   Step,
-  StoredSubmission,
+  SubmissionWithOutbox,
   UseCase,
 } from "@/types";
 import { formatPrice } from "@/lib/utils";
@@ -147,7 +147,7 @@ export function AdminDashboard({
   initialFaq: ManagedFaqItem[];
   initialSettings: ManagedSettings;
   initialContent: ManagedContent;
-  initialSubmissions: StoredSubmission[];
+  initialSubmissions: SubmissionWithOutbox[];
 }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("orders");

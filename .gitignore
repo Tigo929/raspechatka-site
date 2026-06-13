@@ -39,6 +39,7 @@ next-env.d.ts
 /data/analytics.json
 /data/analytics.ndjson
 /data/orders.json
+/data/delivery-outbox.json
 /data/order-files/
 /data/*.tmp
 
