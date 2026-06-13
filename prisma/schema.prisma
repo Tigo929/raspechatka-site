@@ -1,0 +1,402 @@
+// Prisma 7 schema for «Распечатка» — e-commerce print studio.
+// Этап 4A: foundation only. Runtime продолжает работать через JSON.
+// Переключение на PostgreSQL: DATA_BACKEND=postgres (Этап 4C).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum SubmissionKind {
+  lead
+  order
+}
+
+enum SubmissionStatus {
+  pending
+  delivered
+  failed
+}
+
+enum ProcessingStatus {
+  new
+  in_progress
+  done
+  cancelled
+}
+
+enum ContactMethod {
+  telegram
+  max
+  phone
+}
+
+enum DeliveryStatus {
+  pending
+  processing
+  delivered
+  failed
+}
+
+enum DeliveryStepState {
+  pending
+  delivered
+  failed
+}
+
+enum StorageBackend {
+  local
+  s3
+}
+
+enum EventType {
+  pageview
+  session_end
+}
+
+enum DeviceType {
+  mobile
+  desktop
+  tablet
+}
+
+enum ReviewSource {
+  yandex
+  avito
+  manual
+}
+
+enum WorkerStatus {
+  running
+  idle
+  error
+}
+
+enum RetentionRunStatus {
+  running
+  completed
+  failed
+}
+
+// ─── Submission (заявки) ──────────────────────────────────────────────────────
+
+model Submission {
+  id               String           @id @default(uuid())
+  reference        String           @unique
+  idempotencyKey   String?          @unique
+  kind             SubmissionKind
+  status           SubmissionStatus @default(pending)
+  processingStatus ProcessingStatus @default(new)
+
+  // Contact
+  name          String
+  contactMethod ContactMethod
+  contactValue  String
+
+  // Optional order details
+  comment      String?
+  orderDetails Json? // {productName, color, size, quantity, ...}
+
+  // Consent
+  personalDataConsent Boolean  @default(true)
+  imageRightsConsent  Boolean?
+  consentAcceptedAt   DateTime
+
+  // Delivery state (denormalized for fast reads; canonical state in DeliveryOutboxJob)
+  deliveredAt DateTime?
+  lastError   String?
+  attempts    Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  files     SubmissionFile[]
+  outboxJob DeliveryOutboxJob?
+  auditLogs AuditLog[]
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@index([processingStatus, createdAt])
+}
+
+// ─── SubmissionFile (прикреплённые файлы) ─────────────────────────────────────
+
+model SubmissionFile {
+  id           String     @id @default(uuid())
+  submissionId String
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  // File role: frontImage / backImage / frontPreview / backPreview / previewImage
+  fileKey String
+
+  // Original client metadata
+  originalName String
+  safeName     String
+  mimeType     String
+  sizeBytes    Int
+
+  // Storage location
+  storageBackend StorageBackend @default(local)
+  storageKey     String // relative path (local) or S3 object key
+
+  // S3-specific (null for local storage)
+  bucket String?
+
+  // Integrity
+  checksumSha256 String?
+
+  createdAt      DateTime  @default(now())
+  retentionUntil DateTime? // computed from ORDER_FILE_RETENTION_DAYS
+  deletedAt      DateTime?
+
+  @@index([submissionId])
+  @@index([retentionUntil, deletedAt])
+}
+
+// ─── DeliveryOutboxJob ────────────────────────────────────────────────────────
+
+model DeliveryOutboxJob {
+  id           String     @id @default(uuid())
+  submissionId String     @unique
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  status        DeliveryStatus @default(pending)
+  attempts      Int            @default(0)
+  nextAttemptAt DateTime       @default(now())
+  leaseUntil    DateTime?
+
+  // Sanitized error — no PII, no tokens
+  lastError String?
+
+  // Message step (Telegram text notification)
+  messageStatus      DeliveryStepState @default(pending)
+  messageDeliveredAt DateTime?
+  messageLastError   String?
+
+  // Archive step (Telegram ZIP with uploaded files)
+  archiveRequired    Boolean           @default(false)
+  archiveStatus      DeliveryStepState @default(pending)
+  archiveDeliveredAt DateTime?
+  archiveLastError   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attempts_log DeliveryAttempt[]
+
+  @@index([status, nextAttemptAt])
+  @@index([leaseUntil])
+}
+
+// ─── DeliveryAttempt (история попыток доставки) ───────────────────────────────
+
+model DeliveryAttempt {
+  id          String            @id @default(uuid())
+  outboxJobId String
+  outboxJob   DeliveryOutboxJob @relation(fields: [outboxJobId], references: [id], onDelete: Cascade)
+
+  // "message" or "archive"
+  step                  String
+  status                DeliveryStepState
+  errorCode             String?
+  // Sanitized — must not contain PII or tokens
+  errorMessageSanitized String?
+
+  startedAt  DateTime
+  finishedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([outboxJobId])
+}
+
+// ─── AnalyticsEvent ──────────────────────────────────────────────────────────
+
+model AnalyticsEvent {
+  id        String     @id @default(uuid())
+  type      EventType
+  page      String
+  sessionId String
+  device    DeviceType
+  referrer  String?
+  duration  Int? // seconds (only for session_end)
+  timestamp DateTime   @default(now())
+
+  @@index([timestamp])
+  @@index([type, timestamp])
+  @@index([sessionId])
+  @@index([page, timestamp])
+}
+
+// ─── ManagedReview ────────────────────────────────────────────────────────────
+
+model ManagedReview {
+  id        String       @id @default(uuid())
+  name      String
+  context   String
+  rating    Int
+  text      String
+  date      String // ISO date string "2024-01-15"
+  source    ReviewSource @default(manual)
+  published Boolean      @default(false)
+  verified  Boolean      @default(false)
+  order     Int          @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published, order])
+}
+
+// ─── FaqItem ─────────────────────────────────────────────────────────────────
+
+model FaqItem {
+  id        String  @id @default(uuid())
+  question  String
+  answer    String
+  order     Int     @default(0)
+  published Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published, order])
+}
+
+// ─── SiteSettings (singleton) ─────────────────────────────────────────────────
+// Всегда одна запись с id = "default".
+
+model SiteSettings {
+  id              String @id @default("default")
+  phone           String @default("")
+  email           String @default("")
+  address         String @default("")
+  hours           String @default("")
+  telegram        String @default("")
+  max             String @default("")
+  yandexMetrikaId String @default("")
+
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Category (управляемые категории) ─────────────────────────────────────────
+
+model Category {
+  slug        String @id
+  title       String
+  description String
+  image       String
+  imageAlt    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+}
+
+// ─── Product (управляемые товары из /admin) ───────────────────────────────────
+
+model Product {
+  slug         String    @id
+  title        String
+  excerpt      String
+  description  String
+  priceFrom    Int
+  rating       Float     @default(0)
+  reviewsCount Int       @default(0)
+  categorySlug String?
+  category     Category? @relation(fields: [categorySlug], references: [slug])
+
+  image       String
+  imageAlt    String
+  colors      Json // [{name, hex}]
+  material    String
+  printMethod String
+  badge       String?
+  published   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published, createdAt])
+}
+
+// ─── MediaAsset ───────────────────────────────────────────────────────────────
+
+model MediaAsset {
+  id         String  @id @default(uuid())
+  path       String  @unique // relative public path, e.g. "categories/text-print.webp"
+  version    BigInt // timestamp used as cache-buster
+  mimeType   String?
+  sizeBytes  Int?
+  altText    String?
+  uploadedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── ManagedContent (CMS-контент главной страницы) ───────────────────────────
+
+model ManagedContent {
+  id String @id @default("default")
+
+  // Stored as JSON blobs — flexible for CMS changes
+  pricing  Json @default("[]") // PricingTier[]
+  benefits Json @default("[]") // Benefit[]
+  steps    Json @default("[]") // Step[]
+  trustbar Json @default("[]") // string[]
+  useCases Json @default("[]") // UseCase[]
+
+  updatedAt DateTime @updatedAt
+}
+
+// ─── AuditLog ─────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String  @id @default(uuid())
+  actor      String // "admin", "system", "cron", etc.
+  action     String // "submission.created", "status.changed", etc.
+  entityType String // "Submission", "Product", "Review", etc.
+  entityId   String?
+  // MUST NOT contain full PII or secrets; only safe metadata
+  metadata   Json?
+
+  submissionId String?
+  submission   Submission? @relation(fields: [submissionId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actor, createdAt])
+  @@index([createdAt])
+}
+
+// ─── WorkerHeartbeat ──────────────────────────────────────────────────────────
+
+model WorkerHeartbeat {
+  workerName String       @id
+  status     WorkerStatus @default(idle)
+  lastSeenAt DateTime     @default(now())
+  metadata   Json?
+
+  updatedAt DateTime @updatedAt
+}
+
+// ─── RetentionRun ─────────────────────────────────────────────────────────────
+
+model RetentionRun {
+  id           String             @id @default(uuid())
+  startedAt    DateTime           @default(now())
+  finishedAt   DateTime?
+  status       RetentionRunStatus @default(running)
+  deletedFiles Int                @default(0)
+  failedFiles  Int                @default(0)
+  lastError    String?
+}
