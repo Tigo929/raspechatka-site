@@ -13,11 +13,13 @@ export function SubmissionSuccess({
   description,
   referenceLabel,
   reference,
+  onDone,
 }: {
   title: string;
   description: string;
   referenceLabel?: string;
   reference: string | null;
+  onDone?: () => void;
 }) {
   return (
     <div className={`${formCardClass} text-center`}>
@@ -27,9 +29,18 @@ export function SubmissionSuccess({
       <h3 className="font-display text-ink mt-4 text-xl font-bold">{title}</h3>
       <p className="text-muted mx-auto mt-2 max-w-sm text-sm">{description}</p>
       {reference && referenceLabel && (
-        <p className="text-muted mt-2 text-xs">
-          {referenceLabel}: {reference}
+        <p className="text-muted mt-3 text-sm">
+          {referenceLabel}: <strong className="text-ink">{reference}</strong>
         </p>
+      )}
+      {onDone && (
+        <button
+          type="button"
+          onClick={onDone}
+          className="bg-accent mt-5 w-full rounded-2xl py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        >
+          Готово
+        </button>
       )}
     </div>
   );

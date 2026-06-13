@@ -49,6 +49,7 @@ export function OrderForm({
   submitLabel = "Оформить заказ",
 }: OrderFormProps) {
   const [name, setName] = useState("");
+  const [quantity, setQuantity] = useState(1);
   const [method, setMethod] = useState<ContactMethod>("telegram");
   const [telegramUser, setTelegramUser] = useState("");
   const [phone, setPhone] = useState("");
@@ -114,8 +115,9 @@ export function OrderForm({
             size: orderDetails?.size,
             prints: orderDetails?.prints,
             transforms: orderDetails?.transforms,
+            quantity,
           },
-          website,
+          hp_field: website,
           ...consentMeta,
         };
         fd.append("data", JSON.stringify(orderPayload));
@@ -150,8 +152,8 @@ export function OrderForm({
           body: JSON.stringify({
             name: name.trim(),
             contact,
-            orderDetails,
-            website,
+            orderDetails: orderDetails ? { ...orderDetails, quantity } : { quantity },
+            hp_field: website,
             personalDataConsent: pdConsent,
             imageRightsConsent: imageConsent,
             consentAcceptedAt: new Date().toISOString(),
@@ -179,7 +181,6 @@ export function OrderForm({
 
       setReference(d.reference ?? null);
       setStatus("done");
-      onSuccess?.();
     } catch {
       setError("Нет соединения. Попробуйте позже.");
       setStatus("error");
@@ -196,6 +197,7 @@ export function OrderForm({
         }
         referenceLabel="Номер заказа"
         reference={reference}
+        onDone={onSuccess}
       />
     );
   }
@@ -230,6 +232,19 @@ export function OrderForm({
           placeholder="Как к вам обращаться"
           autoComplete="given-name"
           maxLength={80}
+          className={inputClass}
+        />
+      </div>
+
+      {/* Количество */}
+      <div className="flex flex-col gap-1.5">
+        <label className={fieldLabelClass}>Количество футболок</label>
+        <input
+          type="number"
+          value={quantity}
+          onChange={(e) => setQuantity(Math.max(1, Math.min(999, parseInt(e.target.value, 10) || 1)))}
+          min={1}
+          max={999}
           className={inputClass}
         />
       </div>

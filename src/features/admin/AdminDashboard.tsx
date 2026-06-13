@@ -1317,6 +1317,7 @@ function ReviewsPanel({
                     <span className="text-xs text-neutral-500">{review.context}</span>
                     <span className="flex gap-0.5">{Array.from({ length: 5 }).map((_, i) => (<Star key={i} className={`h-3 w-3 ${i < review.rating ? "fill-amber-400 text-amber-400" : "text-neutral-300"}`} />))}</span>
                     <span className={`rounded px-2 py-0.5 text-[11px] font-semibold ${review.published ? "bg-emerald-50 text-emerald-700" : "bg-neutral-100 text-neutral-600"}`}>{review.published ? "Опубликован" : "Скрыт"}</span>
+                    <span className={`rounded px-2 py-0.5 text-[11px] font-semibold ${review.verified ? "bg-blue-50 text-blue-700" : "bg-amber-50 text-amber-700"}`}>{review.verified ? "Верифицирован" : "Не верифицирован"}</span>
                     <span className="rounded bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-600">{review.source}</span>
                   </div>
                   <p className="mt-1 text-sm text-neutral-700 line-clamp-2">{review.text}</p>
@@ -1357,6 +1358,7 @@ function ReviewEditor({
   const [date, setDate] = useState(current?.date ?? new Date().toISOString().slice(0, 10));
   const [source, setSource] = useState<ManagedReview["source"]>(current?.source ?? "manual");
   const [published, setPublished] = useState(current?.published ?? true);
+  const [verified, setVerified] = useState(current?.verified ?? false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -1370,7 +1372,7 @@ function ReviewEditor({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPending(true); setError("");
-    const body = { name, context, rating, text, date, source, published };
+    const body = { name, context, rating, text, date, source, published, verified };
     try {
       const res = await fetch(
         state.mode === "create" ? "/api/admin/reviews" : `/api/admin/reviews/${current?.id}`,
@@ -1419,6 +1421,13 @@ function ReviewEditor({
           <label className="flex items-center gap-3">
             <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} className="h-4 w-4 accent-neutral-900" />
             <span className="text-sm font-semibold">Опубликовать</span>
+          </label>
+          <label className="flex items-start gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+            <input type="checkbox" checked={verified} onChange={(e) => setVerified(e.target.checked)} className="mt-0.5 h-4 w-4 accent-neutral-900" />
+            <span>
+              <span className="block text-sm font-semibold">Верифицирован ✓</span>
+              <span className="mt-0.5 block text-xs text-neutral-500">Отмечайте только реальные отзывы, подлинность которых вы проверили. Только такие отзывы отображаются на сайте.</span>
+            </span>
           </label>
           {error && <p role="alert" className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
         </div>

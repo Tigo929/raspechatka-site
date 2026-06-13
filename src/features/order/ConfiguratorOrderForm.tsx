@@ -27,6 +27,7 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
   const [phone, setPhone] = useState("");
   const [telegram, setTelegram] = useState("");
   const [comment, setComment] = useState("");
+  const [quantity, setQuantity] = useState(1);
   const [website, setWebsite] = useState("");
   const [pdConsent, setPdConsent] = useState(false);
   const [imageConsent, setImageConsent] = useState(false);
@@ -60,7 +61,8 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
       fd.append("product", orderDetails?.product ?? "");
       fd.append("size", orderDetails?.size ?? "");
       fd.append("color", orderDetails?.color ?? "");
-      fd.append("website", website);
+      fd.append("hp_field", website);
+      fd.append("quantity", String(quantity));
       fd.append("personalDataConsent", String(pdConsent));
       fd.append("imageRightsConsent", String(imageConsent));
       fd.append("consentAcceptedAt", new Date().toISOString());
@@ -106,9 +108,11 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
           "Заказ сохранён, менеджер увидит его в системе. Telegram-уведомление подтвердится чуть позже.",
         );
       }
+      if (data.reference) {
+        try { localStorage.setItem("raspechatka_last_reference", data.reference); } catch {}
+      }
       setReference(data.reference ?? null);
       setStatus("done");
-      onSuccess?.();
     } catch {
       setError("Нет соединения. Попробуйте позже.");
       setStatus("error");
@@ -125,6 +129,7 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
         }
         referenceLabel="Номер заказа"
         reference={reference}
+        onDone={onSuccess}
       />
     );
   }
@@ -198,6 +203,20 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
             className={`${inputClass} pl-8`}
           />
         </div>
+      </div>
+
+      {/* Количество */}
+      <div className="flex flex-col gap-1.5">
+        <label className={fieldLabelClass}>Количество футболок</label>
+        <input
+          type="number"
+          value={quantity}
+          onChange={(e) => setQuantity(Math.max(1, Math.min(999, parseInt(e.target.value, 10) || 1)))}
+          min={1}
+          max={999}
+          disabled={sending}
+          className={inputClass}
+        />
       </div>
 
       {/* Комментарий */}

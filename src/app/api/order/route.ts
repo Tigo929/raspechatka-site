@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   const validated = await validateDto(OrderDto, plain);
   if (validated.errors) return NextResponse.json({ ok: false, error: validated.errors[0] }, { status: 422 });
   const data = validated.data;
-  if (data.website) {
+  if (data.hp_field) {
     console.warn("[order] honeypot сработал — запрос отброшен как спам");
     return NextResponse.json({ ok: true, stored: true, delivered: false });
   }
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       orderDetails: data.orderDetails as Record<string, unknown> | undefined,
       personalDataConsent: true,
       imageRightsConsent: data.imageRightsConsent,
-      consentAcceptedAt: data.consentAcceptedAt ?? new Date().toISOString(),
+      consentAcceptedAt: new Date().toISOString(),
     }, files);
     const delivered = await deliverSubmission(submission.id);
     return NextResponse.json({

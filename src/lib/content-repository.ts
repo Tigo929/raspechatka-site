@@ -37,6 +37,9 @@ function seedReviews(): ManagedReview[] {
     id: randomUUID(),
     source: r.source ?? "manual",
     published: true,
+    // Demo-отзывы из data/reviews.ts не верифицированы владельцем.
+    // Чтобы показать отзыв публично, установите verified: true в админке.
+    verified: false,
     order: i,
   }));
 }
@@ -54,10 +57,21 @@ export async function getReviews(): Promise<ManagedReview[]> {
   return [];
 }
 
+/**
+ * Публичные отзывы: только явно верифицированные владельцем (verified === true).
+ *
+ * Правило показа:
+ *   published: true   — включён в выгрузку
+ *   rating >= 4       — положительный
+ *   verified === true — владелец подтвердил, что это реальный отзыв
+ *
+ * source ("yandex" / "avito" / "manual") указывает происхождение,
+ * но сам по себе НЕ является достаточным условием для публикации.
+ */
 export const getPublicReviews = unstable_cache(
   async (): Promise<Review[]> => {
     const all = await getReviews();
-    return all.filter((r) => r.published && r.rating >= 4 && r.source !== "manual");
+    return all.filter((r) => r.published && r.rating >= 4 && r.verified === true);
   },
   ["public-reviews"],
   { tags: ["public-content"], revalidate: false },
@@ -71,7 +85,8 @@ async function mutateReviews<T>(fn: (items: ManagedReview[]) => Promise<T> | T) 
 
 export async function createReview(data: Omit<ManagedReview, "id">): Promise<ManagedReview> {
   return mutateReviews(async (items) => {
-    const review: ManagedReview = { ...data, id: randomUUID() };
+    // verified по умолчанию false — владелец должен явно подтвердить каждый отзыв
+    const review: ManagedReview = { ...data, id: randomUUID(), verified: data.verified ?? false };
     const updated = [review, ...items];
     await safeWrite(reviewsFile, updated);
     revalidateTag("public-content", "max");

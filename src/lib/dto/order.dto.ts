@@ -5,8 +5,11 @@ import {
   IsOptional,
   IsIn,
   IsBoolean,
+  IsInt,
   MaxLength,
   MinLength,
+  Min,
+  Max,
   ValidateNested,
   Matches,
   IsObject,
@@ -49,6 +52,12 @@ export class OrderDetailsDto {
   @IsOptional()
   @IsObject()
   transforms?: Record<string, { x?: number; y?: number; scale?: number }>;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(999)
+  quantity?: number;
 }
 
 export class OrderDto {
@@ -71,7 +80,7 @@ export class OrderDto {
   /** Honeypot — должно быть пустым */
   @IsOptional()
   @IsString()
-  website?: string;
+  hp_field?: string;
 
   /** Факт согласия на обработку персональных данных */
   @IsBoolean()

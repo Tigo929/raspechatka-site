@@ -56,6 +56,8 @@ export interface ManagedReview extends Review {
   id: string;
   source: ReviewSource;
   published: boolean;
+  /** Явное подтверждение владельцем: это реальный верифицированный отзыв, показывать публично. */
+  verified?: boolean;
 }
 
 export interface FaqItem {

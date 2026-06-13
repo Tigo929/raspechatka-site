@@ -41,6 +41,7 @@ function buildText(submission: StoredSubmission) {
     if (details.productName) lines.push(`Товар: ${String(details.productName)}`);
     if (details.color) lines.push(`Цвет: ${String(details.color)}`);
     if (details.size) lines.push(`Размер: ${String(details.size)}`);
+    if (details.quantity) lines.push(`Количество: ${String(details.quantity)} шт.`);
     const prints = details.prints as Record<string, string | null> | undefined;
     if (prints?.front) lines.push(`Принт спереди: ${prints.front}`);
     if (prints?.back) lines.push(`Принт сзади: ${prints.back}`);

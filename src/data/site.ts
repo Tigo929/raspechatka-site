@@ -7,9 +7,12 @@ export const siteConfig = {
   name: "Распечатка",
   legalName: "Распечатка — студия печати",
   // Используется для canonical, sitemap, OG, JSON-LD.
+  // ОБЯЗАТЕЛЬНО задайте NEXT_PUBLIC_SITE_URL в .env.local (dev) или production env.
   url:
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    "https://printlab.ru",
+    (process.env.NODE_ENV === "production"
+      ? (() => { console.error("[site] NEXT_PUBLIC_SITE_URL не задан — canonical и sitemap будут некорректны!"); return "https://example.com"; })()
+      : "http://localhost:3000"),
   description:
     "Премиальная печать на футболках на заказ: с принтом, фото, надписью или логотипом. Без минимального тиража, бесплатный макет, печать от 1 дня.",
   tagline: "Печать на футболках, которой хочется хвастаться",

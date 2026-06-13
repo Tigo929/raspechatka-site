@@ -541,7 +541,7 @@ function OrderDialog({
                 } : null,
               },
             }}
-            onSuccess={() => setTimeout(onClose, 2000)}
+            onSuccess={onClose}
           />
         </div>
 

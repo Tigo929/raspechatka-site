@@ -223,7 +223,12 @@ export function OrdersPanel({ initialItems }: { initialItems: StoredSubmission[]
                     </p>
                     {item.orderDetails && (
                       <p className="mt-1 text-xs text-neutral-500">
-                        {[item.orderDetails.productName, item.orderDetails.color, item.orderDetails.size]
+                        {[
+                          item.orderDetails.productName,
+                          item.orderDetails.color,
+                          item.orderDetails.size,
+                          item.orderDetails.quantity != null ? `${item.orderDetails.quantity} шт.` : null,
+                        ]
                           .filter(Boolean)
                           .join(" · ")}
                       </p>
@@ -268,6 +273,11 @@ export function OrdersPanel({ initialItems }: { initialItems: StoredSubmission[]
                         {item.orderDetails?.size != null && (
                           <DetailRow label="Размер">{String(item.orderDetails.size)}</DetailRow>
                         )}
+                        <DetailRow label="Количество">
+                          {item.orderDetails?.quantity != null
+                            ? `${String(item.orderDetails.quantity)} шт.`
+                            : "не указано"}
+                        </DetailRow>
                         <DetailRow label="Согласие на ПД">
                           {item.personalDataConsent ? "Да" : "Нет"}
                           {item.imageRightsConsent ? " · права на изображение подтверждены" : ""}
