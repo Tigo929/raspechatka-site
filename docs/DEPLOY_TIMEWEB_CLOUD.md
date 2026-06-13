@@ -449,3 +449,92 @@ pm2 restart raspechatka
 - **`/var/lib/raspechatka`** содержит заявки клиентов — делайте резервные копии
 - После каждого `git pull` + `npm run build` выполняйте `pm2 restart raspechatka`
 - `PRINTLAB_DATA_DIR` должен указывать на `/var/lib/raspechatka`, а не на папку проекта
+
+---
+
+## Будущая production-инфраструктура (Этапы 4A–4F)
+
+> **Статус:** Приложение сейчас работает на JSON-хранилище (TEXT-файлы).
+> Разделы ниже — подготовка к PostgreSQL, Redis и S3. Не применять до завершения Этапа 4C.
+
+### Managed PostgreSQL (Timeweb)
+
+```
+Сервис : Timeweb Cloud → Базы данных → PostgreSQL
+Версия : PostgreSQL 16
+Регион : Москва (ru-1) — для минимальной задержки до VPS
+Тариф  : от 1 CPU / 1 GB RAM (достаточно для старта)
+```
+
+1. Создайте базу данных в панели Timeweb Cloud.
+2. Сохраните строку подключения вида:
+   ```
+   postgresql://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=require
+   ```
+3. Добавьте в `.env.production`:
+   ```env
+   DATABASE_URL=postgresql://...
+   DIRECT_URL=postgresql://...   # без пулера, для миграций
+   DATA_BACKEND=postgres
+   ```
+4. Добавьте IP-адрес VPS в whitelist PostgreSQL.
+5. Используйте **приватную сеть** Timeweb, если VPS и PostgreSQL в одном регионе.
+6. Выполните миграции при деплое:
+   ```bash
+   npm run db:migrate:deploy
+   pm2 restart raspechatka
+   ```
+
+**Резервное копирование:** Timeweb делает автоматические бэкапы PostgreSQL.
+Дополнительно — `pg_dump` в cron и загрузка на S3.
+
+### Managed Redis (Timeweb / Valkey)
+
+```
+Сервис : Timeweb Cloud → Базы данных → Redis / Valkey
+Регион : тот же, что и VPS
+```
+
+Нужен для Этапа 4D (BullMQ очередь, rate limiting):
+```env
+REDIS_URL=redis://USER:PASSWORD@HOST:6379
+```
+
+### Private S3 Bucket (Timeweb Object Storage)
+
+```
+Сервис : Timeweb Cloud → Объектное хранилище
+Регион : ru-1
+```
+
+Нужен для Этапа 4E (хранение файлов заявок):
+```env
+S3_ENDPOINT=https://s3.timeweb.cloud
+S3_REGION=ru-1
+S3_BUCKET=raspechatka-order-files
+S3_ACCESS_KEY_ID=...
+S3_SECRET_ACCESS_KEY=...
+S3_FORCE_PATH_STYLE=false
+```
+
+Требования к бакету:
+- **Приватный** (Private, без публичного доступа)
+- Versioning: опционально
+- Lifecycle: автоудаление объектов старше `ORDER_FILE_RETENTION_DAYS` дней
+
+### Приватная сеть
+
+Настройте все сервисы (VPS, PostgreSQL, Redis, S3) в одной приватной сети Timeweb.
+Порты PostgreSQL (5432) и Redis (6379) **не открывать** во внешнем firewall.
+
+### Резервное копирование PostgreSQL
+
+```cron
+# Ежедневный pg_dump с загрузкой в S3
+0 2 * * * deploy pg_dump "$DATABASE_URL" | gzip > /tmp/raspechatka-db-$(date +\%Y-\%m-\%d).sql.gz && \
+  aws s3 cp /tmp/raspechatka-db-$(date +\%Y-\%m-\%d).sql.gz \
+  s3://raspechatka-backups/ --endpoint-url https://s3.timeweb.cloud && \
+  rm /tmp/raspechatka-db-$(date +\%Y-\%m-\%d).sql.gz
+```
+
+Детальная инструкция — `docs/POSTGRES_MIGRATION_PLAN.md`.
