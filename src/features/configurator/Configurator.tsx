@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { ymReachGoal } from "@/lib/analytics";
 import Link from "next/link";
 import {
   Upload,
@@ -77,6 +78,8 @@ export function Configurator({ compact = false }: { compact?: boolean }) {
   const setActiveTransform = (next: Transform) => {
     setTransforms((current) => ({ ...current, [side]: next }));
   };
+
+  useEffect(() => { ymReachGoal("configurator_open"); }, []);
 
   // Освобождаем object URL, чтобы не текла память.
   useEffect(() => {
@@ -541,7 +544,7 @@ function OrderDialog({
                 } : null,
               },
             }}
-            onSuccess={() => setTimeout(onClose, 2000)}
+            onSuccess={onClose}
           />
         </div>
 

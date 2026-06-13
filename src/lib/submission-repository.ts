@@ -26,6 +26,8 @@ export interface CreateSubmissionInput {
   personalDataConsent: true;
   imageRightsConsent?: boolean;
   consentAcceptedAt: string;
+  /** Client-generated UUID for deduplication. Server rejects duplicates. */
+  idempotencyKey?: string;
 }
 
 let mutationQueue: Promise<void> = Promise.resolve();
@@ -71,6 +73,12 @@ export async function getSubmission(id: string): Promise<StoredSubmission | null
   return (await readAllUnsafe()).find((item) => item.id === id) ?? null;
 }
 
+export async function findSubmissionByIdempotencyKey(
+  key: string,
+): Promise<StoredSubmission | null> {
+  return (await readAllUnsafe()).find((item) => item.idempotencyKey === key) ?? null;
+}
+
 export async function createSubmission(
   input: CreateSubmissionInput,
   fileInputs: SubmissionFileInput[] = [],
@@ -96,11 +104,19 @@ export async function createSubmission(
     }
 
     const submission: StoredSubmission = {
-      ...input,
       id,
       reference: makeReference(),
+      idempotencyKey: input.idempotencyKey,
+      kind: input.kind,
       status: "pending",
       processingStatus: "new",
+      name: input.name,
+      contact: input.contact,
+      comment: input.comment,
+      orderDetails: input.orderDetails,
+      personalDataConsent: input.personalDataConsent,
+      imageRightsConsent: input.imageRightsConsent,
+      consentAcceptedAt: input.consentAcceptedAt,
       files,
       attempts: 0,
       createdAt,
@@ -115,6 +131,91 @@ export async function createSubmission(
     await rm(absoluteDirectory, { recursive: true, force: true }).catch(() => undefined);
     throw error;
   }
+}
+
+/**
+ * Atomically finds an existing submission by idempotency key or creates a new one.
+ * Files are written speculatively before acquiring the mutation lock; cleaned up if duplicate found.
+ */
+export async function createOrGetSubmission(
+  input: CreateSubmissionInput,
+  fileInputs: SubmissionFileInput[] = [],
+): Promise<{ submission: StoredSubmission; created: boolean }> {
+  if (!input.idempotencyKey) {
+    const submission = await createSubmission(input, fileInputs);
+    return { submission, created: true };
+  }
+
+  const key = input.idempotencyKey;
+  const id = randomUUID();
+  const createdAt = new Date().toISOString();
+  const relativeDirectory = path.join("order-files", id);
+  const absoluteDirectory = path.join(getDataDirectory(), relativeDirectory);
+  const files: SubmissionFile[] = [];
+
+  // Speculatively write files outside the mutation lock (slow I/O, may be discarded)
+  try {
+    if (fileInputs.length > 0) await mkdir(absoluteDirectory, { recursive: true });
+    for (const file of fileInputs) {
+      const storedName = `${file.key}${safeExtension(file.originalName, file.mimeType) || ".bin"}`;
+      await writeFile(path.join(absoluteDirectory, storedName), file.buffer, { flag: "wx" });
+      files.push({
+        key: file.key,
+        originalName: file.originalName,
+        storedPath: path.join(relativeDirectory, storedName).replaceAll("\\", "/"),
+        mimeType: file.mimeType,
+        size: file.buffer.byteLength,
+      });
+    }
+  } catch (error) {
+    await rm(absoluteDirectory, { recursive: true, force: true }).catch(() => undefined);
+    throw error;
+  }
+
+  let created = true;
+  let result!: StoredSubmission;
+
+  try {
+    result = await mutate(async (items) => {
+      const existing = items.find((s) => s.idempotencyKey === key);
+      if (existing) {
+        created = false;
+        return existing;
+      }
+      const submission: StoredSubmission = {
+        id,
+        reference: makeReference(),
+        idempotencyKey: key,
+        kind: input.kind,
+        status: "pending",
+        processingStatus: "new",
+        name: input.name,
+        contact: input.contact,
+        comment: input.comment,
+        orderDetails: input.orderDetails,
+        personalDataConsent: input.personalDataConsent,
+        imageRightsConsent: input.imageRightsConsent,
+        consentAcceptedAt: input.consentAcceptedAt,
+        files,
+        attempts: 0,
+        createdAt,
+        updatedAt: createdAt,
+      };
+      await writeJsonAtomic(ordersFile(), [...items, submission]);
+      return submission;
+    });
+  } catch (error) {
+    if (fileInputs.length > 0) {
+      await rm(absoluteDirectory, { recursive: true, force: true }).catch(() => undefined);
+    }
+    throw error;
+  }
+
+  if (!created && fileInputs.length > 0) {
+    await rm(absoluteDirectory, { recursive: true, force: true }).catch(() => undefined);
+  }
+
+  return { submission: result, created };
 }
 
 export async function updateSubmissionDelivery(

@@ -1,10 +1,17 @@
 import JSZip from "jszip";
-import { getSubmission, readSubmissionFile, updateSubmissionDelivery } from "@/lib/submission-repository";
+import { getSubmission, listSubmissions, updateSubmissionDelivery } from "@/lib/submission-repository";
+import {
+  claimNextJob,
+  enqueueDeliveryJob,
+  failJobStep,
+  listOutboxJobs,
+  saveJobArchiveDelivered,
+  saveJobMessageDelivered,
+} from "@/lib/delivery-outbox-repository";
 import type { StoredSubmission, SubmissionFile } from "@/types";
 
 const contactLabels = { telegram: "Telegram", max: "MAX", phone: "Телефон" } as const;
 
-/** Имя файла внутри ZIP-архива для каждого вложения. */
 const zipFileNames: Record<SubmissionFile["key"], string> = {
   previewImage: "preview.png",
   frontPreview: "preview-front.png",
@@ -41,6 +48,7 @@ function buildText(submission: StoredSubmission) {
     if (details.productName) lines.push(`Товар: ${String(details.productName)}`);
     if (details.color) lines.push(`Цвет: ${String(details.color)}`);
     if (details.size) lines.push(`Размер: ${String(details.size)}`);
+    if (details.quantity) lines.push(`Количество: ${String(details.quantity)} шт.`);
     const prints = details.prints as Record<string, string | null> | undefined;
     if (prints?.front) lines.push(`Принт спереди: ${prints.front}`);
     if (prints?.back) lines.push(`Принт сзади: ${prints.back}`);
@@ -64,20 +72,27 @@ async function telegramRequest(endpoint: string, body: BodyInit) {
   }
 }
 
-/** Упаковывает все файлы заявки в ZIP и отправляет документом. */
-async function sendZipArchive(chatId: string, submission: StoredSubmission) {
-  const zip = new JSZip();
+/** Sends the text notification message to Telegram. Exported for TelegramDeliveryProvider. */
+export async function sendTelegramTextMessage(submission: StoredSubmission) {
+  const chatId = process.env.TELEGRAM_CHAT_ID?.trim();
+  if (!chatId) throw new Error("TELEGRAM_CHAT_ID не настроен");
+  await telegramRequest("sendMessage", JSON.stringify({ chat_id: chatId, text: buildText(submission) }));
+}
 
-  // Информация о заказе текстом
+/** Packs all submission files into a ZIP and sends as document. Exported for TelegramDeliveryProvider. */
+export async function sendTelegramZipArchive(submission: StoredSubmission) {
+  const chatId = process.env.TELEGRAM_CHAT_ID?.trim();
+  if (!chatId) throw new Error("TELEGRAM_CHAT_ID не настроен");
+
+  const { readSubmissionFile } = await import("@/lib/submission-repository");
+  const zip = new JSZip();
   zip.file("order.txt", buildText(submission));
 
-  // Читаем все файлы параллельно и добавляем в архив
   await Promise.all(
     submission.files.map(async (file) => {
       const buffer = await readSubmissionFile(file);
       const baseName = zipFileNames[file.key] ?? file.key;
       const ext = mimeExt[file.mimeType] ?? ".bin";
-      // preview-файлы уже имеют расширение в baseName, оригиналы — нет
       const fileName = baseName.includes(".") ? baseName : `${baseName}${ext}`;
       zip.file(fileName, buffer);
     }),
@@ -100,24 +115,96 @@ async function sendZipArchive(chatId: string, submission: StoredSubmission) {
   await telegramRequest("sendDocument", form);
 }
 
-async function send(submission: StoredSubmission) {
-  const chatId = process.env.TELEGRAM_CHAT_ID?.trim();
-  if (!chatId) throw new Error("TELEGRAM_CHAT_ID не настроен");
+async function processSingleJob(
+  deliveryProvider: import("@/lib/delivery-provider").SubmissionDeliveryProvider,
+): Promise<boolean> {
+  const job = await claimNextJob();
+  if (!job) return false;
 
-  // 1. Текстовое сообщение — менеджер видит заявку даже если архив не дойдёт
-  await telegramRequest("sendMessage", JSON.stringify({ chat_id: chatId, text: buildText(submission) }));
-
-  // 2. ZIP-архив с превью и оригиналами
-  if (submission.files.length > 0) {
-    await sendZipArchive(chatId, submission);
+  const submission = await getSubmission(job.submissionId);
+  if (!submission) {
+    await saveJobMessageDelivered(job.id);
+    return true;
   }
+
+  if (job.message.status !== "delivered") {
+    try {
+      await deliveryProvider.sendMessage(submission);
+      await saveJobMessageDelivered(job.id);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Ошибка доставки";
+      await failJobStep(job.id, "message", msg);
+      await updateSubmissionDelivery(job.submissionId, "failed", msg).catch(() => undefined);
+      return true;
+    }
+  }
+
+  if (job.archive.required && job.archive.status !== "delivered") {
+    try {
+      await deliveryProvider.sendArchive(submission);
+      await saveJobArchiveDelivered(job.id);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Ошибка архива";
+      await failJobStep(job.id, "archive", msg);
+      await updateSubmissionDelivery(job.submissionId, "failed", msg).catch(() => undefined);
+      return true;
+    }
+  }
+
+  await updateSubmissionDelivery(job.submissionId, "delivered").catch(() => undefined);
+  return true;
 }
 
+/**
+ * Claims and processes up to `limit` outbox jobs (default: 1).
+ * Returns the number of jobs processed.
+ * Call via after() with { limit: 1 }, or from cron with { limit: 10 }.
+ */
+export async function processDeliveryOutbox(options?: {
+  provider?: import("@/lib/delivery-provider").SubmissionDeliveryProvider;
+  limit?: number;
+}): Promise<number> {
+  const { TelegramDeliveryProvider } = await import("@/lib/delivery-provider");
+  const deliveryProvider = options?.provider ?? new TelegramDeliveryProvider();
+  const limit = options?.limit ?? 1;
+
+  let processed = 0;
+  while (processed < limit) {
+    const didWork = await processSingleJob(deliveryProvider);
+    if (!didWork) break;
+    processed++;
+  }
+  return processed;
+}
+
+/**
+ * Finds undelivered submissions without outbox jobs and creates jobs for them.
+ * Handles crash-gap: process crashed after createSubmission but before enqueueDeliveryJob.
+ * Returns the number of new jobs created.
+ */
+export async function reconcileOutbox(): Promise<number> {
+  const [submissions, jobs] = await Promise.all([listSubmissions(), listOutboxJobs()]);
+  const jobSubmissionIds = new Set(jobs.map((j) => j.submissionId));
+
+  const unmatched = submissions.filter(
+    (s) => s.status !== "delivered" && !jobSubmissionIds.has(s.id),
+  );
+
+  let created = 0;
+  for (const s of unmatched) {
+    await enqueueDeliveryJob(s.id, s.files.length > 0);
+    created++;
+  }
+  return created;
+}
+
+/** @deprecated Use enqueueDeliveryJob + processDeliveryOutbox instead. Kept for migration safety. */
 export async function deliverSubmission(id: string) {
   const submission = await getSubmission(id);
   if (!submission) throw new Error("not_found");
   try {
-    await send(submission);
+    await sendTelegramTextMessage(submission);
+    if (submission.files.length > 0) await sendTelegramZipArchive(submission);
     return await updateSubmissionDelivery(id, "delivered");
   } catch (error) {
     const message = error instanceof Error ? error.message : "Неизвестная ошибка доставки";

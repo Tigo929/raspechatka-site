@@ -1,12 +1,17 @@
 import "reflect-metadata";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { allowRequest, getRequestIp } from "@/lib/rate-limit";
 import { validateDto } from "@/lib/validate";
 import { OrderDto } from "@/lib/dto/order.dto";
 import { normalizeContact } from "@/lib/contact";
 import { readImageField } from "@/lib/image-validation";
-import { createSubmission, type SubmissionFileInput } from "@/lib/submission-repository";
-import { deliverSubmission } from "@/lib/submission-delivery";
+import {
+  createOrGetSubmission,
+  type SubmissionFileInput,
+} from "@/lib/submission-repository";
+import { enqueueDeliveryJob } from "@/lib/delivery-outbox-repository";
+import { processDeliveryOutbox } from "@/lib/submission-delivery";
+import { isValidUuid } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
 
@@ -52,7 +57,7 @@ export async function POST(request: Request) {
   const validated = await validateDto(OrderDto, plain);
   if (validated.errors) return NextResponse.json({ ok: false, error: validated.errors[0] }, { status: 422 });
   const data = validated.data;
-  if (data.website) {
+  if (data.hp_field) {
     console.warn("[order] honeypot сработал — запрос отброшен как спам");
     return NextResponse.json({ ok: true, stored: true, delivered: false });
   }
@@ -62,21 +67,37 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Подтвердите права на загружаемое изображение" }, { status: 422 });
   }
 
+  const idempotencyKey = typeof (plain as Record<string, unknown>).idempotencyKey === "string"
+    && isValidUuid((plain as Record<string, unknown>).idempotencyKey as string)
+    ? ((plain as Record<string, unknown>).idempotencyKey as string)
+    : undefined;
+
   try {
-    const submission = await createSubmission({
+    const { submission, created } = await createOrGetSubmission({
       kind: "order",
       name: data.name.trim(),
       contact: data.contact,
       orderDetails: data.orderDetails as Record<string, unknown> | undefined,
       personalDataConsent: true,
       imageRightsConsent: data.imageRightsConsent,
-      consentAcceptedAt: data.consentAcceptedAt ?? new Date().toISOString(),
+      consentAcceptedAt: new Date().toISOString(),
+      idempotencyKey,
     }, files);
-    const delivered = await deliverSubmission(submission.id);
+    const archiveRequired = submission.files.length > 0;
+    await enqueueDeliveryJob(submission.id, archiveRequired);
+    after(() => { void processDeliveryOutbox({ limit: 1 }); });
+    if (!created) {
+      return NextResponse.json({
+        ok: true,
+        stored: true,
+        delivered: submission.status === "delivered",
+        reference: submission.reference,
+      }, { status: 200 });
+    }
     return NextResponse.json({
       ok: true,
       stored: true,
-      delivered: delivered.status === "delivered",
+      delivered: false,
       reference: submission.reference,
     }, { status: 202 });
   } catch {

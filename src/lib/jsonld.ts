@@ -30,11 +30,8 @@ export function organizationJsonLd(settings?: ManagedSettings) {
     },
     openingHours: "Mo-Su 09:00-21:00",
     sameAs: settings ? [settings.telegram, settings.max].filter(Boolean) : Object.values(siteConfig.social).filter(Boolean),
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: siteConfig.aggregateRating.value,
-      reviewCount: siteConfig.aggregateRating.count,
-    },
+    // AggregateRating добавляется только когда есть верифицированные отзывы.
+    // До их появления не включаем, чтобы не передавать ботам ложные данные.
   };
 }
 

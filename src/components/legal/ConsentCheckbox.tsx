@@ -37,7 +37,7 @@ export function ConsentCheckbox({
         <span className="text-muted text-xs leading-snug">
           Я соглашаюсь на{" "}
           <Link
-            href="/personal-data-consent"
+            href="/consent"
             target="_blank"
             className="text-ink underline underline-offset-2 hover:no-underline"
           >

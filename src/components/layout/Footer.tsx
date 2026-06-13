@@ -32,7 +32,7 @@ export async function Footer() {
             </p>
             <div className="mt-6 flex gap-3">
               <TelegramIconButton href={settings.telegram} className="h-11 w-11" />
-              <MaxIconButton href={settings.max} className="h-11 w-11" />
+              {settings.max && <MaxIconButton href={settings.max} className="h-11 w-11" />}
               <a
                 href={phoneHref}
                 aria-label="Позвонить"
@@ -138,7 +138,7 @@ export async function Footer() {
           </p>
           <div className="flex flex-wrap gap-x-4 gap-y-1 sm:text-right">
             <Link href="/privacy" className="hover:text-paper/80 transition-colors">Персональные данные</Link>
-            <Link href="/personal-data-consent" className="hover:text-paper/80 transition-colors">Согласие на обработку</Link>
+            <Link href="/consent" className="hover:text-paper/80 transition-colors">Согласие на обработку</Link>
             <Link href="/cookie-policy" className="hover:text-paper/80 transition-colors">Cookie</Link>
           </div>
         </div>

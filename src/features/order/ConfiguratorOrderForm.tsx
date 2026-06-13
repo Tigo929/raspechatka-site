@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ymReachGoal } from "@/lib/analytics";
 import { Button } from "@/components/ui/Button";
 import { ConsentCheckbox } from "@/components/legal/ConsentCheckbox";
 import { renderDesignPreview, type DesignPreviewInput } from "@/features/configurator/renderDesignPreview";
@@ -27,13 +28,17 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
   const [phone, setPhone] = useState("");
   const [telegram, setTelegram] = useState("");
   const [comment, setComment] = useState("");
+  const startedRef = useRef(false);
+  const [idempotencyKey] = useState<string>(() => crypto.randomUUID());
+
+  useEffect(() => { ymReachGoal("order_form_open"); }, []);
+  const [quantity, setQuantity] = useState(1);
   const [website, setWebsite] = useState("");
   const [pdConsent, setPdConsent] = useState(false);
   const [imageConsent, setImageConsent] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [reference, setReference] = useState<string | null>(null);
-  const [deliveryNote, setDeliveryNote] = useState<string | null>(null);
 
   const hasImages = Boolean(orderDetails?.imageUrls?.front || orderDetails?.imageUrls?.back);
 
@@ -48,7 +53,6 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
     if (hasImages && !imageConsent) { setError("Подтвердите права на загружаемое изображение."); return; }
 
     setError(null);
-    setDeliveryNote(null);
     setStatus("sending");
 
     try {
@@ -60,10 +64,12 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
       fd.append("product", orderDetails?.product ?? "");
       fd.append("size", orderDetails?.size ?? "");
       fd.append("color", orderDetails?.color ?? "");
-      fd.append("website", website);
+      fd.append("hp_field", website);
+      fd.append("quantity", String(quantity));
       fd.append("personalDataConsent", String(pdConsent));
       fd.append("imageRightsConsent", String(imageConsent));
       fd.append("consentAcceptedAt", new Date().toISOString());
+      fd.append("idempotencyKey", idempotencyKey);
 
       // Параллельно: оригиналы + рендер превью обеих сторон
       const frontUrl = orderDetails?.imageUrls?.front ?? null;
@@ -98,20 +104,21 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
       if (!res.ok || !data.ok || !data.stored) {
         setError(data.error ?? "Ошибка отправки. Попробуйте ещё раз.");
         setStatus("error");
+        ymReachGoal("order_submit_error");
         return;
       }
 
-      if (data.delivered === false) {
-        setDeliveryNote(
-          "Заказ сохранён, менеджер увидит его в системе. Telegram-уведомление подтвердится чуть позже.",
-        );
+      // delivery is always async now — no separate note needed
+      if (data.reference) {
+        try { localStorage.setItem("raspechatka_last_reference", data.reference); } catch {}
       }
       setReference(data.reference ?? null);
       setStatus("done");
-      onSuccess?.();
+      ymReachGoal("configurator_submit_success");
     } catch {
       setError("Нет соединения. Попробуйте позже.");
       setStatus("error");
+      ymReachGoal("order_submit_error");
     }
   };
 
@@ -119,12 +126,10 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
     return (
       <SubmissionSuccess
         title="Заявка отправлена!"
-        description={
-          deliveryNote ??
-          "Менеджер уже видит ваш заказ и фотографии. Мы свяжемся с вами и подтвердим детали."
-        }
+        description="Менеджер уже видит ваш заказ и фотографии. Мы свяжемся с вами и подтвердим детали."
         referenceLabel="Номер заказа"
         reference={reference}
+        onDone={onSuccess}
       />
     );
   }
@@ -152,7 +157,13 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
         <input
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            if (!startedRef.current && e.target.value) {
+              startedRef.current = true;
+              ymReachGoal("order_form_start");
+            }
+            setName(e.target.value);
+          }}
           placeholder="Как к вам обращаться"
           autoComplete="given-name"
           maxLength={80}
@@ -198,6 +209,20 @@ export function ConfiguratorOrderForm({ orderDetails, onSuccess }: Props) {
             className={`${inputClass} pl-8`}
           />
         </div>
+      </div>
+
+      {/* Количество */}
+      <div className="flex flex-col gap-1.5">
+        <label className={fieldLabelClass}>Количество футболок</label>
+        <input
+          type="number"
+          value={quantity}
+          onChange={(e) => setQuantity(Math.max(1, Math.min(999, parseInt(e.target.value, 10) || 1)))}
+          min={1}
+          max={999}
+          disabled={sending}
+          className={inputClass}
+        />
       </div>
 
       {/* Комментарий */}

@@ -28,7 +28,7 @@ export async function PopularProducts() {
       <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {popular.map((p, i) => (
           <Reveal key={p.slug} delay={i * 0.05}>
-            <ProductCard product={p} priority={i === 0} />
+            <ProductCard product={p} priority={false} />
           </Reveal>
         ))}
       </div>

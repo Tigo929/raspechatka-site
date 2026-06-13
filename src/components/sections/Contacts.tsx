@@ -75,7 +75,7 @@ export async function Contacts() {
 
           <div className="flex flex-wrap gap-3">
             <TelegramButton href={settings.telegram} className="w-fit" />
-            <MaxButton href={settings.max} className="w-fit" />
+            {settings.max && <MaxButton href={settings.max} className="w-fit" />}
           </div>
         </Reveal>
 

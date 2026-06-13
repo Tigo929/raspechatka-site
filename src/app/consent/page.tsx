@@ -7,11 +7,10 @@ export const metadata: Metadata = {
   description:
     "Текст согласия на обработку персональных данных при оформлении заявки на сайте Распечатка.",
   alternates: { canonical: `${siteConfig.url}/consent` },
-  // noindex: каноническая версия — /consent
   robots: { index: false, follow: false },
 };
 
-export default function PersonalDataConsentPage() {
+export default function ConsentPage() {
   return (
     <LegalLayout
       title="Согласие на обработку персональных данных"

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ymReachGoal } from "@/lib/analytics";
 import { Button } from "@/components/ui/Button";
 import { ConsentCheckbox } from "@/components/legal/ConsentCheckbox";
 import { renderDesignPreview, type DesignPreviewInput } from "@/features/configurator/renderDesignPreview";
@@ -49,7 +50,12 @@ export function OrderForm({
   submitLabel = "Оформить заказ",
 }: OrderFormProps) {
   const [name, setName] = useState("");
+  const [quantity, setQuantity] = useState(1);
   const [method, setMethod] = useState<ContactMethod>("telegram");
+  const startedRef = useRef(false);
+  const [idempotencyKey] = useState<string>(() => crypto.randomUUID());
+
+  useEffect(() => { ymReachGoal("order_form_open"); }, []);
   const [telegramUser, setTelegramUser] = useState("");
   const [phone, setPhone] = useState("");
   const [website, setWebsite] = useState("");
@@ -58,7 +64,6 @@ export function OrderForm({
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [reference, setReference] = useState<string | null>(null);
-  const [deliveryNote, setDeliveryNote] = useState<string | null>(null);
 
   const hasImages = Boolean(
     orderDetails?.imageUrls?.front || orderDetails?.imageUrls?.back,
@@ -83,7 +88,6 @@ export function OrderForm({
     }
 
     setError(null);
-    setDeliveryNote(null);
     setStatus("sending");
 
     const contact =
@@ -114,11 +118,12 @@ export function OrderForm({
             size: orderDetails?.size,
             prints: orderDetails?.prints,
             transforms: orderDetails?.transforms,
+            quantity,
           },
-          website,
+          hp_field: website,
           ...consentMeta,
         };
-        fd.append("data", JSON.stringify(orderPayload));
+        fd.append("data", JSON.stringify({ ...orderPayload, idempotencyKey }));
 
         if (frontUrl) {
           const blob = await fetch(frontUrl).then((r) => r.blob());
@@ -150,11 +155,12 @@ export function OrderForm({
           body: JSON.stringify({
             name: name.trim(),
             contact,
-            orderDetails,
-            website,
+            orderDetails: orderDetails ? { ...orderDetails, quantity } : { quantity },
+            hp_field: website,
             personalDataConsent: pdConsent,
             imageRightsConsent: imageConsent,
             consentAcceptedAt: new Date().toISOString(),
+            idempotencyKey,
           }),
         });
       }
@@ -169,20 +175,17 @@ export function OrderForm({
       if (!res.ok || !d.ok || !d.stored) {
         setError(d.error ?? "Ошибка отправки. Попробуйте ещё раз.");
         setStatus("error");
+        ymReachGoal("order_submit_error");
         return;
       }
-      if (d.delivered === false) {
-        setDeliveryNote(
-          "Заказ сохранён, но Telegram-уведомление пока не подтверждено. Мы всё равно видим его в системе.",
-        );
-      }
-
+      // delivery is always async now — no separate note needed
       setReference(d.reference ?? null);
       setStatus("done");
-      onSuccess?.();
+      ymReachGoal("order_submit_success");
     } catch {
       setError("Нет соединения. Попробуйте позже.");
       setStatus("error");
+      ymReachGoal("order_submit_error");
     }
   };
 
@@ -190,12 +193,10 @@ export function OrderForm({
     return (
       <SubmissionSuccess
         title="Заказ принят!"
-        description={
-          deliveryNote ??
-          "Уведомление уже отправлено менеджеру. Мы свяжемся с вами и подтвердим детали заказа."
-        }
+        description="Уведомление отправлено менеджеру. Мы свяжемся с вами и подтвердим детали заказа."
         referenceLabel="Номер заказа"
         reference={reference}
+        onDone={onSuccess}
       />
     );
   }
@@ -226,10 +227,29 @@ export function OrderForm({
         <input
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            if (!startedRef.current && e.target.value) {
+              startedRef.current = true;
+              ymReachGoal("order_form_start");
+            }
+            setName(e.target.value);
+          }}
           placeholder="Как к вам обращаться"
           autoComplete="given-name"
           maxLength={80}
+          className={inputClass}
+        />
+      </div>
+
+      {/* Количество */}
+      <div className="flex flex-col gap-1.5">
+        <label className={fieldLabelClass}>Количество футболок</label>
+        <input
+          type="number"
+          value={quantity}
+          onChange={(e) => setQuantity(Math.max(1, Math.min(999, parseInt(e.target.value, 10) || 1)))}
+          min={1}
+          max={999}
           className={inputClass}
         />
       </div>

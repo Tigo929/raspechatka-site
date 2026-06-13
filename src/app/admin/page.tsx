@@ -4,6 +4,8 @@ import { isAdminAuthenticated, isAdminConfigured } from "@/lib/admin-auth";
 import { getManagedProducts, getBaseProducts } from "@/lib/product-repository";
 import { getReviews, getFaq, getSettings, getContent, getCategories } from "@/lib/content-repository";
 import { listSubmissions } from "@/lib/submission-repository";
+import { listOutboxJobs } from "@/lib/delivery-outbox-repository";
+import type { SubmissionWithOutbox } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -12,16 +14,24 @@ export default async function AdminPage() {
     redirect("/admin/login");
   }
 
-  const [products, baseProducts, categories, reviews, faqItems, settings, content, submissions] = await Promise.all([
-    getManagedProducts(),
-    getBaseProducts(),
-    getCategories(),
-    getReviews(),
-    getFaq(),
-    getSettings(),
-    getContent(),
-    listSubmissions(),
-  ]);
+  const [products, baseProducts, categories, reviews, faqItems, settings, content, submissions, jobs] =
+    await Promise.all([
+      getManagedProducts(),
+      getBaseProducts(),
+      getCategories(),
+      getReviews(),
+      getFaq(),
+      getSettings(),
+      getContent(),
+      listSubmissions(),
+      listOutboxJobs(),
+    ]);
+
+  const jobMap = new Map(jobs.map((j) => [j.submissionId, j]));
+  const withOutbox: SubmissionWithOutbox[] = submissions.map((s) => ({
+    ...s,
+    outboxJob: jobMap.get(s.id),
+  }));
 
   return (
     <AdminDashboard
@@ -32,7 +42,7 @@ export default async function AdminPage() {
       initialFaq={faqItems}
       initialSettings={settings}
       initialContent={content}
-      initialSubmissions={submissions}
+      initialSubmissions={withOutbox}
     />
   );
 }

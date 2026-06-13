@@ -25,11 +25,12 @@ export function LeadForm() {
   const [telegram, setTelegram] = useState("");
   const [comment, setComment] = useState("");
   const [website, setWebsite] = useState("");
+  // Stable key for this form session — deduplicate retries on the server side
+  const [idempotencyKey] = useState<string>(() => crypto.randomUUID());
   const [pdConsent, setPdConsent] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [reference, setReference] = useState<string | null>(null);
-  const [deliveryNote, setDeliveryNote] = useState<string | null>(null);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +52,6 @@ export function LeadForm() {
     }
 
     setError(null);
-    setDeliveryNote(null);
     setStatus("sending");
 
     try {
@@ -68,6 +68,7 @@ export function LeadForm() {
           website,
           personalDataConsent: pdConsent,
           consentAcceptedAt: new Date().toISOString(),
+          idempotencyKey,
         }),
       });
       const result = (await response.json()) as {
@@ -80,11 +81,7 @@ export function LeadForm() {
       if (!response.ok || !result.ok || !result.stored) {
         throw new Error(result.error ?? "Не удалось сохранить заявку.");
       }
-      if (result.delivered === false) {
-        setDeliveryNote(
-          "Заявка сохранена, но Telegram-уведомление пока не подтверждено. Мы всё равно видим её в системе.",
-        );
-      }
+      // delivery is always async now — no separate note needed
       setReference(result.reference ?? null);
       setStatus("done");
     } catch (requestError) {
@@ -97,10 +94,7 @@ export function LeadForm() {
     return (
       <SubmissionSuccess
         title="Заявка принята!"
-        description={
-          deliveryNote ??
-          "Уведомление уже отправлено менеджеру. Свяжемся с вами в ближайшее рабочее время."
-        }
+        description="Уведомление отправлено менеджеру. Свяжемся с вами в ближайшее рабочее время."
         referenceLabel="Номер заявки"
         reference={reference}
       />

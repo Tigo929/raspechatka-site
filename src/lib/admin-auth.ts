@@ -4,21 +4,23 @@ import { cookies, headers } from "next/headers";
 export const adminCookieName = "printlab_admin_session";
 const sessionLifetimeSeconds = 60 * 60 * 12;
 
-// Если ADMIN_SESSION_SECRET не задан — генерируем случайный при запуске.
-// Сессии перестанут работать после рестарта сервера, но пароль не используется как секрет.
-const runtimeSecret = randomBytes(32).toString("hex");
-
 function getPassword() {
   return process.env.ADMIN_PASSWORD?.trim() ?? "";
 }
 
-function getSessionSecret() {
-  const secret = process.env.ADMIN_SESSION_SECRET?.trim();
-  return secret && secret.length >= 32 ? secret : runtimeSecret;
+// Возвращает секрет только когда он настроен корректно.
+// Никогда не падает назад на случайный секрет — это исключало бы проверку в proxy.ts.
+function getSessionSecret(): string | null {
+  const s = process.env.ADMIN_SESSION_SECRET?.trim();
+  return s && s.length >= 32 ? s : null;
 }
 
-function sign(value: string) {
-  return createHmac("sha256", getSessionSecret()).update(value).digest("base64url");
+export function isSessionSecretConfigured(): boolean {
+  return getSessionSecret() !== null;
+}
+
+function sign(value: string, secret: string) {
+  return createHmac("sha256", secret).update(value).digest("base64url");
 }
 
 function safeEqual(left: string, right: string) {
@@ -29,8 +31,9 @@ function safeEqual(left: string, right: string) {
   return timingSafeEqual(leftBuf, rightBuf);
 }
 
+// Требуем оба: пароль ≥12 и секрет ≥32. Без секрета логин вернёт 503.
 export function isAdminConfigured() {
-  return getPassword().length >= 12;
+  return getPassword().length >= 12 && isSessionSecretConfigured();
 }
 
 export function verifyAdminPassword(password: string) {
@@ -39,15 +42,29 @@ export function verifyAdminPassword(password: string) {
 }
 
 export function createAdminSessionToken() {
+  const secret = getSessionSecret();
+  if (!secret) throw new Error("ADMIN_SESSION_SECRET is not configured");
   const nonce = randomBytes(16).toString("hex");
   const payload = Buffer.from(
     JSON.stringify({ expiresAt: Date.now() + sessionLifetimeSeconds * 1000, nonce }),
   ).toString("base64url");
-  return `${payload}.${sign(payload)}`;
+  return `${payload}.${sign(payload, secret)}`;
 }
 
-export function verifyAdminSessionToken(token?: string) {
-  if (!token || !isAdminConfigured()) return false;
+export function verifyAdminSessionToken(token?: string): boolean {
+  const secret = getSessionSecret();
+  if (!secret) {
+    // Нет секрета — всё отклоняем. В dev выводим подсказку разработчику.
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        "[admin-auth] ADMIN_SESSION_SECRET не задан или короче 32 символов — " +
+          "все сессии /admin отклонены. Задайте его в .env.local.",
+      );
+    }
+    return false;
+  }
+
+  if (!token) return false;
 
   const parts = token.split(".");
   // Ожидаем ровно 2 части: payload.signature
@@ -55,7 +72,7 @@ export function verifyAdminSessionToken(token?: string) {
   const [payload, signature] = parts;
   if (!payload || !signature) return false;
 
-  if (!safeEqual(signature, sign(payload))) return false;
+  if (!safeEqual(signature, sign(payload, secret))) return false;
 
   try {
     const data = JSON.parse(

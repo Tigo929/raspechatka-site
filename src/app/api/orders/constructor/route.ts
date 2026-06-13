@@ -1,9 +1,15 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { allowRequest, getRequestIp } from "@/lib/rate-limit";
 import { normalizeContact } from "@/lib/contact";
 import { readImageField } from "@/lib/image-validation";
-import { createSubmission, type SubmissionFileInput } from "@/lib/submission-repository";
-import { deliverSubmission } from "@/lib/submission-delivery";
+import {
+  createOrGetSubmission,
+  type SubmissionFileInput,
+} from "@/lib/submission-repository";
+import { enqueueDeliveryJob } from "@/lib/delivery-outbox-repository";
+import { processDeliveryOutbox } from "@/lib/submission-delivery";
+import { parseOrderQuantity, OrderValidationError } from "@/lib/order-validation";
+import { isValidUuid } from "@/lib/sanitize";
 import type { SubmissionContact } from "@/types";
 
 export const runtime = "nodejs";
@@ -33,8 +39,7 @@ export async function POST(request: Request) {
 
   const field = (key: string) => ((form.get(key) as string | null) ?? "").trim();
 
-  // Honeypot: скрытое поле должно остаться пустым.
-  if (field("website")) {
+  if (field("hp_field")) {
     console.warn("[constructor] honeypot сработал — запрос отброшен как спам");
     return NextResponse.json({ ok: true, stored: true, delivered: false });
   }
@@ -46,26 +51,42 @@ export async function POST(request: Request) {
   const product = field("product");
   const size = field("size");
   const color = field("color");
+  let quantity: number;
+  try {
+    quantity = parseOrderQuantity(field("quantity"));
+  } catch (e) {
+    return fail(
+      e instanceof OrderValidationError ? e.message : "Некорректное количество",
+      400,
+    );
+  }
   const personalDataConsent = field("personalDataConsent") === "true";
   const imageRightsConsent = field("imageRightsConsent") === "true";
-  const consentAcceptedAt = field("consentAcceptedAt") || new Date().toISOString();
+  const consentAcceptedAt = new Date().toISOString();
 
   if (name.length < 2) return fail("Укажите ваше имя", 422);
+  if (name.length > 80) return fail("Имя слишком длинное", 422);
+  if (comment.length > 500) return fail("Комментарий слишком длинный", 422);
+  if (product.length > 200) return fail("Название продукта слишком длинное", 422);
+  if (color.length > 100) return fail("Цвет слишком длинный", 422);
+  if (size.length > 10) return fail("Размер слишком длинный", 422);
   if (!phone && !telegram) {
     return fail("Укажите телефон или Telegram-юзернейм", 422);
   }
 
-  // Telegram приоритетнее: это самый быстрый канал связи для менеджера.
   const contact: SubmissionContact = telegram
     ? { method: "telegram", value: telegram }
     : { method: "phone", value: phone };
   const contactError = normalizeContact(contact);
   if (contactError) return fail(contactError, 422);
 
-  // Серверное подтверждение согласий — нельзя обойти, минуя клиентскую форму (152-ФЗ).
   if (!personalDataConsent) {
     return fail("Необходимо согласие на обработку персональных данных", 422);
   }
+
+  // Idempotency key (optional field in form)
+  const rawKey = field("idempotencyKey");
+  const idempotencyKey = rawKey && isValidUuid(rawKey) ? rawKey : undefined;
 
   let files: SubmissionFileInput[];
   try {
@@ -87,7 +108,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const submission = await createSubmission(
+    const { submission, created } = await createOrGetSubmission(
       {
         kind: "order",
         name,
@@ -97,19 +118,34 @@ export async function POST(request: Request) {
           productName: product || "Футболка с принтом",
           color,
           size,
+          quantity: String(quantity),
         },
         personalDataConsent: true,
         imageRightsConsent,
         consentAcceptedAt,
+        idempotencyKey,
       },
       files,
     );
-    const delivered = await deliverSubmission(submission.id);
+    const archiveRequired = submission.files.length > 0;
+    await enqueueDeliveryJob(submission.id, archiveRequired);
+    after(() => { void processDeliveryOutbox({ limit: 1 }); });
+    if (!created) {
+      return NextResponse.json(
+        {
+          ok: true,
+          stored: true,
+          delivered: submission.status === "delivered",
+          reference: submission.reference,
+        },
+        { status: 200 },
+      );
+    }
     return NextResponse.json(
       {
         ok: true,
         stored: true,
-        delivered: delivered.status === "delivered",
+        delivered: false,
         reference: submission.reference,
       },
       { status: 202 },

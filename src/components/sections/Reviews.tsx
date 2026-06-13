@@ -41,7 +41,13 @@ export async function Reviews() {
       </Reveal>
 
       <div className="mt-12">
-        <ReviewsCarousel reviews={positive} />
+        {positive.length > 0 ? (
+          <ReviewsCarousel reviews={positive} />
+        ) : (
+          <p className="text-muted text-center text-sm py-6">
+            Живые отзывы клиентов появятся здесь после первых заказов.
+          </p>
+        )}
       </div>
     </Section>
   );
