@@ -1,0 +1,25 @@
+[
+  {
+    "id": "aaaa0001-0000-0000-0000-000000000001",
+    "submissionId": "11111111-0000-0000-0000-000000000001",
+    "status": "delivered",
+    "attempts": 1,
+    "createdAt": "2026-01-01T10:00:00.000Z",
+    "updatedAt": "2026-01-01T10:01:00.000Z",
+    "nextAttemptAt": "2026-01-01T10:00:00.000Z",
+    "message": { "status": "delivered", "deliveredAt": "2026-01-01T10:00:30.000Z" },
+    "archive": { "required": false, "status": "pending" }
+  },
+  {
+    "id": "bbbb0002-0000-0000-0000-000000000002",
+    "submissionId": "22222222-0000-0000-0000-000000000002",
+    "status": "failed",
+    "attempts": 2,
+    "createdAt": "2026-01-02T11:00:00.000Z",
+    "updatedAt": "2026-01-02T11:30:00.000Z",
+    "nextAttemptAt": "2026-01-02T12:30:00.000Z",
+    "lastError": "Telegram HTTP 429: Too Many Requests",
+    "message": { "status": "failed", "lastError": "Telegram HTTP 429" },
+    "archive": { "required": true, "status": "pending" }
+  }
+]

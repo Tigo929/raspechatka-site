@@ -1,0 +1,7 @@
+{
+  "pricing": [{ "label": "Fixture tier", "price": 500 }],
+  "benefits": [{ "title": "Fixture benefit", "description": "Testing" }],
+  "steps": [{ "step": 1, "title": "Fixture step" }],
+  "trustbar": ["Fixture trust item"],
+  "useCases": [{ "title": "Fixture use case" }]
+}

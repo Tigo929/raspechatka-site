@@ -1,0 +1,11 @@
+[
+  {
+    "id": "faq-fixture-0001-0000-0000-000000000001",
+    "question": "Fixture question for testing?",
+    "answer": "Fixture answer for testing.",
+    "order": 1,
+    "published": true,
+    "createdAt": "2026-01-01T10:00:00.000Z",
+    "updatedAt": "2026-01-01T10:00:00.000Z"
+  }
+]

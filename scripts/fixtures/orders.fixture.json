@@ -1,0 +1,63 @@
+[
+  {
+    "id": "11111111-0000-0000-0000-000000000001",
+    "reference": "RP-FIXTURE-AA1111",
+    "idempotencyKey": "fixture-idem-key-1",
+    "kind": "lead",
+    "status": "delivered",
+    "processingStatus": "new",
+    "name": "Fixture Customer One",
+    "contact": { "method": "phone", "value": "+70000000001" },
+    "comment": "Fixture comment for testing",
+    "personalDataConsent": true,
+    "consentAcceptedAt": "2026-01-01T10:00:00.000Z",
+    "files": [],
+    "attempts": 1,
+    "createdAt": "2026-01-01T10:00:00.000Z",
+    "updatedAt": "2026-01-01T10:01:00.000Z",
+    "deliveredAt": "2026-01-01T10:01:00.000Z"
+  },
+  {
+    "id": "22222222-0000-0000-0000-000000000002",
+    "reference": "RP-FIXTURE-BB2222",
+    "idempotencyKey": "fixture-idem-key-2",
+    "kind": "order",
+    "status": "pending",
+    "processingStatus": "new",
+    "name": "Fixture Customer Two",
+    "contact": { "method": "telegram", "value": "@fixture_user" },
+    "orderDetails": { "productName": "Fixture Shirt", "color": "white", "size": "M", "quantity": 1 },
+    "personalDataConsent": true,
+    "imageRightsConsent": true,
+    "consentAcceptedAt": "2026-01-02T11:00:00.000Z",
+    "files": [
+      {
+        "key": "frontImage",
+        "originalName": "front.png",
+        "storedPath": "order-files/22222222-0000-0000-0000-000000000002/frontImage.png",
+        "mimeType": "image/png",
+        "size": 512000
+      }
+    ],
+    "attempts": 0,
+    "createdAt": "2026-01-02T11:00:00.000Z",
+    "updatedAt": "2026-01-02T11:00:00.000Z"
+  },
+  {
+    "id": "33333333-0000-0000-0000-000000000003",
+    "reference": "RP-FIXTURE-CC3333",
+    "idempotencyKey": "fixture-idem-key-1",
+    "kind": "lead",
+    "status": "failed",
+    "processingStatus": "new",
+    "name": "Fixture Duplicate IdemKey",
+    "contact": { "method": "phone", "value": "+70000000003" },
+    "personalDataConsent": true,
+    "consentAcceptedAt": "2026-01-03T12:00:00.000Z",
+    "files": [],
+    "attempts": 3,
+    "lastError": "Telegram HTTP 500",
+    "createdAt": "2026-01-03T12:00:00.000Z",
+    "updatedAt": "2026-01-03T12:00:00.000Z"
+  }
+]

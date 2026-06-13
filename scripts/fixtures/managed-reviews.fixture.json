@@ -1,0 +1,16 @@
+[
+  {
+    "id": "rev-fixture-0001-0000-0000-000000000001",
+    "name": "Fixture Reviewer",
+    "context": "Корпоративный заказ",
+    "rating": 5,
+    "text": "Fixture review text for testing.",
+    "date": "2026-01-01",
+    "source": "manual",
+    "published": true,
+    "verified": true,
+    "order": 1,
+    "createdAt": "2026-01-01T10:00:00.000Z",
+    "updatedAt": "2026-01-01T10:00:00.000Z"
+  }
+]

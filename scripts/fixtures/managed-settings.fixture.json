@@ -1,0 +1,9 @@
+{
+  "phone": "+7 (999) 000-00-00",
+  "email": "fixture@example.com",
+  "address": "Fixture address",
+  "hours": "Пн–Пт 9:00–18:00",
+  "telegram": "@fixture_bot",
+  "max": "@fixture_max",
+  "yandexMetrikaId": "00000000"
+}

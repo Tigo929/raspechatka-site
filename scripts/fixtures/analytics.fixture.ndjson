@@ -1,0 +1,5 @@
+{"id":"evt-fix-0001","type":"pageview","page":"/","sessionId":"sess-fix-0001","device":"desktop","referrer":"https://yandex.ru/","timestamp":"2026-01-01T10:00:00.000Z"}
+{"id":"evt-fix-0002","type":"pageview","page":"/catalog","sessionId":"sess-fix-0001","device":"desktop","timestamp":"2026-01-01T10:00:30.000Z"}
+{"id":"evt-fix-0003","type":"session_end","page":"/catalog","sessionId":"sess-fix-0001","device":"desktop","duration":45,"timestamp":"2026-01-01T10:00:45.000Z"}
+{"id":"evt-fix-0004","type":"pageview","page":"/","sessionId":"sess-fix-0002","device":"mobile","timestamp":"2026-01-02T09:00:00.000Z"}
+{"id":"evt-fix-0005","type":"session_end","page":"/","sessionId":"sess-fix-0002","device":"mobile","duration":12,"timestamp":"2026-01-02T09:00:12.000Z"}

@@ -1,0 +1,11 @@
+[
+  {
+    "slug": "fixture-category",
+    "title": "Fixture Category",
+    "description": "Fixture category description for testing.",
+    "image": "/images/fixture-category.webp",
+    "imageAlt": "Fixture category image",
+    "createdAt": "2026-01-01T10:00:00.000Z",
+    "updatedAt": "2026-01-01T10:00:00.000Z"
+  }
+]
